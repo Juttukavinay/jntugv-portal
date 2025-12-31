@@ -1,0 +1,6 @@
+--- FACULTY CREDENTIALS ---
+Role: Faculty | Name: Dr.Ch BinduMadhuri | Email: chbindumadhuri@jntugv.edu | Password: 9701458518
+Role: Faculty | Name: Dr G. Jaya Suma | Email: drgjayasuma@jntugv.edu | Password: 9701458518
+Role: Faculty | Name: Dr.G. Madhavi | Email: gmadhavi@jntugv.edu | Password: 9701458518
+Role: Faculty | Name: Dr.B. TirimulaRao | Email: btirimularao@jntugv.edu | Password: 9701458518
+Role: Faculty | Name: Mr.AnilWurity | Email: anilwurity@jntugv.edu | Password: 9701458518
