@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import API_BASE_URL from '../../config'
 import '../../App.css'
 
 // --- UPGRADED STUDENT TAB (Full Management) ---
@@ -9,6 +10,8 @@ function StudentManager() {
     const [modalType, setModalType] = useState('') // 'add', 'edit', 'delete'
     const [currentStudent, setCurrentStudent] = useState(null)
     const [formData, setFormData] = useState({ rollNumber: '', name: '', year: '3', semester: '1', department: 'IT' })
+    const [activeCourse, setActiveCourse] = useState('B.Tech');
+    const [activeYear, setActiveYear] = useState('All');
 
     const fetchStudents = () => {
         fetch(`${API_BASE_URL}/api/students`)
@@ -61,9 +64,47 @@ function StudentManager() {
 
     return (
         <div className="full-width-container">
-            <div className="full-width-header">
-                <h4 style={{ margin: 0 }}>Student Directory (IT Dept)</h4>
-                <button className="btn" onClick={openAddModal}>+ Add Student</button>
+            <div className="full-width-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <h4 style={{ margin: 0 }}>Student Directory (IT Dept)</h4>
+                        {/* Course Toggle */}
+                        <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '8px', padding: '2px' }}>
+                            {['B.Tech', 'M.Tech', 'MCA'].map(c => (
+                                <button
+                                    key={c}
+                                    onClick={() => setActiveCourse(c)}
+                                    style={{
+                                        padding: '4px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                                        background: activeCourse === c ? '#fff' : 'transparent',
+                                        color: activeCourse === c ? '#0f172a' : '#64748b',
+                                        fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >{c}</button>
+                            ))}
+                        </div>
+                    </div>
+                    <button className="btn" onClick={openAddModal}>+ Add Student</button>
+                </div>
+
+                {/* Year Filter */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Year:</span>
+                    {['All', '1', '2', '3', '4'].map(y => (
+                        <button
+                            key={y}
+                            onClick={() => setActiveYear(y)}
+                            style={{
+                                padding: '4px 10px', borderRadius: '20px', border: '1px solid ' + (activeYear === y ? '#3b82f6' : '#e2e8f0'),
+                                background: activeYear === y ? '#eff6ff' : 'transparent',
+                                color: activeYear === y ? '#2563eb' : '#64748b',
+                                fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer'
+                            }}
+                        >
+                            {y === 'All' ? 'All' : `${y}`}
+                        </button>
+                    ))}
+                </div>
             </div>
             <div className="full-table-wrapper">
                 <table className="clean-table">
@@ -71,6 +112,7 @@ function StudentManager() {
                         <tr>
                             <th>Roll No</th>
                             <th>Name</th>
+                            <th>Course</th>
                             <th>Year</th>
                             <th>Semester</th>
                             <th>Department</th>
@@ -78,10 +120,20 @@ function StudentManager() {
                         </tr>
                     </thead>
                     <tbody>
-                        {students.map(student => (
+                        {students.filter(s => {
+                            const matchesCourse = (s.course === activeCourse) ||
+                                (!s.course && (
+                                    (activeCourse === 'B.Tech' && s.rollNumber.includes('1A')) ||
+                                    (activeCourse === 'M.Tech' && s.rollNumber.includes('1D')) ||
+                                    (activeCourse === 'MCA' && s.rollNumber.includes('1F'))
+                                ));
+                            const matchesYear = activeYear === 'All' || s.year.toString() === activeYear;
+                            return matchesCourse && matchesYear;
+                        }).map(student => (
                             <tr key={student._id}>
                                 <td style={{ fontWeight: 'bold' }}>{student.rollNumber}</td>
                                 <td>{student.name}</td>
+                                <td>{student.course}</td>
                                 <td>{student.year}</td>
                                 <td>{student.semester}</td>
                                 <td>{student.department}</td>
@@ -409,6 +461,14 @@ function TimetableManager() {
         labPlacement: 'afternoon',
         lunchTime: '12:30'
     })
+    const [activeCourse, setActiveCourse] = useState('B.Tech');
+
+    // Automatically switch default sem when program changes
+    useEffect(() => {
+        if (activeCourse === 'B.Tech') setSelectedSemester('I-B.Tech I Sem');
+        else if (activeCourse === 'M.Tech') setSelectedSemester('I-M.Tech I Sem');
+        else if (activeCourse === 'MCA') setSelectedSemester('I-MCA I Sem');
+    }, [activeCourse]);
 
     const fetchTimetable = useCallback(() => {
         setTimetable(null)
@@ -520,19 +580,53 @@ function TimetableManager() {
             <div className="full-width-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <h4 style={{ margin: 0 }}>Academic Timetable Manager</h4>
+                    <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '8px', padding: '2px' }}>
+                        {['B.Tech', 'M.Tech', 'MCA'].map(c => (
+                            <button
+                                key={c}
+                                onClick={() => setActiveCourse(c)}
+                                style={{
+                                    padding: '4px 8px', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                                    background: activeCourse === c ? '#fff' : 'transparent',
+                                    color: activeCourse === c ? '#0f172a' : '#64748b',
+                                    fontWeight: '600', fontSize: '0.8rem'
+                                }}
+                            >{c}</button>
+                        ))}
+                    </div>
                     <select
                         value={selectedSemester}
                         onChange={(e) => setSelectedSemester(e.target.value)}
                         style={{ padding: '0.5rem', border: '1px solid #ccc', borderRadius: '4px' }}
                     >
-                        <option value="I-B.Tech I Sem">I Year - I Sem</option>
-                        <option value="I-B.Tech II Sem">I Year - II Sem</option>
-                        <option value="II-B.Tech I Sem">II Year - I Sem</option>
-                        <option value="II-B.Tech II Sem">II Year - II Sem</option>
-                        <option value="III-B.Tech I Sem">III Year - I Sem</option>
-                        <option value="III-B.Tech II Sem">III Year - II Sem</option>
-                        <option value="IV-B.Tech I Sem">IV Year - I Sem</option>
-                        <option value="IV-B.Tech II Sem">IV Year - II Sem</option>
+                        {activeCourse === 'B.Tech' && (
+                            <>
+                                <option value="I-B.Tech I Sem">I Year - I Sem</option>
+                                <option value="I-B.Tech II Sem">I Year - II Sem</option>
+                                <option value="II-B.Tech I Sem">II Year - I Sem</option>
+                                <option value="II-B.Tech II Sem">II Year - II Sem</option>
+                                <option value="III-B.Tech I Sem">III Year - I Sem</option>
+                                <option value="III-B.Tech II Sem">III Year - II Sem</option>
+                                <option value="IV-B.Tech I Sem">IV Year - I Sem</option>
+                                <option value="IV-B.Tech II Sem">IV Year - II Sem</option>
+                            </>
+                        )}
+                        {activeCourse === 'M.Tech' && (
+                            <>
+                                <option value="I-M.Tech I Sem">I Year - I Sem</option>
+                                <option value="I-M.Tech II Sem">I Year - II Sem</option>
+                                <option value="II-M.Tech I Sem">II Year - I Sem</option>
+                                <option value="II-M.Tech II Sem">II Year - II Sem</option>
+                            </>
+                        )}
+                        {activeCourse === 'MCA' && (
+                            <>
+                                <option value="I-MCA I Sem">I Year - I Sem</option>
+                                <option value="I-MCA II Sem">I Year - II Sem</option>
+                                <option value="II-MCA I Sem">II Year - I Sem</option>
+                                <option value="II-MCA II Sem">II Year - II Sem</option>
+                            </>
+                        )}
                     </select>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
@@ -783,7 +877,15 @@ function HodDashboard() {
                         <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#3b82f6', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>H</div>
                         <div>
                             <div style={{ fontSize: '0.9rem', fontWeight: 'bold' }}>Head of Dept</div>
-                            <Link to="/login" style={{ fontSize: '0.75rem', color: '#94a3b8', textDecoration: 'none' }}>Logout</Link>
+                            <button
+                                onClick={() => {
+                                    localStorage.removeItem('user');
+                                    navigate('/login', { replace: true });
+                                }}
+                                style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                            >
+                                Sign Out
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -930,14 +1032,16 @@ function HodOverview({ onNavigate }) {
 // To avoid massive code duplication, I'll rely on the user having told me to MOVE functionality.
 // So I will implement a fully functional Subjects Manager here.
 
+
 function SubjectsTabWrapper() {
     const [viewMode, setViewMode] = useState('list');
     const [subjects, setSubjects] = useState([]);
     const [regulation, setRegulation] = useState('R23');
-    const [program, setProgram] = useState('UG');
+    const [activeCourse, setActiveCourse] = useState('B.Tech');
     const [courseName, setCourseName] = useState('B.Tech');
     const [semesterName, setSemesterName] = useState('I-B.Tech I Sem');
     const [editRows, setEditRows] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
 
     const fetchSubjects = useCallback(() => {
         fetch(`${API_BASE_URL}/api/subjects?t=${Date.now()}`).then(res => res.json()).then(setSubjects).catch(console.error);
@@ -966,26 +1070,117 @@ function SubjectsTabWrapper() {
         const validRows = editRows.filter(r => r.courseName);
         if (validRows.length === 0) return alert("Please fill at least one subject");
         const payload = {
-            regulation, program, courseName, department: 'IT',
+            regulation, activeCourse, courseName, department: 'IT',
             subjects: validRows.map(r => ({ ...r, semester: semesterName }))
         };
-        const res = await fetch('/api/courses/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const res = await fetch(`${API_BASE_URL}/api/courses/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if ((await res.json()).success) { alert('Saved!'); fetchSubjects(); }
+    }
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setIsUploading(true);
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/courses/preview`, {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Map preview subjects to rows
+                const mapped = data.subjects.map((s, i) => ({
+                    sNo: s.sNo || i + 1,
+                    category: s.category || 'PC',
+                    courseCode: s.courseCode || '',
+                    courseName: s.courseName || '',
+                    L: s.L || 0,
+                    T: s.T || 0,
+                    P: s.P || 0,
+                    credits: s.credits || 0,
+                    semester: semesterName // Assign to current selected sem
+                }));
+                setEditRows(mapped);
+                alert('✅ Syllabus Parsed! Please review and save.');
+            } else {
+                alert('❌ Failed to parse: ' + data.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error uploading file');
+        } finally {
+            setIsUploading(false);
+            e.target.value = null; // Reset input
+        }
     }
 
     return (
         <div className="full-width-container">
-            <div className="full-width-header">
-                <div>
+            <div className="full-width-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                     <h4 style={{ margin: 0 }}>Curriculum Manager</h4>
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                        <select value={semesterName} onChange={e => setSemesterName(e.target.value)} style={{ padding: '5px' }}>
-                            {['I-B.Tech I Sem', 'I-B.Tech II Sem', 'II-B.Tech I Sem', 'II-B.Tech II Sem', 'III-B.Tech I Sem', 'III-B.Tech II Sem', 'IV-B.Tech I Sem', 'IV-B.Tech II Sem'].map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <label className="btn-outline" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {isUploading ? '⏳ Parsing...' : '📄 Upload PDF Syllabus'}
+                            <input type="file" accept="application/pdf" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isUploading} />
+                        </label>
+                        <button className="btn-primary" onClick={saveSubjects}>💾 Save Changes</button>
                     </div>
                 </div>
-                <button className="btn-primary" onClick={saveSubjects}>💾 Save Changes</button>
+
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', width: '100%' }}>
+                    <div style={{ display: 'flex', background: '#e2e8f0', borderRadius: '8px', padding: '2px' }}>
+                        {['B.Tech', 'M.Tech', 'MCA'].map(c => (
+                            <button
+                                key={c}
+                                onClick={() => { setActiveCourse(c); if (c === 'B.Tech') setSemesterName('I-B.Tech I Sem'); else if (c === 'M.Tech') setSemesterName('I-M.Tech I Sem'); else setSemesterName('I-MCA I Sem'); }}
+                                style={{
+                                    padding: '4px 12px', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                                    background: activeCourse === c ? '#fff' : 'transparent',
+                                    color: activeCourse === c ? '#0f172a' : '#64748b',
+                                    fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                }}
+                            >{c}</button>
+                        ))}
+                    </div>
+
+                    <select value={semesterName} onChange={e => setSemesterName(e.target.value)} className="search-input-premium" style={{ width: '200px', backgroundImage: 'none' }}>
+                        {activeCourse === 'B.Tech' && (
+                            <>
+                                <option value="I-B.Tech I Sem">I Year - I Sem</option>
+                                <option value="I-B.Tech II Sem">I Year - II Sem</option>
+                                <option value="II-B.Tech I Sem">II Year - I Sem</option>
+                                <option value="II-B.Tech II Sem">II Year - II Sem</option>
+                                <option value="III-B.Tech I Sem">III Year - I Sem</option>
+                                <option value="III-B.Tech II Sem">III Year - II Sem</option>
+                                <option value="IV-B.Tech I Sem">IV Year - I Sem</option>
+                                <option value="IV-B.Tech II Sem">IV Year - II Sem</option>
+                            </>
+                        )}
+                        {activeCourse === 'M.Tech' && (
+                            <>
+                                <option value="I-M.Tech I Sem">I Year - I Sem</option>
+                                <option value="I-M.Tech II Sem">I Year - II Sem</option>
+                                <option value="II-M.Tech I Sem">II Year - I Sem</option>
+                                <option value="II-M.Tech II Sem">II Year - II Sem</option>
+                            </>
+                        )}
+                        {activeCourse === 'MCA' && (
+                            <>
+                                <option value="I-MCA I Sem">I Year - I Sem</option>
+                                <option value="I-MCA II Sem">I Year - II Sem</option>
+                                <option value="II-MCA I Sem">II Year - I Sem</option>
+                                <option value="II-MCA II Sem">II Year - II Sem</option>
+                            </>
+                        )}
+                    </select>
+                </div>
             </div>
+
             <div className="full-table-wrapper">
                 <table className="clean-table">
                     <thead>
@@ -993,7 +1188,7 @@ function SubjectsTabWrapper() {
                             <th style={{ width: '50px' }}>S.No</th>
                             <th>Category</th>
                             <th>Code</th>
-                            <th>Subject Name</th>
+                            <th>Subject Title</th>
                             <th>L</th><th>T</th><th>P</th>
                             <th>Credits</th>
                             <th>Action</th>
@@ -1002,27 +1197,29 @@ function SubjectsTabWrapper() {
                     <tbody>
                         {editRows.map((row, i) => (
                             <tr key={i}>
-                                <td><input value={row.sNo || ''} onChange={e => handleSubjectChange(i, 'sNo', e.target.value)} style={{ width: '100%', border: 'none' }} /></td>
+                                <td><input value={row.sNo || ''} onChange={e => handleSubjectChange(i, 'sNo', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent' }} /></td>
                                 <td>
-                                    <select value={row.category || 'PC'} onChange={e => handleSubjectChange(i, 'category', e.target.value)} style={{ width: '100%' }}>
-                                        <option value="PC">PC</option><option value="BS">BS</option><option value="ES">ES</option>
+                                    <select value={row.category || 'PC'} onChange={e => handleSubjectChange(i, 'category', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent' }}>
+                                        <option value="PC">PC</option><option value="BS">BS</option><option value="ES">ES</option><option value="MC">MC</option>
                                     </select>
                                 </td>
-                                <td><input value={row.courseCode || ''} onChange={e => handleSubjectChange(i, 'courseCode', e.target.value)} style={{ width: '100%' }} /></td>
-                                <td><input value={row.courseName || ''} onChange={e => handleSubjectChange(i, 'courseName', e.target.value)} style={{ width: '100%' }} /></td>
-                                <td><input value={row.L || ''} onChange={e => handleSubjectChange(i, 'L', e.target.value)} style={{ width: '40px' }} /></td>
-                                <td><input value={row.T || ''} onChange={e => handleSubjectChange(i, 'T', e.target.value)} style={{ width: '40px' }} /></td>
-                                <td><input value={row.P || ''} onChange={e => handleSubjectChange(i, 'P', e.target.value)} style={{ width: '40px' }} /></td>
-                                <td><input value={row.credits || ''} onChange={e => handleSubjectChange(i, 'credits', e.target.value)} style={{ width: '50px' }} /></td>
-                                <td><button onClick={() => {
-                                    const newRows = editRows.filter((_, idx) => idx !== i);
-                                    setEditRows(newRows);
-                                }} style={{ color: 'red' }}>✕</button></td>
+                                <td><input value={row.courseCode || ''} onChange={e => handleSubjectChange(i, 'courseCode', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent' }} /></td>
+                                <td><input value={row.courseName || ''} onChange={e => handleSubjectChange(i, 'courseName', e.target.value)} style={{ width: '100%', border: 'none', background: 'transparent' }} /></td>
+                                <td><input value={row.L || ''} onChange={e => handleSubjectChange(i, 'L', e.target.value)} style={{ width: '30px', border: 'none', background: 'transparent', textAlign: 'center' }} /></td>
+                                <td><input value={row.T || ''} onChange={e => handleSubjectChange(i, 'T', e.target.value)} style={{ width: '30px', border: 'none', background: 'transparent', textAlign: 'center' }} /></td>
+                                <td><input value={row.P || ''} onChange={e => handleSubjectChange(i, 'P', e.target.value)} style={{ width: '30px', border: 'none', background: 'transparent', textAlign: 'center' }} /></td>
+                                <td><input value={row.credits || ''} onChange={e => handleSubjectChange(i, 'credits', e.target.value)} style={{ width: '40px', border: 'none', background: 'transparent', textAlign: 'center', fontWeight: 'bold' }} /></td>
+                                <td>
+                                    <button onClick={() => {
+                                        const newRows = editRows.filter((_, idx) => idx !== i);
+                                        setEditRows(newRows);
+                                    }} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                <button onClick={addSubjectRow} style={{ width: '100%', padding: '10px', marginTop: '10px' }}>+ Add Subject</button>
+                <button onClick={addSubjectRow} style={{ width: '100%', padding: '12px', marginTop: '10px', border: '2px dashed #cbd5e1', background: 'transparent', borderRadius: '8px', color: '#64748b', cursor: 'pointer' }}>+ Add Subject Row</button>
             </div>
         </div>
     )

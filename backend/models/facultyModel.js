@@ -12,6 +12,7 @@ const facultySchema = mongoose.Schema({
     type: { type: String }, // Regular/Contract
     email: { type: String, unique: true, sparse: true },
     mobileNumber: { type: String }, // Will serve as password
+    department: { type: String, required: true } // Linked to Department name
 }, {
     timestamps: true
 });

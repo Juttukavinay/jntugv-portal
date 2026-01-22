@@ -104,10 +104,16 @@ function Landing() {
                     <div className="content-wrapper">
                         <div className="text-content">
                             <h2 className="section-title">About <span className="highlight">JNTU-GV</span></h2>
+                            <p className="text-gray-600 mb-4 text-justify">
+                                JNTU College of Engineering, Vizianagaram was established in the year 2007 as a constituent College of JNTU Hyderabad. JNTU Hyderabad was trifurcated into three Universities by the Andhra Pradesh Act No. 30 of 2008 and since 24th August 2008, the College has become the constituent college of JNTU Kakinada. Vide University Act No.22 of 2021, JNTU Kakinada is bifurcated and Jawaharlal Nehru Technological University Gurajada, Vizianagaram come into existence as a separate University vide G.O.Ms.No.3, dated: 12-01-2022.
+                            </p>
+                            <p className="text-gray-600 text-justify">
+                                The university is spread across six districts i.e Vizianagaram, Visakhapatnam, Srikakulam, Parvathipuram Manyam, Alluri Sitharama Raju and Anakapalli. There are 2 constituent colleges and 37 affiliated colleges under its jurisdiction and catering education in different Engineering, Pharmacy and Management departments.
+                            </p>
                         </div>
                         <div className="image-content">
                             <img
-                                src="https://images.unsplash.com/photo-1562774053-701939374585?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
+                                src="/college-building.png"
                                 alt="JNTU-GV Campus Representative"
                                 className="rounded-image shadow-lg"
                             />
@@ -115,16 +121,21 @@ function Landing() {
                     </div>
                 </section>
 
-                {/* IT Dept Section */}
-                <section className="info-section alt-bg" id="it-dept">
+                {/* Mission Section */}
+                <section className="info-section alt-bg" id="mission">
                     <div className="content-wrapper reverse">
                         <div className="text-content">
-                            <h2 className="section-title">Department of <span className="highlight">Information Technology</span></h2>
+                            <h2 className="section-title">Our <span className="highlight">Mission</span></h2>
+                            <ul className="mission-list text-justify">
+                                <li className="mb-3">❖ To orchestrate an unparalleled symphony of intellectual rigor and academic distinction, sculpting minds through innovative pedagogies, cutting-edge research, thus forging individuals capable of leading transformative change in their chosen fields.</li>
+                                <li className="mb-3">❖ To foster a mission of community synergy, university engages with and uplifts the rural community through initiatives that transcend educational boundarie enriching environment within our academic sphere.</li>
+                                <li>❖ To foster a global perspective and a culture of scholarly inquiry, the university endeavors to instill in our students a thirst for knowledge that transcends borders, encouraging them to explore diverse perspectives and engage in rigorous scholarly endeavors that contribute not only to their personal growth but also to the global academic discourse.</li>
+                            </ul>
                         </div>
                         <div className="image-content">
                             <img
-                                src="https://images.unsplash.com/photo-1531482615713-2afd69097998?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80"
-                                alt="IT Department Lab"
+                                src="/college-landing-small.jpg"
+                                alt="University Mission"
                                 className="rounded-image shadow-lg"
                             />
                         </div>

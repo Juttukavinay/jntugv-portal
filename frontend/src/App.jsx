@@ -6,6 +6,7 @@ import VicePrincipalDashboard from './pages/dashboard/VicePrincipalDashboard'
 import FacultyDashboard from './pages/dashboard/FacultyDashboard'
 import HodDashboard from './pages/dashboard/HodDashboard'
 import StudentDashboard from './pages/dashboard/StudentDashboard'
+import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
 function App() {
@@ -14,11 +15,31 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/dashboard/principal" element={<PrincipalDashboard />} />
-        <Route path="/dashboard/vice-principal" element={<VicePrincipalDashboard />} />
-        <Route path="/dashboard/faculty" element={<FacultyDashboard />} />
-        <Route path="/dashboard/hod" element={<HodDashboard />} />
-        <Route path="/dashboard/student" element={<StudentDashboard />} />
+        <Route path="/dashboard/principal" element={
+          <ProtectedRoute>
+            <PrincipalDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/vice-principal" element={
+          <ProtectedRoute>
+            <VicePrincipalDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/faculty" element={
+          <ProtectedRoute>
+            <FacultyDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/hod" element={
+          <ProtectedRoute>
+            <HodDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard/student" element={
+          <ProtectedRoute>
+            <StudentDashboard />
+          </ProtectedRoute>
+        } />
       </Routes>
     </Router>
   )

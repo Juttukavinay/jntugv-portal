@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Faculty = require('./models/facultyModel');
+const Faculty = require('../models/facultyModel');
 const fs = require('fs');
 
 const mongoURI = 'mongodb://localhost:27017/timetable_db';

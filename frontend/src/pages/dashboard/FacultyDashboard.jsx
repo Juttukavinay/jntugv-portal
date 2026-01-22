@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import API_BASE_URL from '../../config'
 import '../../App.css'
 
 function FacultyDashboard() {
@@ -95,7 +96,8 @@ function FacultyDashboard() {
 
     const simpleLogout = () => {
         localStorage.removeItem('user')
-        navigate('/login')
+        navigate('/login', { replace: true })
+        // Force reload to clear any memory states if needed, though replace should suffice for history
     }
 
     // Stats

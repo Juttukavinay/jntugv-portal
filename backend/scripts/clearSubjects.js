@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const Subject = require('./models/subjectModel');
-const Course = require('./models/courseModel');
+const Subject = require('../models/subjectModel');
+const Course = require('../models/courseModel');
 require('dotenv').config();
 
 const clearData = async () => {

@@ -1,0 +1,6 @@
+merged_files/
+node_modules/
+mongodb_data/
+*.log
+.env
+.DS_Store

@@ -3,21 +3,27 @@ const router = express.Router();
 const Department = require('../models/departmentModel');
 const Faculty = require('../models/facultyModel');
 
-// Get all departments (or specific one)
+// Get all departments
 router.get('/', async (req, res) => {
     try {
-        // Ensure default departments exist
-        const defaults = ['IT']; // Restricted to only IT as per user request
-        for (const name of defaults) {
-            const exists = await Department.findOne({ name });
-            if (!exists) await Department.create({ name });
-        }
-
-        // Only return IT department
-        const depts = await Department.find({ name: 'IT' });
+        const depts = await Department.find({}).sort({ name: 1 });
         res.json(depts);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+});
+
+// Create a new department
+router.post('/', async (req, res) => {
+    try {
+        const { name } = req.body;
+        const exists = await Department.findOne({ name });
+        if (exists) return res.status(400).json({ message: 'Department already exists' });
+
+        const dept = await Department.create({ name });
+        res.status(201).json(dept);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
     }
 });
 

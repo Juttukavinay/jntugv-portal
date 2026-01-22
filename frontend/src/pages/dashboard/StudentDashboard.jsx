@@ -70,7 +70,7 @@ function StudentDashboard() {
 
     const logout = () => {
         localStorage.removeItem('user')
-        navigate('/login')
+        navigate('/login', { replace: true })
     }
 
     // --- Components ---

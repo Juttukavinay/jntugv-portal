@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const Faculty = require('./models/facultyModel');
-const Student = require('./models/studentModel');
-const Timetable = require('./models/timetableModel');
-const Attendance = require('./models/attendanceModel');
+const Faculty = require('../models/facultyModel');
+const Student = require('../models/studentModel');
+const Timetable = require('../models/timetableModel');
+const Attendance = require('../models/attendanceModel');
 
 const seedData = async () => {
     try {

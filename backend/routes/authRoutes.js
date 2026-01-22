@@ -62,4 +62,53 @@ router.post('/login', async (req, res) => {
     }
 });
 
+const Student = require('../models/studentModel');
+const axios = require('axios');
+
+router.post('/google-login', async (req, res) => {
+    const { token } = req.body;
+    try {
+        const googleRes = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const { email, name } = googleRes.data;
+
+        let student = await Student.findOne({ email });
+
+        if (!student) {
+            // Auto-register new student
+            // Try to use email prefix as roll number if it looks like one, otherwise generate
+            let rollNumber = email.split('@')[0].toUpperCase();
+
+            // Check if rollNumber is taken, if so append random
+            const exists = await Student.findOne({ rollNumber });
+            if (exists) {
+                rollNumber = `${rollNumber}-${Math.floor(Math.random() * 1000)}`;
+            }
+
+            student = new Student({
+                name,
+                email,
+                rollNumber,
+                course: 'B.Tech',
+                department: 'General',
+                year: '1',
+                semester: '1'
+            });
+            await student.save();
+        }
+
+        return res.json({
+            role: 'student',
+            name: student.name,
+            email: student.email,
+            semester: `${student.year}-${student.course} ${student.semester} Sem`
+        });
+
+    } catch (error) {
+        console.error('Google Login Error:', error.message);
+        res.status(401).json({ message: 'Google Authentication Failed' });
+    }
+});
+
 module.exports = router;
