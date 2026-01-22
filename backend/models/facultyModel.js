@@ -12,7 +12,8 @@ const facultySchema = mongoose.Schema({
     type: { type: String }, // Regular/Contract
     email: { type: String, unique: true, sparse: true },
     mobileNumber: { type: String }, // Will serve as password
-    department: { type: String, required: true } // Linked to Department name
+    department: { type: String, required: true }, // Linked to Department name
+    role: { type: String, default: 'faculty', enum: ['faculty', 'hod', 'principal', 'vice_principal'] } // Added role
 }, {
     timestamps: true
 });

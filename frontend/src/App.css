@@ -1257,3 +1257,114 @@
     opacity: 1;
   }
 }
+
+/* --- RESPONSIVE DASHBOARD FIXES (Added by Agent) --- */
+@media (max-width: 768px) {
+  .mobile-header {
+    display: flex !important;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    background: transparent;
+  }
+
+  .glass-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    transform: translateX(-100%);
+    width: 280px;
+    z-index: 2000;
+    /* Higher than everything */
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .glass-sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Overlay for sidebar */
+  .sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1500;
+    backdrop-filter: blur(2px);
+  }
+
+  .sidebar-overlay.open {
+    display: block;
+  }
+
+  /* Adjust Main Content */
+  .dashboard-main-area {
+    width: 100%;
+    padding: 1rem;
+    overflow-x: hidden;
+  }
+
+  /* Stack Grid Items */
+  .modern-stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem;
+  }
+
+  .grid-split {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Make tables scrollable */
+  .glass-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .premium-table {
+    min-width: 600px;
+    /* Force scroll */
+  }
+
+  .table-header-premium {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .table-header-premium>div {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Inputs */
+  .search-input-premium {
+    width: 100%;
+  }
+}
+
+
+/* Fix: Hide mobile hamburger on desktop */
+@media (min-width: 769px) {
+  .mobile-header {
+    display: none !important;
+  }
+}
+
+/* --- ADDED UTILITIES --- */
+.title-gradient {
+  background: linear-gradient(135deg, #0f172a 0%, #3b82f6 50%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}

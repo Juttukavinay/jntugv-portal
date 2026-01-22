@@ -31,14 +31,24 @@ router.post('/', async (req, res) => {
 router.put('/assign-hod', async (req, res) => {
     const { deptName, facultyId } = req.body;
     try {
-        const faculty = await Faculty.findById(facultyId);
         if (!faculty) return res.status(404).json({ message: 'Faculty not found' });
 
+        // 1. Find current Dept info to see if there is an existing HOD
+        const currentDept = await Department.findOne({ name: deptName });
+        if (currentDept && currentDept.hodId) {
+            // Demote previous HOD back to faculty role
+            await Faculty.findByIdAndUpdate(currentDept.hodId, { role: 'faculty' });
+        }
+
+        // 2. Update Department
         const dept = await Department.findOneAndUpdate(
             { name: deptName },
             { hodId: faculty._id, hodName: faculty.name },
             { new: true, upsert: true }
         );
+
+        // 3. Promote New HOD
+        await Faculty.findByIdAndUpdate(faculty._id, { role: 'hod' });
 
         res.json(dept);
     } catch (error) {

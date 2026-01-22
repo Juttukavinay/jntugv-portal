@@ -106,7 +106,7 @@ function Login() {
         const demos = {
             principal: { email: 'principal@jntugv.edu', password: '9701458518' },
             vice_principal: { email: 'viceprincipal@jntugv.edu', password: '9701458518' },
-            hod: { email: 'chbindumadhuri@jntugv.edu', password: '9701458518' },
+            hod: { email: 'bindumadhuri@jntugv.edu', password: '9988776655' },
             faculty: { email: 'btirimularao@jntugv.edu', password: '9701458518' },
             student: { email: '21131A0501', password: 'password' }
         }

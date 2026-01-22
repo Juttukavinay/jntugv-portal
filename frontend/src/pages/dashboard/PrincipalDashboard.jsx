@@ -83,8 +83,14 @@ function PrincipalDashboard() {
 
             {/* Main Content Area */}
             <main className="dashboard-main-area">
-                <header className="mobile-header" style={{ display: 'none', marginBottom: '1rem', alignItems: 'center', gap: '1rem' }}>
-                    {/* Add hamburger logic here for mobile if needed, usually global logic */}
+                <header className="mobile-header">
+                    <button
+                        onClick={() => setMobileMenuOpen(true)}
+                        style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Principal Dashboard</span>
                 </header>
 
                 <div className="fade-in-up">

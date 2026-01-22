@@ -3,6 +3,16 @@ import API_BASE_URL from '../../config'
 import { useNavigate } from 'react-router-dom'
 import '../../App.css'
 
+// --- ICONS ---
+const Icons = {
+    Home: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+    Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
+    Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>,
+    Award: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></svg>,
+    LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
+    Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+}
+
 function StudentDashboard() {
     const navigate = useNavigate()
     const [currentUser, setCurrentUser] = useState(null)
@@ -11,14 +21,14 @@ function StudentDashboard() {
     const [activeTab, setActiveTab] = useState('overview')
     const [currentClass, setCurrentClass] = useState(null)
     const [currentTime, setCurrentTime] = useState(new Date())
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user')) || { name: 'Student', role: 'student', email: '21131A0501', semester: 'III-B.Tech I Sem' }
         setCurrentUser(user)
         fetchMySchedule(user.semester || 'III-B.Tech I Sem')
 
-        // Clock timer
-        const timer = setInterval(() => setCurrentTime(new Date()), 60000); // update every min
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         return () => clearInterval(timer);
     }, [])
 
@@ -32,16 +42,8 @@ function StudentDashboard() {
         const daySchedule = myTimetable.find(d => d.day === today);
 
         if (daySchedule) {
-            // Simple string matching for time ranges (e.g. "09:00 - 09:50")
-            // This is a rough estimation for demo UI dynamic feel
             const currentHour = currentTime.getHours();
-            // Mock logic: Find period that roughly spans current hour
-            const period = daySchedule.periods.find((p, idx) => {
-                // assume 9 starts at index 0, 10 at index 1... for simplicity or parse string
-                // Let's just pick the first one for "Now" if morning, or random for demo
-                return false;
-            });
-            // Fallback for visual demo:
+            // Mock logic for demo purposes as before
             if (currentHour >= 9 && currentHour <= 16) {
                 setCurrentClass(daySchedule.periods[Math.floor(Math.random() * daySchedule.periods.length)] || null)
             } else {
@@ -55,17 +57,16 @@ function StudentDashboard() {
         fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(semester)}`)
             .then(res => res.json())
             .then(data => {
-                if (data && data.schedule) {
+                if (Array.isArray(data) && data.length > 0) {
+                    setMyTimetable(data[0].schedule || [])
+                } else if (data && data.schedule) {
                     setMyTimetable(data.schedule)
                 } else {
                     setMyTimetable([])
                 }
                 setLoading(false)
             })
-            .catch(err => {
-                console.error(err);
-                setLoading(false)
-            })
+            .catch(err => { console.error(err); setLoading(false) })
     }
 
     const logout = () => {
@@ -73,105 +74,106 @@ function StudentDashboard() {
         navigate('/login', { replace: true })
     }
 
-    // --- Components ---
-
+    // --- SUB-COMPONENTS ---
     const OverviewTab = () => (
-        <div style={{ animation: 'fadeIn 0.5s' }}>
-            <div className="grid-3-col" style={{ gap: '1.5rem', marginBottom: '2rem' }}>
-                {/* Attendance Card */}
-                <div className="card overview-card" style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)', color: 'white' }}>
-                    <h3>Average Attendance</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', marginTop: '1rem' }}>
-                        <div style={{ position: 'relative', width: '80px', height: '80px' }}>
-                            {/* SVG Circle */}
-                            <svg width="80" height="80" viewBox="0 0 100 100" style={{ transform: 'rotate(-90deg)' }}>
-                                <circle cx="50" cy="50" r="45" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="10" />
-                                <circle cx="50" cy="50" r="45" fill="none" stroke="white" strokeWidth="10" strokeDasharray="283" strokeDashoffset={283 - (283 * 0.85)} strokeLinecap="round" />
-                            </svg>
-                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>85%</div>
-                        </div>
-                        <div style={{ marginLeft: '1.5rem' }}>
-                            <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Total Classes: 124</div>
-                            <div style={{ fontSize: '0.9rem', opacity: 0.8 }}>Present: 105</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* CGPA Card */}
-                <div className="card overview-card" style={{ background: 'white', color: '#1e293b' }}>
+        <div className="fade-in-up">
+            <div className="modern-stats-grid" style={{ marginBottom: '2rem' }}>
+                <div className="premium-stat-card" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <h3 style={{ color: '#64748b', fontSize: '1rem' }}>Overall CGPA</h3>
-                            <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#1e293b' }}>8.4</div>
-                            <span style={{ fontSize: '0.8rem', color: '#16a34a' }}>+0.2 from last sem</span>
+                            <div style={{ opacity: 0.8, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Average Attendance</div>
+                            <div style={{ fontSize: '2.5rem', fontWeight: '800' }}>85%</div>
+                            <div style={{ fontSize: '0.8rem', color: '#4ade80' }}>On Track</div>
                         </div>
-                        <div style={{ fontSize: '3rem', opacity: 0.1 }}>🎓</div>
+                        <div style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '50%', background: 'conic-gradient(#3b82f6 85%, rgba(255,255,255,0.1) 0)' }}>
+                            <div style={{ position: 'absolute', inset: '6px', background: '#0f172a', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Icons.Award />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Next/Current Class */}
-                <div className="card overview-card" style={{ borderLeft: '4px solid #f59e0b' }}>
-                    <h3 style={{ color: '#f59e0b', fontSize: '1rem' }}>Current Session</h3>
-                    {currentClass ? (
-                        <div style={{ marginTop: '1rem' }}>
-                            <div style={{ fontSize: '1.4rem', fontWeight: 'bold' }}>{currentClass.subject}</div>
-                            <div style={{ color: '#64748b' }}>{currentClass.room || 'Room 304'} • {currentClass.faculty || 'Unassigned'}</div>
-                            <div style={{ marginTop: '0.5rem', display: 'inline-block', padding: '4px 8px', background: '#fffbeb', color: '#b45309', borderRadius: '4px', fontSize: '0.8rem' }}>
-                                {currentClass.time}
-                            </div>
+                <div className="premium-stat-card">
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <div className="stat-icon-wrapper" style={{ background: '#eff6ff', color: '#3b82f6' }}><Icons.Clock /></div>
+                        <div>
+                            <h5 style={{ margin: 0, color: '#64748b' }}>Current Session</h5>
+                            {currentClass ? (
+                                <div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#0f172a' }}>{currentClass.subject}</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{currentClass.room || 'Room 304'}</div>
+                                </div>
+                            ) : (
+                                <div style={{ fontSize: '1rem', fontWeight: '600', color: '#94a3b8' }}>No active class</div>
+                            )}
                         </div>
-                    ) : (
-                        <div style={{ marginTop: '1rem', color: '#94a3b8' }}>No class currently in session.</div>
-                    )}
+                    </div>
+                </div>
+
+                <div className="premium-stat-card">
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <div className="stat-icon-wrapper" style={{ background: '#f0fdf4', color: '#16a34a' }}><Icons.Award /></div>
+                        <div>
+                            <h5 style={{ margin: 0, color: '#64748b' }}>Overall CGPA</h5>
+                            <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a' }}>8.4</div>
+                            <span style={{ fontSize: '0.75rem', color: '#16a34a' }}>+0.2 from last sem</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="grid-2-col" style={{ gap: '2rem' }}>
-                <div className="card">
-                    <h3>📚 My Subjects (Current Sem)</h3>
-                    <ul style={{ padding: 0, listStyle: 'none', marginTop: '1rem' }}>
-                        {['Data Structures', 'Create & Manage Cloud Resources', 'Machine Learning', 'English'].map((s, i) => (
-                            <li key={i} style={{ padding: '12px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center' }}>
-                                <div style={{ width: 10, height: 10, background: ['#3b82f6', '#10b981', '#f59e0b', '#ec4899'][i % 4], borderRadius: '50%', marginRight: '1rem' }}></div>
-                                <div style={{ flex: 1 }}>{s}</div>
-                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>3 Credits</div>
-                            </li>
-                        ))}
-                    </ul>
+            <div className="glass-table-container">
+                <div className="table-header-premium">
+                    <h3>My Subjects (Current Sem)</h3>
                 </div>
-
-                <div className="card">
-                    <h3>📝 Upcoming Events / Work</h3>
-                    {/* Empty State visual */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', color: '#94a3b8' }}>
-                        <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>✅</div>
-                        <div>No pending assignments</div>
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', padding: '1rem' }}>
+                    {['Data Structures', 'Cloud Computing', 'Machine Learning', 'English'].map((s, i) => (
+                        <div key={i} style={{ padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: ['#eff6ff', '#f0fdf4', '#fff7ed', '#f3e8ff'][i], color: ['#3b82f6', '#16a34a', '#ea580c', '#9333ea'][i], display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                {s.charAt(0)}
+                            </div>
+                            <div>
+                                <div style={{ fontWeight: '600', color: '#1e293b' }}>{s}</div>
+                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>3 Credits</div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
     )
 
     const TimetableTab = () => (
-        <div style={{ animation: 'slideIn 0.3s' }}>
-            <h3 style={{ marginBottom: '1rem' }}>Weekly Class Schedule</h3>
-            {loading ? <p>Loading schedule...</p> : (
-                <div className="card" style={{ overflowX: 'auto' }}>
-                    <table className="clean-table student-tt">
+        <div className="glass-table-container fade-in-up">
+            <div className="table-header-premium">
+                <h3>Weekly Class Schedule</h3>
+                <span className="badge-role" style={{ background: '#eff6ff', color: '#3b82f6' }}>{currentUser?.semester}</span>
+            </div>
+            {loading ? <div style={{ padding: '2rem', textAlign: 'center' }}>Loading...</div> : (
+                <div style={{ overflowX: 'auto' }}>
+                    <table className="premium-table" style={{ width: '100%', minWidth: '800px' }}>
                         <thead>
                             <tr>
-                                <th style={{ background: '#f8fafc' }}>Day / Time</th>
+                                <th style={{ width: '100px' }}>Day</th>
                                 {['09:00', '10:00', '11:00', '12:00', '02:00', '03:00', '04:00'].map(t => <th key={t}>{t}</th>)}
                             </tr>
                         </thead>
                         <tbody>
                             {myTimetable.map((day, i) => (
                                 <tr key={i}>
-                                    <td style={{ fontWeight: 'bold' }}>{day.day}</td>
+                                    <td style={{ fontWeight: '700', color: '#0f172a' }}>{day.day}</td>
                                     {day.periods.map((p, j) => (
-                                        <td key={j} className={p.type === 'Lab' ? 'cell-lab' : 'cell-theory'}>
-                                            <div style={{ fontWeight: '600', fontSize: '0.85rem' }}>{p.subject}</div>
-                                            <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>{p.room}</div>
+                                        <td key={j}>
+                                            <div style={{
+                                                background: p.type === 'Lab' ? '#eff6ff' : '#fff',
+                                                padding: '8px',
+                                                borderRadius: '6px',
+                                                border: p.type === 'Lab' ? '1px solid #bfdbfe' : '1px solid #f1f5f9',
+                                                fontSize: '0.85rem'
+                                            }}>
+                                                <div style={{ fontWeight: '600', color: '#1e293b', marginBottom: '2px' }}>{p.subject}</div>
+                                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{p.room || 'Room 101'}</div>
+                                            </div>
                                         </td>
                                     ))}
                                 </tr>
@@ -183,72 +185,127 @@ function StudentDashboard() {
         </div>
     )
 
+    const ResultsTab = () => (
+        <div className="glass-table-container fade-in-up">
+            <div className="table-header-premium">
+                <h3>Exam Results</h3>
+            </div>
+            <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📊</div>
+                <p>No results have been published for the current semester yet.</p>
+                <button className="btn-action primary" style={{ marginTop: '1rem' }}>View History</button>
+            </div>
+        </div>
+    )
+
+    const LibraryTab = () => (
+        <div className="glass-table-container fade-in-up">
+            <div className="table-header-premium">
+                <h3>Library Books</h3>
+                <button className="btn-action">+ Request Book</button>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+                <table className="premium-table">
+                    <thead><tr><th>Book Title</th><th>Author</th><th>Due Date</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td style={{ fontWeight: '600' }}>Into to Algorithms</td>
+                            <td>Cormen</td>
+                            <td>25 Jan 2026</td>
+                            <td><span className="badge-role" style={{ background: '#fef3c7', color: '#d97706' }}>Due Soon</span></td>
+                        </tr>
+                        <tr>
+                            <td>Clean Code</td>
+                            <td>Uncle Bob</td>
+                            <td>02 Feb 2026</td>
+                            <td><span className="badge-role" style={{ background: '#dcfce7', color: '#16a34a' }}>Borrowed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    )
+
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'timetable': return <TimetableTab />;
+            case 'results': return <ResultsTab />;
+            case 'library': return <LibraryTab />;
+            default: return <OverviewTab />;
+        }
+    }
+
     return (
-        <div className="dashboard-layout" style={{ display: 'flex', minHeight: '100vh', background: '#f1f5f9' }}>
+        <div className="dashboard-container">
             {/* Sidebar */}
-            <aside style={{ width: '250px', background: 'white', borderRight: '1px solid #e2e8f0', padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                    <img src="/jntugv-logo.png" alt="Logo" style={{ width: '40px', height: 'auto' }} />
+            <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
+                <div className="sidebar-header">
+                    <img src="/jntugv-logo.png" alt="Logo" className="sidebar-logo" />
                     <div>
-                        <h2 style={{ fontSize: '1.2rem', margin: 0, color: '#1e293b' }}>JNTU-GV</h2>
-                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Student Portal</span>
+                        <div className="sidebar-title">JNTU-GV</div>
+                        <div className="sidebar-role">Student Portal</div>
                     </div>
                 </div>
 
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {[
-                        { id: 'overview', label: 'Overview', icon: '🏠' },
-                        { id: 'timetable', label: 'My Timetable', icon: '📅' },
-                        { id: 'results', label: 'Exam Results', icon: '📊' },
-                        { id: 'library', label: 'Library Books', icon: '📖' },
-                    ].map(item => (
-                        <button
-                            key={item.id}
-                            onClick={() => setActiveTab(item.id)}
-                            style={{
-                                background: activeTab === item.id ? '#1e293b' : 'transparent',
-                                color: activeTab === item.id ? 'white' : '#64748b',
-                                border: 'none', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.9rem', fontWeight: '500', transition: 'all 0.2s'
-                            }}
-                        >
-                            <span>{item.icon}</span> {item.label}
-                        </button>
-                    ))}
+                <nav className="nav-menu">
+                    <NavItem icon={<Icons.Home />} label="Overview" active={activeTab === 'overview'} onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Calendar />} label="My Timetable" active={activeTab === 'timetable'} onClick={() => { setActiveTab('timetable'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Award />} label="Exam Results" active={activeTab === 'results'} onClick={() => { setActiveTab('results'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Book />} label="Library Books" active={activeTab === 'library'} onClick={() => { setActiveTab('library'); setMobileMenuOpen(false); }} />
                 </nav>
 
-                <div style={{ marginTop: 'auto', borderTop: '1px solid #f1f5f9', paddingTop: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>👤</div>
-                        <div style={{ overflow: 'hidden' }}>
-                            <div style={{ fontSize: '0.9rem', fontWeight: 'bold', whiteSpace: 'nowrap' }}>{currentUser?.name || 'Student'}</div>
-                            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{currentUser?.email}</div>
+                <div className="sidebar-footer">
+                    <div className="user-snippet">
+                        <div className="user-avatar" style={{ background: '#3b82f6' }}>{currentUser?.name?.charAt(0) || 'S'}</div>
+                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentUser?.name || 'Student'}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{currentUser?.email}</div>
                         </div>
+                        <button onClick={logout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }} title="Logout">
+                            <Icons.LogOut />
+                        </button>
                     </div>
-                    <button onClick={logout} style={{ marginTop: '1rem', width: '100%', padding: '8px', border: '1px solid #e2e8f0', background: 'white', borderRadius: '6px', cursor: 'pointer', color: '#ef4444' }}>Sign Out</button>
                 </div>
             </aside>
 
+            {/* Mobile Overlay */}
+            {mobileMenuOpen && <div className="sidebar-overlay open" onClick={() => setMobileMenuOpen(false)} />}
+
             {/* Main Content */}
-            <main style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                    <div>
-                        <h1 style={{ fontSize: '1.8rem', margin: 0, color: '#1e293b' }}>
-                            {activeTab === 'overview' ? 'Dashboard' : activeTab === 'timetable' ? 'My Schedule' : 'Exam Results'}
-                        </h1>
-                        <p style={{ color: '#64748b', margin: '0.5rem 0 0 0' }}>{new Date().toDateString()}</p>
-                    </div>
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        🔔
-                    </div>
+            <main className="dashboard-main-area">
+                <header className="mobile-header">
+                    <button onClick={() => setMobileMenuOpen(true)} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Student Dashboard</span>
                 </header>
 
-                {activeTab === 'overview' && <OverviewTab />}
-                {activeTab === 'timetable' && <TimetableTab />}
-                {activeTab === 'results' && <div className="card"><h3>Exam Results</h3><p>No results published recently.</p></div>}
+                <div className="fade-in-up">
+                    <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h1 className="title-gradient" style={{ fontSize: '1.8rem', margin: '0 0 0.5rem 0' }}>
+                                {activeTab === 'overview' ? 'Hello, Student 👋' :
+                                    activeTab === 'timetable' ? 'Your Schedule' :
+                                        activeTab === 'results' ? 'Your Results' : 'Library'}
+                            </h1>
+                            <p style={{ color: '#64748b', margin: 0 }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                        </div>
+                        <div style={{ background: 'white', padding: '10px', borderRadius: '50%', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>🔔</div>
+                    </div>
+                    {renderContent()}
+                </div>
             </main>
         </div>
     )
+}
+
+function NavItem({ icon, label, active, onClick }) {
+    return (
+        <div className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>
+            {icon}
+            <span>{label}</span>
+        </div>
+    );
 }
 
 export default StudentDashboard

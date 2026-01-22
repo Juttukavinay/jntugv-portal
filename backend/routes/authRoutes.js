@@ -49,8 +49,35 @@ router.post('/login', async (req, res) => {
             }
         }
 
-        // 4. Check Student (No OTP)
+        // 4. Check Student (Database Check)
         if (/\d+[A-Z]+\d+/.test(email) || email.includes('student')) {
+            const student = await require('../models/studentModel').findOne({
+                $or: [{ email: email }, { rollNumber: email }]
+            });
+
+            if (student) {
+                const roman = ['I', 'II', 'III', 'IV'];
+                const semRoman = ['I', 'II'];
+
+                // Parse strings '1', '2' -> 0, 1
+                let yIndex = parseInt(student.year) - 1;
+                if (yIndex < 0 || yIndex > 3) yIndex = 0;
+
+                let sIndex = parseInt(student.semester) - 1;
+                if (sIndex < 0 || sIndex > 1) sIndex = 0;
+
+                const course = student.course || 'B.Tech';
+                // Format: IV-B.Tech I Sem
+                const semStr = `${roman[yIndex]}-${course} ${semRoman[sIndex]} Sem`;
+
+                return res.json({
+                    role: 'student',
+                    name: student.name,
+                    email: student.email || student.rollNumber,
+                    semester: semStr
+                });
+            }
+
             return res.json({ role: 'student', name: 'Student User', email, semester: 'I-B.Tech II Sem' });
         }
 
