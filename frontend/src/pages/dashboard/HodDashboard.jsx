@@ -551,143 +551,144 @@ function TimetableManager() {
                         <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No timetable found. Click Auto-Generate to create one.</div>
                     )}
                 </div>
+            </div>
 
-                {showBookingModal && bookingSlot && createPortal(
-                    <div className="modal-overlay">
-                        <div className="modal-content glass-panel" style={{ maxWidth: '600px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                                <h3 style={{ margin: 0 }}>Edit Slot: {bookingSlot.day} ({bookingSlot.time})</h3>
-                                <button onClick={() => setShowBookingModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
-                            </div>
-                            <BookingForm initialData={bookingSlot} facultyList={allFaculty} onSubmit={handleConfirmBooking} onCancel={() => setShowBookingModal(false)} />
+            {showBookingModal && bookingSlot && createPortal(
+                <div className="modal-overlay">
+                    <div className="modal-content glass-panel" style={{ maxWidth: '600px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                            <h3 style={{ margin: 0 }}>Edit Slot: {bookingSlot.day} ({bookingSlot.time})</h3>
+                            <button onClick={() => setShowBookingModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
                         </div>
-                    </div>, document.body
-                )}
+                        <BookingForm initialData={bookingSlot} facultyList={allFaculty} onSubmit={handleConfirmBooking} onCancel={() => setShowBookingModal(false)} />
+                    </div>
+                </div>, document.body
+            )}
 
-                {showSettings && createPortal(
-                    <div className="modal-overlay">
-                        <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
-                            <h3>Generation Settings</h3>
-                            <div style={{ margin: '1rem 0' }}>
-                                <label>Slot Mode</label>
-                                <select className="search-input-premium" value={genOptions.slotMode} onChange={e => setGenOptions({ ...genOptions, slotMode: e.target.value })}>
-                                    <option value="dynamic">Dynamic</option><option value="1h">1 Hour Fixed</option>
-                                </select>
-                            </div>
-                            <button className="btn-action primary" onClick={() => setShowSettings(false)}>Done</button>
+            {showSettings && createPortal(
+                <div className="modal-overlay">
+                    <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
+                        <h3>Generation Settings</h3>
+                        <div style={{ margin: '1rem 0' }}>
+                            <label>Slot Mode</label>
+                            <select className="search-input-premium" value={genOptions.slotMode} onChange={e => setGenOptions({ ...genOptions, slotMode: e.target.value })}>
+                                <option value="dynamic">Dynamic</option><option value="1h">1 Hour Fixed</option>
+                            </select>
                         </div>
-                    </div>, document.body
-                )}
-            </>
-            );
+                        <button className="btn-action primary" onClick={() => setShowSettings(false)}>Done</button>
+                    </div>
+                </div>, document.body
+            )}
+        </>
+    );
 }
-            function SubjectsManager() {
+function SubjectsManager() {
     const [viewMode, setViewMode] = useState('list');
-            const [subjects, setSubjects] = useState([]);
-            const [regulation, setRegulation] = useState('R23');
-            const [activeCourse, setActiveCourse] = useState('B.Tech');
-            const [courseName, setCourseName] = useState('B.Tech');
-            const [semesterName, setSemesterName] = useState('I-B.Tech I Sem');
-            const [editRows, setEditRows] = useState([]);
-            const [isUploading, setIsUploading] = useState(false);
+    const [subjects, setSubjects] = useState([]);
+    const [regulation, setRegulation] = useState('R23');
+    const [activeCourse, setActiveCourse] = useState('B.Tech');
+    const [courseName, setCourseName] = useState('B.Tech');
+    const [semesterName, setSemesterName] = useState('I-B.Tech I Sem');
+    const [editRows, setEditRows] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
 
-    const fetchSubjects = useCallback(() => {fetch(`${API_BASE_URL}/api/subjects?t=${Date.now()}`).then(res => res.json()).then(setSubjects).catch(console.error); }, []);
-    useEffect(() => {fetchSubjects(); }, [fetchSubjects]);
+    const fetchSubjects = useCallback(() => { fetch(`${API_BASE_URL}/api/subjects?t=${Date.now()}`).then(res => res.json()).then(setSubjects).catch(console.error); }, []);
+    useEffect(() => { fetchSubjects(); }, [fetchSubjects]);
 
     useEffect(() => {
         const current = subjects.filter(s => s.semester === semesterName);
-        if (current.length > 0) setEditRows(current.map(s => ({...s})));
-            else setEditRows([{sNo: 1, category: 'PC', courseCode: '', courseName: '', L: '', T: '', P: '', credits: '', semester: semesterName }]);
+        if (current.length > 0) setEditRows(current.map(s => ({ ...s })));
+        else setEditRows([{ sNo: 1, category: 'PC', courseCode: '', courseName: '', L: '', T: '', P: '', credits: '', semester: semesterName }]);
     }, [subjects, semesterName]);
 
-    const handleSubjectChange = (index, field, value) => { const newRows = [...editRows]; newRows[index] = {...newRows[index], [field]: value }; setEditRows(newRows); }
-    const addSubjectRow = () => setEditRows([...editRows, {sNo: editRows.length + 1, category: 'PC', semester: semesterName }]);
+    const handleSubjectChange = (index, field, value) => { const newRows = [...editRows]; newRows[index] = { ...newRows[index], [field]: value }; setEditRows(newRows); }
+    const addSubjectRow = () => setEditRows([...editRows, { sNo: editRows.length + 1, category: 'PC', semester: semesterName }]);
     const saveSubjects = async () => {
         const validRows = editRows.filter(r => r.courseName);
-            if (validRows.length === 0) return alert("Please fill at least one subject");
-            const res = await fetch(`${API_BASE_URL}/api/courses/save`, {method: 'POST', headers: {'Content-Type': 'application/json' }, body: JSON.stringify({regulation, activeCourse, courseName, department: 'IT', subjects: validRows.map(r => ({...r, semester: semesterName })) }) });
-            if ((await res.json()).success) {alert('Saved!'); fetchSubjects(); }
+        if (validRows.length === 0) return alert("Please fill at least one subject");
+        const res = await fetch(`${API_BASE_URL}/api/courses/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regulation, activeCourse, courseName, department: 'IT', subjects: validRows.map(r => ({ ...r, semester: semesterName })) }) });
+        if ((await res.json()).success) { alert('Saved!'); fetchSubjects(); }
     }
 
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
-            if (!file) return;
-            setIsUploading(true);
-            const formData = new FormData(); formData.append('file', file);
-            try {
-            const res = await fetch(`${API_BASE_URL}/api/courses/preview`, {method: 'POST', body: formData });
+        if (!file) return;
+        setIsUploading(true);
+        const formData = new FormData(); formData.append('file', file);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/courses/preview`, { method: 'POST', body: formData });
             const data = await res.json();
             if (data.success) {
                 setEditRows(data.subjects.map((s, i) => ({ sNo: s.sNo || i + 1, category: s.category || 'PC', courseCode: s.courseCode || '', courseName: s.courseName || '', L: s.L || 0, T: s.T || 0, P: s.P || 0, credits: s.credits || 0, semester: semesterName })));
-            alert('✅ Syllabus Parsed! Please review and save.');
+                alert('✅ Syllabus Parsed! Please review and save.');
             } else alert('❌ Failed to parse: ' + data.message);
-        } catch (err) {alert('Error uploading file'); } finally {setIsUploading(false); e.target.value = null; }
+        } catch (err) { alert('Error uploading file'); } finally { setIsUploading(false); e.target.value = null; }
     }
 
-            return (
-            <div className="glass-table-container">
-                <div className="table-header-premium" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <h3>Curriculum Manager</h3>
-                            <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
-                                {['B.Tech', 'M.Tech', 'MCA'].map(c => (
-                                    <button key={c} onClick={() => { setActiveCourse(c); if (c === 'B.Tech') setSemesterName('I-B.Tech I Sem'); else if (c === 'M.Tech') setSemesterName('I-M.Tech I Sem'); else setSemesterName('I-MCA I Sem'); }} style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: activeCourse === c ? '#fff' : 'transparent', color: activeCourse === c ? '#0f172a' : '#64748b', fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>{c}</button>
-                                ))}
-                            </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: '1rem' }}>
-                            <label className="btn-action" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                {isUploading ? '⏳...' : '📄 UP/CSV'}
-                                <input type="file" accept=".pdf, .csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isUploading} />
-                            </label>
-                            <button className="btn-action primary" onClick={saveSubjects}>💾 Save</button>
+    return (
+        <div className="glass-table-container">
+            <div className="table-header-premium" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <h3>Curriculum Manager</h3>
+                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
+                            {['B.Tech', 'M.Tech', 'MCA'].map(c => (
+                                <button key={c} onClick={() => { setActiveCourse(c); if (c === 'B.Tech') setSemesterName('I-B.Tech I Sem'); else if (c === 'M.Tech') setSemesterName('I-M.Tech I Sem'); else setSemesterName('I-MCA I Sem'); }} style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: activeCourse === c ? '#fff' : 'transparent', color: activeCourse === c ? '#0f172a' : '#64748b', fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>{c}</button>
+                            ))}
                         </div>
                     </div>
-                    <div style={{ width: '100%' }}>
-                        <select value={semesterName} onChange={e => setSemesterName(e.target.value)} className="search-input-premium" style={{ width: '250px' }}>
-                            <option value="I-B.Tech I Sem">I Year - I Sem</option><option value="I-B.Tech II Sem">I Year - II Sem</option>
-                            <option value="II-B.Tech I Sem">II Year - I Sem</option><option value="II-B.Tech II Sem">II Year - II Sem</option>
-                            <option value="III-B.Tech I Sem">III Year - I Sem</option><option value="III-B.Tech II Sem">III Year - II Sem</option>
-                            <option value="IV-B.Tech I Sem">IV Year - I Sem</option><option value="IV-B.Tech II Sem">IV Year - II Sem</option>
-                            <option value="I-M.Tech I Sem">M.Tech I-I</option><option value="I-M.Tech II Sem">M.Tech I-II</option>
-                            <option value="I-MCA I Sem">MCA I-I</option><option value="I-MCA II Sem">MCA I-II</option>
-                        </select>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
+                        <label className="btn-action" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {isUploading ? '⏳...' : '📄 UP/CSV'}
+                            <input type="file" accept=".pdf, .csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isUploading} />
+                        </label>
+                        <button className="btn-action primary" onClick={saveSubjects}>💾 Save</button>
                     </div>
                 </div>
-                <div style={{ overflowX: 'auto' }}>
-                    <table className="premium-table">
-                        <thead><tr><th style={{ width: '50px' }}>S.No</th><th>Category</th><th>Code</th><th>Title</th><th>L</th><th>T</th><th>P</th><th>C</th><th>Action</th></tr></thead>
-                        <tbody>
-                            {editRows.map((row, i) => (
-                                <tr key={i}>
-                                    <td><input value={row.sNo || ''} onChange={e => handleSubjectChange(i, 'sNo', e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none' }} /></td>
-                                    <td>
-                                        <select value={row.category || 'PC'} onChange={e => handleSubjectChange(i, 'category', e.target.value)} style={{ background: 'transparent', border: 'none' }}>
-                                            <option value="PC">PC</option><option value="BS">BS</option><option value="ES">ES</option><option value="MC">MC</option>
-                                        </select>
-                                    </td>
-                                    <td><input value={row.courseCode || ''} onChange={e => handleSubjectChange(i, 'courseCode', e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none' }} /></td>
-                                    <td><input value={row.courseName || ''} onChange={e => handleSubjectChange(i, 'courseName', e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none' }} /></td>
-                                    <td><input value={row.L || ''} onChange={e => handleSubjectChange(i, 'L', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center' }} /></td>
-                                    <td><input value={row.T || ''} onChange={e => handleSubjectChange(i, 'T', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center' }} /></td>
-                                    <td><input value={row.P || ''} onChange={e => handleSubjectChange(i, 'P', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center' }} /></td>
-                                    <td><input value={row.credits || ''} onChange={e => handleSubjectChange(i, 'credits', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center', fontWeight: 'bold' }} /></td>
-                                    <td><button onClick={() => setEditRows(editRows.filter((_, idx) => idx !== i))} style={{ color: 'red', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <button onClick={addSubjectRow} style={{ width: '100%', padding: '10px', marginTop: '10px', border: '1px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', cursor: 'pointer', background: 'transparent' }}>+ Add Row</button>
+                <div style={{ width: '100%' }}>
+                    <select value={semesterName} onChange={e => setSemesterName(e.target.value)} className="search-input-premium" style={{ width: '250px' }}>
+                        <option value="I-B.Tech I Sem">I Year - I Sem</option><option value="I-B.Tech II Sem">I Year - II Sem</option>
+                        <option value="II-B.Tech I Sem">II Year - I Sem</option><option value="II-B.Tech II Sem">II Year - II Sem</option>
+                        <option value="III-B.Tech I Sem">III Year - I Sem</option><option value="III-B.Tech II Sem">III Year - II Sem</option>
+                        <option value="IV-B.Tech I Sem">IV Year - I Sem</option><option value="IV-B.Tech II Sem">IV Year - II Sem</option>
+                        <option value="I-M.Tech I Sem">M.Tech I-I</option><option value="I-M.Tech II Sem">M.Tech I-II</option>
+                        <option value="I-MCA I Sem">MCA I-I</option><option value="I-MCA II Sem">MCA I-II</option>
+                    </select>
                 </div>
             </div>
-            );
+            <div style={{ overflowX: 'auto' }}>
+                <table className="premium-table">
+                    <thead><tr><th style={{ width: '50px' }}>S.No</th><th>Category</th><th>Code</th><th>Title</th><th>L</th><th>T</th><th>P</th><th>C</th><th>Action</th></tr></thead>
+                    <tbody>
+                        {editRows.map((row, i) => (
+                            <tr key={i}>
+                                <td><input value={row.sNo || ''} onChange={e => handleSubjectChange(i, 'sNo', e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none' }} /></td>
+                                <td>
+                                    <select value={row.category || 'PC'} onChange={e => handleSubjectChange(i, 'category', e.target.value)} style={{ background: 'transparent', border: 'none' }}>
+                                        <option value="PC">PC</option><option value="BS">BS</option><option value="ES">ES</option><option value="MC">MC</option>
+                                    </select>
+                                </td>
+                                <td><input value={row.courseCode || ''} onChange={e => handleSubjectChange(i, 'courseCode', e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none' }} /></td>
+                                <td><input value={row.courseName || ''} onChange={e => handleSubjectChange(i, 'courseName', e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none' }} /></td>
+                                <td><input value={row.L || ''} onChange={e => handleSubjectChange(i, 'L', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center' }} /></td>
+                                <td><input value={row.T || ''} onChange={e => handleSubjectChange(i, 'T', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center' }} /></td>
+                                <td><input value={row.P || ''} onChange={e => handleSubjectChange(i, 'P', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center' }} /></td>
+                                <td><input value={row.credits || ''} onChange={e => handleSubjectChange(i, 'credits', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center', fontWeight: 'bold' }} /></td>
+                                <td><button onClick={() => setEditRows(editRows.filter((_, idx) => idx !== i))} style={{ color: 'red', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <button onClick={addSubjectRow} style={{ width: '100%', padding: '10px', marginTop: '10px', border: '1px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', cursor: 'pointer', background: 'transparent' }}>+ Add Row</button>
+            </div>
+        </div>
+    );
 }
-            function BookingForm({initialData, facultyList, onSubmit, onCancel}) {
+function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
     const [subject, setSubject] = useState(initialData.currentSubject);
-            const [mainFaculty, setMainFaculty] = useState(initialData.faculty);
-            const [assistants, setAssistants] = useState(initialData.assistants || []);
-            const isLab = (subject || '').toLowerCase().includes('lab') || (subject || '').toLowerCase().includes('project');
+    const [mainFaculty, setMainFaculty] = useState(initialData.faculty);
+    const [assistants, setAssistants] = useState(initialData.assistants || []);
+    const isLab = (subject || '').toLowerCase().includes('lab') || (subject || '').toLowerCase().includes('project');
 
     const contractFaculty = facultyList.filter(f => f.type === 'Contract');
     const regularFaculty = facultyList.filter(f => f.type !== 'Contract');
@@ -695,38 +696,38 @@ function TimetableManager() {
 
     const handleAssistantChange = (e) => {
         const selected = Array.from(e.target.selectedOptions, option => option.value);
-            setAssistants(selected);
+        setAssistants(selected);
     };
 
-            return (
-            <div style={{ display: 'grid', gap: '1rem' }}>
+    return (
+        <div style={{ display: 'grid', gap: '1rem' }}>
+            <div>
+                <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Subject Name</label>
+                <input className="search-input-premium" value={subject} onChange={e => setSubject(e.target.value)} />
+            </div>
+            <div>
+                <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Main Faculty</label>
+                <select className="search-input-premium" value={mainFaculty} onChange={e => setMainFaculty(e.target.value)}>
+                    <option value="">-- Select --</option>
+                    <optgroup label="Regular">{renderOpts(regularFaculty)}</optgroup>
+                    <optgroup label="Contract">{renderOpts(contractFaculty)}</optgroup>
+                </select>
+            </div>
+            {isLab && (
                 <div>
-                    <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Subject Name</label>
-                    <input className="search-input-premium" value={subject} onChange={e => setSubject(e.target.value)} />
-                </div>
-                <div>
-                    <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Main Faculty</label>
-                    <select className="search-input-premium" value={mainFaculty} onChange={e => setMainFaculty(e.target.value)}>
-                        <option value="">-- Select --</option>
+                    <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Assistants (Hold Ctrl)</label>
+                    <select multiple className="search-input-premium" style={{ height: '100px' }} value={assistants} onChange={handleAssistantChange}>
+                        <optgroup label="Contract (Recommended)">{renderOpts(contractFaculty)}</optgroup>
                         <optgroup label="Regular">{renderOpts(regularFaculty)}</optgroup>
-                        <optgroup label="Contract">{renderOpts(contractFaculty)}</optgroup>
                     </select>
                 </div>
-                {isLab && (
-                    <div>
-                        <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Assistants (Hold Ctrl)</label>
-                        <select multiple className="search-input-premium" style={{ height: '100px' }} value={assistants} onChange={handleAssistantChange}>
-                            <optgroup label="Contract (Recommended)">{renderOpts(contractFaculty)}</optgroup>
-                            <optgroup label="Regular">{renderOpts(regularFaculty)}</optgroup>
-                        </select>
-                    </div>
-                )}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                    <button className="btn-action" onClick={onCancel}>Cancel</button>
-                    <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants })}>Save</button>
-                </div>
+            )}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
+                <button className="btn-action" onClick={onCancel}>Cancel</button>
+                <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants })}>Save</button>
             </div>
-            );
+        </div>
+    );
 }
 
-            export default HodDashboard;
+export default HodDashboard;
