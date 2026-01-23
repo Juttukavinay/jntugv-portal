@@ -31,6 +31,7 @@ router.post('/', async (req, res) => {
 router.put('/assign-hod', async (req, res) => {
     const { deptName, facultyId } = req.body;
     try {
+        const faculty = await Faculty.findById(facultyId);
         if (!faculty) return res.status(404).json({ message: 'Faculty not found' });
 
         // 1. Find current Dept info to see if there is an existing HOD
