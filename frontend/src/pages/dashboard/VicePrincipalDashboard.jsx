@@ -734,56 +734,77 @@ function AddFacultyForm({ onSubmit, onCancel }) {
 function CurriculumView() {
     const [subjects, setSubjects] = useState([]);
     const [activeCourse, setActiveCourse] = useState('B.Tech');
+    const [selectedSem, setSelectedSem] = useState('All');
 
-    useEffect(() => { fetch(`${API_BASE_URL}/api/subjects`).then(res => res.json()).then(setSubjects); }, []);
+    useEffect(() => { fetch(`${API_BASE_URL}/api/subjects`).then(res => res.json()).then(setSubjects).catch(console.error); }, []);
+
+    // Get unique semesters for filter
+    const semesters = [...new Set(subjects.filter(s => s.semester && s.semester.includes(activeCourse)).map(s => s.semester))].sort();
 
     const filteredSubjects = Array.isArray(subjects) ? subjects.filter(s => {
-        return s.semester && s.semester.includes(activeCourse);
-    }) : [];
+        const matchesCourse = s.semester && s.semester.includes(activeCourse);
+        const matchesSem = selectedSem === 'All' || s.semester === selectedSem;
+        return matchesCourse && matchesSem;
+    }).sort((a, b) => a.semester.localeCompare(b.semester)) : [];
 
     return (
         <div className="glass-table-container">
-            <div className="table-header-premium">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <h3>Curriculum Overview</h3>
-                    <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
-                        {['B.Tech', 'M.Tech', 'MCA'].map(c => (
-                            <button
-                                key={c}
-                                onClick={() => setActiveCourse(c)}
-                                style={{
-                                    padding: '6px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer',
-                                    background: activeCourse === c ? '#fff' : 'transparent',
-                                    color: activeCourse === c ? '#0f172a' : '#64748b',
-                                    fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                                }}
-                            >{c}</button>
-                        ))}
+            <div className="table-header-premium" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between', width: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <h3>Curriculum Overview</h3>
+                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
+                            {['B.Tech', 'M.Tech', 'MCA'].map(c => (
+                                <button
+                                    key={c}
+                                    onClick={() => { setActiveCourse(c); setSelectedSem('All'); }}
+                                    style={{
+                                        padding: '6px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer',
+                                        background: activeCourse === c ? '#fff' : 'transparent',
+                                        color: activeCourse === c ? '#0f172a' : '#64748b',
+                                        fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                    }}
+                                >{c}</button>
+                            ))}
+                        </div>
+                    </div>
+                    <div>
+                        <select
+                            className="search-input-premium"
+                            style={{ width: '200px' }}
+                            value={selectedSem}
+                            onChange={(e) => setSelectedSem(e.target.value)}
+                        >
+                            <option value="All">All Semesters</option>
+                            {semesters.map(sem => <option key={sem} value={sem}>{sem}</option>)}
+                        </select>
                     </div>
                 </div>
             </div>
-            <table className="premium-table">
-                <thead>
-                    <tr>
-                        <th>Code</th>
-                        <th>Subject Title</th>
-                        <th>Sem</th>
-                        <th>Credits</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredSubjects.length > 0 ? filteredSubjects.map((s, i) => (
-                        <tr key={i}>
-                            <td style={{ fontFamily: 'monospace' }}>{s.courseCode}</td>
-                            <td style={{ fontWeight: '500' }}>{s.courseName}</td>
-                            <td>{s.semester}</td>
-                            <td>{s.credits}</td>
+            <div style={{ overflowX: 'auto' }}>
+                <table className="premium-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Subject Title</th>
+                            <th>Sem</th>
+                            <th>Credits</th>
                         </tr>
-                    )) : (
-                        <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No subjects found for {activeCourse}</td></tr>
-                    )}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {filteredSubjects.length > 0 ? filteredSubjects.map((s, i) => (
+                            <tr key={i}>
+                                <td style={{ fontFamily: 'monospace' }}>{s.courseCode}</td>
+                                <td style={{ fontWeight: '500' }}>{s.courseName}</td>
+                                <td>{s.semester}</td>
+                                <td>{s.credits}</td>
+                            </tr>
+                        )) : (
+                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No subjects found for {activeCourse}</td></tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }
