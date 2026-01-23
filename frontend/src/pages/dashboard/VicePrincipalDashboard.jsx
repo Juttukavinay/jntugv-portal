@@ -737,9 +737,9 @@ function CurriculumView() {
 
     useEffect(() => { fetch(`${API_BASE_URL}/api/subjects`).then(res => res.json()).then(setSubjects); }, []);
 
-    const filteredSubjects = subjects.filter(s => {
-        return s.semester.includes(activeCourse);
-    });
+    const filteredSubjects = Array.isArray(subjects) ? subjects.filter(s => {
+        return s.semester && s.semester.includes(activeCourse);
+    }) : [];
 
     return (
         <div className="glass-table-container">
