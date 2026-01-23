@@ -788,7 +788,10 @@ function CurriculumView() {
                             <th>Code</th>
                             <th>Subject Title</th>
                             <th>Sem</th>
-                            <th>Credits</th>
+                            <th style={{ textAlign: 'center' }}>L</th>
+                            <th style={{ textAlign: 'center' }}>T</th>
+                            <th style={{ textAlign: 'center' }}>P</th>
+                            <th style={{ textAlign: 'center' }}>Credits</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -797,10 +800,13 @@ function CurriculumView() {
                                 <td style={{ fontFamily: 'monospace' }}>{s.courseCode}</td>
                                 <td style={{ fontWeight: '500' }}>{s.courseName}</td>
                                 <td>{s.semester}</td>
-                                <td>{s.credits}</td>
+                                <td style={{ textAlign: 'center' }}>{s.L}</td>
+                                <td style={{ textAlign: 'center' }}>{s.T}</td>
+                                <td style={{ textAlign: 'center' }}>{s.P}</td>
+                                <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{s.credits}</td>
                             </tr>
                         )) : (
-                            <tr><td colSpan="4" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No subjects found for {activeCourse}</td></tr>
+                            <tr><td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No subjects found for {activeCourse}</td></tr>
                         )}
                     </tbody>
                 </table>
