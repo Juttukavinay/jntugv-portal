@@ -465,7 +465,7 @@ function TimetableManager() {
     const generateTimetable = async () => {
         setLoading(true)
         try {
-            const res = await fetch('/api/timetables/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ semester: selectedSemester, options: genOptions }) })
+            const res = await fetch(`${API_BASE_URL}/api/timetables/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ semester: selectedSemester, options: genOptions }) })
             const data = await res.json()
             if (res.ok) { alert(data.unallocated?.length > 0 ? `⚠️ Warnings:\n${data.unallocated.join('\n')}` : "✅ Success!"); fetchTimetable(); }
             else alert("Error: " + data.message)
@@ -481,7 +481,7 @@ function TimetableManager() {
 
     const handleConfirmBooking = async (details) => {
         try {
-            const res = await fetch('/api/timetables/update', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dayIndex: bookingSlot.dayIndex, periodIndex: bookingSlot.periodIndex, subject: details.subject || '-', faculty: details.faculty, assistants: details.assistants, semester: selectedSemester }) });
+            const res = await fetch(`${API_BASE_URL}/api/timetables/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dayIndex: bookingSlot.dayIndex, periodIndex: bookingSlot.periodIndex, subject: details.subject || '-', faculty: details.faculty, assistants: details.assistants, semester: selectedSemester }) });
             if (res.ok) { alert('Slot Updated!'); setShowBookingModal(false); fetchTimetable(); }
             else alert('Error: ' + (await res.json()).message);
         } catch (e) { alert('Failed to update slot'); }
