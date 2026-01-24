@@ -205,4 +205,15 @@ router.get('/:id/subjects', async (req, res) => {
     res.json(subjects);
 });
 
+// DELETE Single Subject
+router.delete('/subject/:id', async (req, res) => {
+    try {
+        const deleted = await Subject.findByIdAndDelete(req.params.id);
+        if (deleted) res.json({ success: true, message: 'Subject deleted' });
+        else res.status(404).json({ message: 'Subject not found' });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 module.exports = router;

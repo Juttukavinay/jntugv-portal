@@ -515,7 +515,11 @@ function TimetableManager() {
                         <div style={{ display: 'flex', gap: '0.5rem' }}>
                             <button className="btn-action" onClick={() => setShowSettings(true)}>⚙️ Settings</button>
                             <button className="btn-action primary" onClick={generateTimetable} disabled={loading}>{loading ? 'Generating...' : '⚡ Auto-Generate'}</button>
-                            {timetable && <button className="btn-action" style={{ color: 'red' }} onClick={async () => { if (confirm('Delete?')) { await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`, { method: 'DELETE' }); fetchTimetable(); } }}>🗑️</button>}
+                            {timetable && (
+                                <button className="btn-action" style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={async () => { if (confirm('Delete ENTIRE timetable for this semester?')) { await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`, { method: 'DELETE' }); fetchTimetable(); } }}>
+                                    <Icons.Trash /> Delete Timetable
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -585,7 +589,6 @@ function TimetableManager() {
     );
 }
 function SubjectsManager() {
-    const [viewMode, setViewMode] = useState('list');
     const [subjects, setSubjects] = useState([]);
     const [regulation, setRegulation] = useState('R23');
     const [activeCourse, setActiveCourse] = useState('B.Tech');
@@ -606,12 +609,35 @@ function SubjectsManager() {
 
     const handleSubjectChange = (index, field, value) => { const newRows = [...editRows]; newRows[index] = { ...newRows[index], [field]: value }; setEditRows(newRows); }
     const addSubjectRow = () => setEditRows([...editRows, { sNo: editRows.length + 1, category: 'PC', semester: semesterName }]);
+
     const saveSubjects = async () => {
         const validRows = editRows.filter(r => r.courseName);
         if (validRows.length === 0) return alert("Please fill at least one subject");
         const res = await fetch(`${API_BASE_URL}/api/courses/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regulation, activeCourse, courseName, department: 'IT', subjects: validRows.map(r => ({ ...r, semester: semesterName })) }) });
         if ((await res.json()).success) { alert('Saved!'); fetchSubjects(); }
     }
+
+    const deleteSubject = async (index) => {
+        const row = editRows[index];
+        if (row._id) {
+            if (!confirm("Are you sure you want to permanently delete this subject?")) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/courses/subject/${row._id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    setEditRows(editRows.filter((_, idx) => idx !== index));
+                    fetchSubjects(); // Sync with global state
+                } else {
+                    alert("Failed to delete subject");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error deleting subject");
+            }
+        } else {
+            // Local delete only
+            setEditRows(editRows.filter((_, idx) => idx !== index));
+        }
+    };
 
     const handleFileUpload = async (e) => {
         const file = e.target.files[0];
@@ -645,7 +671,7 @@ function SubjectsManager() {
                             {isUploading ? '⏳...' : '📄 UP/CSV'}
                             <input type="file" accept=".pdf, .csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isUploading} />
                         </label>
-                        <button className="btn-action primary" onClick={saveSubjects}>💾 Save</button>
+                        <button className="btn-action primary" onClick={saveSubjects}>💾 Save Changes</button>
                     </div>
                 </div>
                 <div style={{ width: '100%' }}>
@@ -664,29 +690,39 @@ function SubjectsManager() {
                     <thead><tr><th style={{ width: '50px' }}>S.No</th><th>Category</th><th>Code</th><th>Title</th><th>L</th><th>T</th><th>P</th><th>C</th><th>Action</th></tr></thead>
                     <tbody>
                         {editRows.map((row, i) => (
-                            <tr key={i}>
-                                <td><input value={row.sNo || ''} onChange={e => handleSubjectChange(i, 'sNo', e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none' }} /></td>
+                            <tr key={i} style={{ background: '#fff' }}>
+                                <td><input value={row.sNo || ''} onChange={e => handleSubjectChange(i, 'sNo', e.target.value)} className="modern-input" style={{ width: '100%', padding: '4px' }} /></td>
                                 <td>
-                                    <select value={row.category || 'PC'} onChange={e => handleSubjectChange(i, 'category', e.target.value)} style={{ background: 'transparent', border: 'none' }}>
+                                    <select value={row.category || 'PC'} onChange={e => handleSubjectChange(i, 'category', e.target.value)} className="modern-input" style={{ padding: '4px' }}>
                                         <option value="PC">PC</option><option value="BS">BS</option><option value="ES">ES</option><option value="MC">MC</option>
                                     </select>
                                 </td>
-                                <td><input value={row.courseCode || ''} onChange={e => handleSubjectChange(i, 'courseCode', e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none' }} /></td>
-                                <td><input value={row.courseName || ''} onChange={e => handleSubjectChange(i, 'courseName', e.target.value)} style={{ width: '100%', background: 'transparent', border: 'none' }} /></td>
-                                <td><input value={row.L || ''} onChange={e => handleSubjectChange(i, 'L', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center' }} /></td>
-                                <td><input value={row.T || ''} onChange={e => handleSubjectChange(i, 'T', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center' }} /></td>
-                                <td><input value={row.P || ''} onChange={e => handleSubjectChange(i, 'P', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center' }} /></td>
-                                <td><input value={row.credits || ''} onChange={e => handleSubjectChange(i, 'credits', e.target.value)} style={{ width: '30px', background: 'transparent', border: 'none', textAlign: 'center', fontWeight: 'bold' }} /></td>
-                                <td><button onClick={() => setEditRows(editRows.filter((_, idx) => idx !== i))} style={{ color: 'red', background: 'none', border: 'none', cursor: 'pointer' }}>✕</button></td>
+                                <td><input value={row.courseCode || ''} onChange={e => handleSubjectChange(i, 'courseCode', e.target.value)} className="modern-input" style={{ width: '100%', padding: '4px' }} /></td>
+                                <td><input value={row.courseName || ''} onChange={e => handleSubjectChange(i, 'courseName', e.target.value)} className="modern-input" style={{ width: '100%', padding: '4px' }} /></td>
+                                <td><input value={row.L || ''} onChange={e => handleSubjectChange(i, 'L', e.target.value)} className="modern-input" style={{ width: '40px', textAlign: 'center', padding: '4px' }} /></td>
+                                <td><input value={row.T || ''} onChange={e => handleSubjectChange(i, 'T', e.target.value)} className="modern-input" style={{ width: '40px', textAlign: 'center', padding: '4px' }} /></td>
+                                <td><input value={row.P || ''} onChange={e => handleSubjectChange(i, 'P', e.target.value)} className="modern-input" style={{ width: '40px', textAlign: 'center', padding: '4px' }} /></td>
+                                <td><input value={row.credits || ''} onChange={e => handleSubjectChange(i, 'credits', e.target.value)} className="modern-input" style={{ width: '40px', textAlign: 'center', padding: '4px', fontWeight: 'bold' }} /></td>
+                                <td>
+                                    <button
+                                        onClick={() => deleteSubject(i)}
+                                        className="btn-action"
+                                        style={{ color: '#fff', background: '#ef4444', border: 'none', cursor: 'pointer', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        title="Delete Subject"
+                                    >
+                                        <Icons.Trash />
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                <button onClick={addSubjectRow} style={{ width: '100%', padding: '10px', marginTop: '10px', border: '1px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', cursor: 'pointer', background: 'transparent' }}>+ Add Row</button>
+                <button onClick={addSubjectRow} style={{ width: '100%', padding: '12px', marginTop: '10px', border: '2px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', cursor: 'pointer', background: '#f8fafc', fontWeight: '600' }}>+ Add Row</button>
             </div>
         </div>
     );
 }
+
 function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
     const [subject, setSubject] = useState(initialData.currentSubject);
     const [mainFaculty, setMainFaculty] = useState(initialData.faculty);
@@ -706,7 +742,7 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
         <div style={{ display: 'grid', gap: '1rem' }}>
             <div>
                 <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Subject Name</label>
-                <input className="search-input-premium" value={subject} onChange={e => setSubject(e.target.value)} />
+                <input className="search-input-premium" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject or '-'" />
             </div>
             <div>
                 <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Main Faculty</label>
@@ -725,9 +761,20 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
                     </select>
                 </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
-                <button className="btn-action" onClick={onCancel}>Cancel</button>
-                <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants })}>Save</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                <button
+                    className="btn-action"
+                    style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2' }}
+                    onClick={() => {
+                        if (confirm('Clear this slot?')) onSubmit({ subject: '-', faculty: '', assistants: [] });
+                    }}
+                >
+                    Clear Slot
+                </button>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                    <button className="btn-action" onClick={onCancel}>Cancel</button>
+                    <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants })}>Save</button>
+                </div>
             </div>
         </div>
     );
