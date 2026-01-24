@@ -9,9 +9,9 @@ const fix = async () => {
         await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/jntugv-portal');
         console.log('Connected to DB');
 
-        // 1. Find "Bindu"
-        const bindu = await Faculty.findOne({ name: { $regex: 'Bindu', $options: 'i' } });
-        if (!bindu) return console.log('Bindu Not Found');
+        // 1. Find exact HOD by email
+        const bindu = await Faculty.findOne({ email: 'drch1@jntugv.edu.in' });
+        if (!bindu) return console.log('HOD User Not Found (drch1@jntugv.edu.in)');
 
         console.log(`Fixing HOD for: ${bindu.name}`);
 

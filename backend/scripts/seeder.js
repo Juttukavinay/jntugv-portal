@@ -35,7 +35,12 @@ const faculty = [
     { sNo: 10, name: 'P.Venkateswaralu', qualification: 'M.Tech', university: 'JNTUK', gradYear: '2014', designation: 'Asst. Prof.', dateOfJoining: '06-08-2015', department: 'CSE', type: 'Contract' },
     { sNo: 11, name: 'B.Manasa', qualification: 'M.Tech', university: 'JNTUK', gradYear: '2017', designation: 'Asst. Prof.', dateOfJoining: '19-06-2017', department: 'CSE', type: 'Contract' },
     { sNo: 12, name: 'Madhumita Chanda', qualification: 'M.Tech', university: 'JNTUK', gradYear: '2017', designation: 'Asst. Prof.', dateOfJoining: '15-06-2017', department: 'CSE', type: 'Contract' }
-];
+].map(f => ({
+    ...f,
+    email: `${f.name.split(' ')[0].toLowerCase().replace('.', '')}${f.sNo}@jntugv.edu.in`,
+    mobileNumber: `98765432${f.sNo.toString().padStart(2, '0')}`,
+    role: 'faculty'
+}));
 
 const subjects = [
     { semester: 'I-B.Tech I Sem', sNo: 1, category: 'BS', courseCode: 'R23BS01', courseName: 'Linear Algebra & Calculus', L: 3, T: 0, P: 0, credits: 3 },
