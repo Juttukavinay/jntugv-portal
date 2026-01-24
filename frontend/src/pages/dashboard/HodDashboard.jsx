@@ -598,7 +598,8 @@ function SubjectsManager() {
     useEffect(() => { fetchSubjects(); }, [fetchSubjects]);
 
     useEffect(() => {
-        const current = subjects.filter(s => s.semester === semesterName);
+        const safeSubjects = Array.isArray(subjects) ? subjects : [];
+        const current = safeSubjects.filter(s => s && s.semester === semesterName);
         if (current.length > 0) setEditRows(current.map(s => ({ ...s })));
         else setEditRows([{ sNo: 1, category: 'PC', courseCode: '', courseName: '', L: '', T: '', P: '', credits: '', semester: semesterName }]);
     }, [subjects, semesterName]);

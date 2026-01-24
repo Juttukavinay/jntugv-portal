@@ -739,10 +739,11 @@ function CurriculumView() {
     useEffect(() => { fetch(`${API_BASE_URL}/api/subjects`).then(res => res.json()).then(setSubjects).catch(console.error); }, []);
 
     // Get unique semesters for filter
-    const semesters = [...new Set(subjects.filter(s => s.semester && s.semester.includes(activeCourse)).map(s => s.semester))].sort();
+    const semesters = Array.isArray(subjects) ? [...new Set(subjects.filter(s => s && typeof s.semester === 'string' && s.semester.includes(activeCourse)).map(s => s.semester))].sort() : [];
 
     const filteredSubjects = Array.isArray(subjects) ? subjects.filter(s => {
-        const matchesCourse = s.semester && s.semester.includes(activeCourse);
+        if (!s || typeof s.semester !== 'string') return false;
+        const matchesCourse = s.semester.includes(activeCourse);
         const matchesSem = selectedSem === 'All' || s.semester === selectedSem;
         return matchesCourse && matchesSem;
     }).sort((a, b) => a.semester.localeCompare(b.semester)) : [];
