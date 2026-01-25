@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import API_BASE_URL from '../../config'
 import { useNavigate } from 'react-router-dom'
 import '../../App.css'
+import GlobalLoader from '../../components/GlobalLoader'
 
 // --- ICONS ---
 const Icons = {
@@ -74,7 +75,7 @@ function StudentDashboard() {
         navigate('/login', { replace: true })
     }
 
-    import GlobalLoader from '../../components/GlobalLoader'
+
 
     // --- SUB-COMPONENTS ---
     const OverviewTab = () => (
