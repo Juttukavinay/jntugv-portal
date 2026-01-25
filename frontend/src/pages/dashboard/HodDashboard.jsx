@@ -113,11 +113,15 @@ function NavItem({ icon, label, active, onClick }) {
     );
 }
 
+import GlobalLoader from '../../components/GlobalLoader'
+
 // --- OVERVIEW COMPONENT ---
 function HodOverview({ onNavigate, user }) {
     const [stats, setStats] = useState({ students: 0, faculty: 0, alerts: 0 });
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        setLoading(true);
         Promise.all([
             fetch(`${API_BASE_URL}/api/students`).then(res => res.json()),
             fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json())
@@ -131,11 +135,16 @@ function HodOverview({ onNavigate, user }) {
                 faculty: Array.isArray(f) ? f.length : 0,
                 alerts: 2
             });
-        }).catch(console.error);
+            setLoading(false);
+        }).catch(err => {
+            console.error(err);
+            setLoading(false);
+        });
     }, []);
 
     return (
         <div>
+            {loading && <GlobalLoader />}
             <div style={{ marginBottom: '2.5rem' }}>
                 <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome back, {user.name || 'HOD'} 👋</h1>
                 <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Manage your department's academics and resources efficiently.</p>

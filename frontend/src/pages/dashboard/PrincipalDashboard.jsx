@@ -110,12 +110,16 @@ function NavItem({ icon, label, active, onClick }) {
     );
 }
 
+import GlobalLoader from '../../components/GlobalLoader'
+
 // --- SUB-COMPONENTS ---
 
 function DashboardOverview({ onNavigate }) {
     const [stats, setStats] = useState({ students: 0, faculty: 0, depts: 0 });
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        setLoading(true);
         Promise.all([
             fetch(`${API_BASE_URL}/api/students`).then(res => res.json()),
             fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()),
@@ -126,11 +130,16 @@ function DashboardOverview({ onNavigate }) {
                 faculty: Array.isArray(f) ? f.length : 0,
                 depts: Array.isArray(d) ? d.length : 0
             });
-        }).catch(err => console.error("Failed to load dashboard stats", err));
+            setLoading(false);
+        }).catch(err => {
+            console.error("Failed to load dashboard stats", err);
+            setLoading(false);
+        });
     }, []);
 
     return (
         <div>
+            {loading && <GlobalLoader />}
             <div style={{ marginBottom: '2.5rem' }}>
                 <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome back, Principal 👋</h1>
                 <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Here's what's happening in your campus today.</p>

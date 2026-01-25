@@ -74,9 +74,12 @@ function StudentDashboard() {
         navigate('/login', { replace: true })
     }
 
+    import GlobalLoader from '../../components/GlobalLoader'
+
     // --- SUB-COMPONENTS ---
     const OverviewTab = () => (
         <div className="fade-in-up">
+            {loading && <GlobalLoader />}
             <div className="modern-stats-grid" style={{ marginBottom: '2rem' }}>
                 <div className="premium-stat-card" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

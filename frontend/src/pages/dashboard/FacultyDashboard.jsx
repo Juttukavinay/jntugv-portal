@@ -217,6 +217,7 @@ function SectionStudentList() {
     )
 }
 
+import GlobalLoader from '../../components/GlobalLoader'
 import { createPortal } from 'react-dom'
 
 function FacultyTimetable({ currentUser }) {
@@ -337,9 +338,11 @@ function FacultyTimetable({ currentUser }) {
                     </select>
                 </div>
                 <button className="btn-action" onClick={fetchTimetable} disabled={loading}>
-                    {loading ? 'Loading...' : '🔄 Refresh'}
+                    {loading ? 'Refreshing...' : '🔄 Refresh'}
                 </button>
             </div>
+            
+            {loading && <GlobalLoader />}
 
             {/* BOOKING GRID */}
             <div style={{ padding: '1rem', overflowX: 'auto' }}>

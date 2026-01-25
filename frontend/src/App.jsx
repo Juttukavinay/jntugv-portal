@@ -11,10 +11,12 @@ import './App.css'
 
 import ChatAssistant from './components/ChatAssistant'
 import ErrorBoundary from './components/ErrorBoundary'
+import ProgressBar from './components/ProgressBar'
 
 function App() {
   return (
     <Router>
+      <ProgressBar />
       <ErrorBoundary>
         <ChatAssistant />
       </ErrorBoundary>
