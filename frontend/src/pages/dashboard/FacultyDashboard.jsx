@@ -3,412 +3,327 @@ import { useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
 
+// --- ICONS (Consistent with Principal) ---
+const Icons = {
+    Home: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
+    Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
+    Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>,
+    Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
+    LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
+    Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+}
+
 function FacultyDashboard() {
     const navigate = useNavigate()
     const [currentUser, setCurrentUser] = useState(null)
-    const [allPeriods, setAllPeriods] = useState([]) // All weekly periods
-    const [todaysPeriods, setTodaysPeriods] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState('dashboard') // dashboard, my-classes
-    const [selectedClass, setSelectedClass] = useState(null) // For attendance modal
+    const [activeTab, setActiveTab] = useState('overview')
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+    const [mySubject, setMySubject] = useState('')
 
-    const [mySubject, setMySubject] = useState(''); // State for current faculty's subject
-    const [myDesignation, setMyDesignation] = useState(''); // To check for min limit
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar state
-
-    // Simulate getting logged-in user
     useEffect(() => {
-        const user = JSON.parse(localStorage.getItem('user')) || { name: 'Dr. Smith', role: 'faculty' }
+        const user = JSON.parse(localStorage.getItem('user')) || { name: 'Faculty Member', role: 'faculty' }
         setCurrentUser(user)
+        setMobileMenuOpen(false)
     }, [])
 
-    useEffect(() => {
-        if (currentUser) {
-            fetchMySchedule(currentUser.name)
-        }
-    }, [currentUser])
-
-    const fetchMySchedule = (facultyName) => {
-        setLoading(true)
-
-        // 1. Get All Faculty to find "My Subject"
-        // (Ideally, the backend login should return this, but we'll fetch it for now)
-        fetch(`${API_BASE_URL}/api/faculty`)
-            .then(res => res.json())
-            .then(facultyList => {
-                // Find current faculty details
-                const myProfile = facultyList.find(f => f.email === currentUser.email) || {};
-                const subject = myProfile.subject || ''; // e.g., "Computer Networks"
-                const designation = myProfile.designation || 'Assistant Professor';
-                setMySubject(subject); // Update state for render
-                setMyDesignation(designation);
-
-                fetch(`${API_BASE_URL}/api/timetables`)
-                    .then(res => res.json())
-                    .then(data => {
-                        let periods = []
-                        const timetables = Array.isArray(data) ? data : [data]
-
-                        timetables.forEach(timetable => {
-                            if (!timetable || !timetable.schedule) return
-                            timetable.schedule.forEach(day => {
-                                day.periods.forEach(period => {
-                                    // Match by Faculty Name (Strict booking ownership)
-                                    // Robust check with trim()
-                                    const isMine = period.faculty && currentUser.name && period.faculty.trim() === currentUser.name.trim();
-
-                                    if (isMine) {
-                                        // Estimate credits if missing: Lab -> 3, otherwise 1. 
-                                        // The backend usually provides 'credits' for generated items.
-                                        let h = period.credits || (period.type === 'Lab' || (period.subject && period.subject.toLowerCase().includes('lab')) ? 3 : 1);
-                                        h = Number(h) || 1;
-
-                                        periods.push({
-                                            day: day.day,
-                                            time: period.time,
-                                            subject: period.subject,
-                                            semester: timetable.className,
-                                            type: period.type,
-                                            room: period.room || '',
-                                            credits: h
-                                        })
-                                    }
-                                })
-                            })
-                        })
-
-                        setAllPeriods(periods)
-
-                        // Filter Today's Classes
-                        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-                        const todayName = days[new Date().getDay()]
-                        setTodaysPeriods(periods.filter(p => p.day === todayName))
-
-                        setLoading(false)
-                    })
-                    .catch(err => {
-                        console.error(err)
-                        setLoading(false)
-                    })
-            })
-            .catch(err => console.error(err));
-    }
-
-    const simpleLogout = () => {
-        localStorage.removeItem('user')
-        navigate('/login', { replace: true })
-        // Force reload to clear any memory states if needed, though replace should suffice for history
-    }
-
-    // Stats
-    const totalHours = allPeriods.reduce((acc, curr) => acc + (curr.credits || 1), 0);
-    const classesToday = todaysPeriods.length;
-    const labSessions = allPeriods.filter(p => p.type && p.type.toLowerCase().includes('lab')).length;
-    const theorySessions = allPeriods.length - labSessions;
-
-    // Workload Limits
-    // Prof = 10, Assoc = 14, Asst = 16 (Default)
-    let minWorkload = 16;
-    if (myDesignation.toLowerCase().includes('associate')) minWorkload = 14;
-    else if (myDesignation.toLowerCase().includes('assistant')) minWorkload = 16;
-    else if (myDesignation.toLowerCase().includes('professor')) minWorkload = 10;
-
-
     return (
-        <div className="dashboard-layout">
-            {/* Sidebar Overlay for Mobile */}
-            <div
-                className={`sidebar-overlay ${isSidebarOpen ? 'open' : ''}`}
-                onClick={() => setIsSidebarOpen(false)}
-            />
-
-            {/* Sidebar */}
-            <aside className={`dashboard-sidebar ${isSidebarOpen ? 'open' : ''}`}>
-                <div style={{ padding: '2rem 1.5rem', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #1e293b' }}>
-                    <img src="/jntugv-logo.png" alt="Logo" style={{ width: '40px', height: 'auto' }} />
+        <div className="dashboard-container">
+            {/* Sidebar with consistent class */}
+            <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
+                <div className="sidebar-header">
+                    <img src="/jntugv-logo.png" alt="Logo" className="sidebar-logo" />
                     <div>
-                        <h3 style={{ margin: 0, fontSize: '1.2rem', background: 'linear-gradient(to right, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>JNTU-GV</h3>
-                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', letterSpacing: '0.5px' }}>FACULTY PORTAL</span>
+                        <div className="sidebar-title">JNTU-GV</div>
+                        <div className="sidebar-role">Faculty Portal</div>
                     </div>
                 </div>
 
-                <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1rem', overflowY: 'auto' }}>
-                    <button onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }}
-                        style={{
-                            background: activeTab === 'dashboard' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                            color: activeTab === 'dashboard' ? '#60a5fa' : '#94a3b8',
-                            border: 'none', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.95rem', transition: 'all 0.2s', fontWeight: activeTab === 'dashboard' ? '600' : 'normal'
-                        }}>
-                        <span>📊</span> Dashboard
-                    </button>
-                    <button onClick={() => { setActiveTab('my-classes'); setIsSidebarOpen(false); }}
-                        style={{
-                            background: activeTab === 'my-classes' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                            color: activeTab === 'my-classes' ? '#60a5fa' : '#94a3b8',
-                            border: 'none', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.95rem', transition: 'all 0.2s', fontWeight: activeTab === 'my-classes' ? '600' : 'normal'
-                        }}>
-                        <span>📅</span> Weekly Schedule
-                    </button>
-                    <button onClick={() => { setActiveTab('attendance'); setIsSidebarOpen(false); }}
-                        style={{
-                            background: activeTab === 'attendance' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                            color: activeTab === 'attendance' ? '#60a5fa' : '#94a3b8',
-                            border: 'none', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.95rem', transition: 'all 0.2s', fontWeight: activeTab === 'attendance' ? '600' : 'normal'
-                        }}>
-                        <span>📝</span> Attendance History
-                    </button>
-                    <button onClick={() => { setActiveTab('view-timetables'); setIsSidebarOpen(false); }}
-                        style={{
-                            background: activeTab === 'view-timetables' ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
-                            color: activeTab === 'view-timetables' ? '#60a5fa' : '#94a3b8',
-                            border: 'none', textAlign: 'left', padding: '12px 16px', borderRadius: '8px', cursor: 'pointer',
-                            display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.95rem', transition: 'all 0.2s', fontWeight: activeTab === 'view-timetables' ? '600' : 'normal'
-                        }}>
-                        <span>🗓️</span> Dept Timetables
-                    </button>
+                <nav className="nav-menu">
+                    <NavItem icon={<Icons.Home />} label="Overview" active={activeTab === 'overview'} onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Calendar />} label="My Timetable" active={activeTab === 'timetable'} onClick={() => { setActiveTab('timetable'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Users />} label="My Students" active={activeTab === 'students'} onClick={() => { setActiveTab('students'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Check />} label="Attendance" active={activeTab === 'attendance'} onClick={() => { setActiveTab('attendance'); setMobileMenuOpen(false); }} />
                 </nav>
 
-                <div style={{ padding: '1.5rem', borderTop: '1px solid #1e293b', background: '#0f172a' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1rem' }}>
-                        <div style={{ width: 40, height: 40, background: '#3b82f6', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: 'white' }}>👤</div>
-                        <div style={{ overflow: 'hidden' }}>
-                            <div style={{ fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px', fontSize: '0.9rem' }}>{currentUser?.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Associate Professor</div>
+                <div className="sidebar-footer">
+                    <div className="user-snippet">
+                        <div className="user-avatar">{currentUser?.name?.charAt(0) || 'F'}</div>
+                        <div style={{ flex: 1, overflow: 'hidden' }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentUser?.name}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Faculty</div>
                         </div>
+                        <button
+                            onClick={() => { localStorage.removeItem('user'); navigate('/login', { replace: true }); }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                        >
+                            <Icons.LogOut />
+                        </button>
                     </div>
-                    <button onClick={simpleLogout} style={{ width: '100%', padding: '10px', background: '#334155', color: '#cbd5e1', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}>
-                        Sign Out
-                    </button>
                 </div>
             </aside>
 
-            {/* Main Content Area */}
-            <main className="dashboard-main">
-                {/* Header */}
-                <header className="dashboard-header">
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <button className="mobile-menu-btn" onClick={() => setIsSidebarOpen(true)}>☰</button>
-                        <div className="greeting">
-                            <h1 style={{ fontSize: '1.5rem', color: '#1e293b', margin: 0, fontWeight: '700' }}>Welcome back, {currentUser?.name}! 👋</h1>
-                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>{new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} • Have a great day.</p>
-                        </div>
-                    </div>
-                    <div>
-                        <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: 0 }}>
-                            ⬇️ <span className="mobile-hide">Download Schedule</span>
-                        </button>
-                    </div>
+            {/* Mobile Overlay */}
+            {mobileMenuOpen && <div className="sidebar-overlay open" onClick={() => setMobileMenuOpen(false)} />}
+
+            {/* Main Content */}
+            <main className="dashboard-main-area">
+                <header className="mobile-header">
+                    <button
+                        onClick={() => setMobileMenuOpen(true)}
+                        style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', padding: '0.5rem', display: 'flex' }}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    </button>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Faculty Dashboard</span>
                 </header>
 
-                <div style={{ padding: '2rem', flex: 1, background: '#f8fafc' }}>
-                    {/* Notifications Removed */}
-
-
-                    {activeTab === 'dashboard' && (
-                        <div className="fade-in">
-                            {/* Stats Grid */}
-                            <div className="stats-grid">
-                                <div className="stat-card">
-                                    <div className="stat-value">{classesToday}</div>
-                                    <div className="stat-label">Classes Today</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-value" style={{ color: totalHours < minWorkload ? '#eab308' : '#22c55e' }}>
-                                        {totalHours} <span style={{ fontSize: '1rem', color: '#64748b' }}>/ {minWorkload} h</span>
-                                    </div>
-                                    <div className="stat-label">Total Load (Min {minWorkload}h)</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-value">{theorySessions}</div>
-                                    <div className="stat-label">Theory Periods</div>
-                                </div>
-                                <div className="stat-card">
-                                    <div className="stat-value">{labSessions}</div>
-                                    <div className="stat-label">Lab Sessions</div>
-                                </div>
-                            </div>
-
-                            {/* Today's Schedule */}
-                            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem' }}>Today's Schedule</h3>
-
-                            {!loading && todaysPeriods.length === 0 ? (
-                                <div className="card" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-secondary)' }}>
-                                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>☕</div>
-                                    <h3>No classes scheduled for today</h3>
-                                    <p>Enjoy your free time!</p>
-                                </div>
-                            ) : (
-                                <div className="class-grid">
-                                    {todaysPeriods.map((cls, idx) => (
-                                        <div key={idx} className="class-card">
-                                            <div className="class-card-header">
-                                                <div>
-                                                    <span className={`badge-pill ${cls.type === 'Lab' ? 'badge-lab' : 'badge-theory'}`}>{cls.type}</span>
-                                                </div>
-                                                <div style={{ fontWeight: '600', color: 'var(--primary)', fontSize: '1.2rem' }}>{cls.room}</div>
-                                            </div>
-                                            <div className="class-card-body">
-                                                <div className="time-badge">
-                                                    <span>⏰</span> {cls.time}
-                                                </div>
-                                                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.2rem' }}>{cls.subject}</h4>
-                                                <p style={{ color: 'var(--text-secondary)', margin: 0, fontSize: '0.9rem' }}>{cls.semester}</p>
-
-                                                <button
-                                                    className="btn"
-                                                    style={{ width: '100%', marginTop: '1.5rem' }}
-                                                    onClick={() => setSelectedClass(cls)}
-                                                >
-                                                    Mark Attendance
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {activeTab === 'my-classes' && (
-                        <div className="fade-in">
-                            <h3 style={{ marginBottom: '1.5rem' }}>Full Weekly Schedule</h3>
-                            <div className="table-container">
-                                {allPeriods.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
-                                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📅</div>
-                                        <h3>No classes scheduled</h3>
-                                        <p>You have no classes assigned for this week.</p>
-                                    </div>
-                                ) : (() => {
-                                    // Define the standard grid columns (Time Slots) matching dept timetable
-                                    const timeSlots = [
-                                        "09:30 - 10:30", "10:30 - 11:30", "11:30 - 12:30",
-                                        "LUNCH",
-                                        "02:00 - 03:00", "03:00 - 04:00", "04:00 - 05:00"
-                                    ];
-
-                                    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-                                    // Helper to check if a period matches a time slot
-                                    // Handles fuzzy matching like "09:30 - 10:30" vs "9:30-10:30"
-                                    const normalizeTime = (t) => t.replace(/\s/g, '').replace(/^0/, '');
-                                    const findClass = (dayname, slotTime) => {
-                                        if (slotTime === 'LUNCH') return null;
-                                        // Find period in allPeriods that matches day and roughly matches time
-                                        return allPeriods.find(p =>
-                                            p.day === dayname &&
-                                            (normalizeTime(p.time) === normalizeTime(slotTime) || p.time.includes(slotTime.split(' - ')[0]))
-                                        );
-                                    };
-
-                                    return (
-                                        <table className="clean-table" style={{ width: '100%', tableLayout: 'fixed', textAlign: 'center' }}>
-                                            <thead>
-                                                <tr>
-                                                    <th style={{ width: '80px' }}>Day</th>
-                                                    <th>09:30 - 10:30</th>
-                                                    <th>10:30 - 11:30</th>
-                                                    <th>11:30 - 12:30</th>
-                                                    <th style={{ width: '100px', backgroundColor: '#f8fafc', color: '#64748b' }}>Lunch</th>
-                                                    <th>02:00 - 03:00</th>
-                                                    <th>03:00 - 04:00</th>
-                                                    <th>04:00 - 05:00</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {days.map(day => (
-                                                    <tr key={day} style={{ height: '80px' }}>
-                                                        <td style={{ fontWeight: 'bold' }}>{day}</td>
-                                                        {timeSlots.map((slot, idx) => {
-                                                            if (slot === 'LUNCH') {
-                                                                return <td key={idx} style={{ backgroundColor: '#f8fafc', fontWeight: 'bold', fontSize: '0.8rem', color: '#64748b' }}>BREAK</td>
-                                                            }
-
-                                                            const cls = findClass(day, slot);
-
-                                                            return (
-                                                                <td key={idx} style={{ padding: '4px' }}>
-                                                                    {cls ? (
-                                                                        <div className="fade-in" style={{
-                                                                            height: '100%',
-                                                                            backgroundColor: cls.type === 'Lab' ? '#e6f4ff' : '#eff6ff',
-                                                                            border: `1px solid ${cls.type === 'Lab' ? '#bfdbfe' : '#dbeafe'}`,
-                                                                            borderRadius: '6px',
-                                                                            padding: '6px',
-                                                                            display: 'flex',
-                                                                            flexDirection: 'column',
-                                                                            justifyContent: 'center',
-                                                                            alignItems: 'center',
-                                                                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                                                                        }}>
-                                                                            <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: '#1e293b', marginBottom: '4px' }}>{cls.subject}</div>
-                                                                            <div style={{ fontSize: '0.75rem', color: cls.type === 'Lab' ? '#0369a1' : '#2563eb' }}>
-                                                                                {cls.semester}
-                                                                            </div>
-                                                                            <div style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '2px' }}>
-                                                                                {cls.type === 'Lab' ? 'Practical / Lab' : 'Theory'}
-                                                                            </div>
-                                                                        </div>
-                                                                    ) : (
-                                                                        <div style={{ height: '100%', background: 'transparent' }}></div>
-                                                                    )}
-                                                                </td>
-                                                            )
-                                                        })}
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    )
-                                })()}
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'attendance' && (
-                        <div className="fade-in">
-                            <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-                                <h3>Attendance History</h3>
-                                <p style={{ color: 'var(--text-secondary)' }}>View past attendance records and analytics.</p>
-                                <button className="btn-outline" style={{ marginTop: '1rem' }}>View Reports</button>
-                            </div>
-                        </div>
-                    )}
-
-                    {activeTab === 'view-timetables' && (
-                        <div className="fade-in">
-                            <FullTimetableView
-                                currentUser={currentUser}
-                                mySubject={mySubject}
-                                onScheduleUpdate={() => fetchMySchedule(currentUser?.name)}
-                            />
-                        </div>
-                    )}
-
-                    {activeTab === 'book-slots' && (
-                        <div style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
-                            Please use the "Book My Slots" button in the notification above.
-                        </div>
-                    )}
+                <div className="fade-in-up">
+                    {activeTab === 'overview' && <FacultyOverview currentUser={currentUser} onNavigate={setActiveTab} />}
+                    {activeTab === 'timetable' && <FacultyTimetable currentUser={currentUser} />}
+                    {activeTab === 'students' && <SectionStudentList />}
+                    {activeTab === 'attendance' && <AttendanceManager />}
                 </div>
             </main>
-
-            {/* ATTENDANCE MODAL */}
-            {selectedClass && (
-                <AttendanceModal
-                    selectedClass={selectedClass}
-                    onClose={() => setSelectedClass(null)}
-                    currentUser={currentUser}
-                />
-            )}
-
-
         </div>
     )
 }
+
+function NavItem({ icon, label, active, onClick }) {
+    return (
+        <div className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>
+            {icon}
+            <span>{label}</span>
+        </div>
+    )
+}
+
+// --- SUB COMPONENTS ---
+
+function FacultyOverview({ currentUser, onNavigate }) {
+    return (
+        <div>
+            <div style={{ marginBottom: '2rem' }}>
+                <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome, {currentUser?.name?.split(' ')[0]}! 👋</h1>
+                <p style={{ color: '#64748b' }}>Here is your daily activity summary.</p>
+            </div>
+
+            <div className="modern-stats-grid">
+                <div className="premium-stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: '#eff6ff', color: '#2563eb' }}><Icons.Calendar /></div>
+                    <div className="stat-content">
+                        <h5>Today's Classes</h5>
+                        <h3>3</h3>
+                        <span className="stat-trend trend-neutral">Next: 2:00 PM (Lab)</span>
+                    </div>
+                </div>
+                <div className="premium-stat-card">
+                    <div className="stat-icon-wrapper" style={{ background: '#f0fdf4', color: '#16a34a' }}><Icons.Check /></div>
+                    <div className="stat-content">
+                        <h5>Attendance</h5>
+                        <h3>Pending</h3>
+                        <span className="stat-trend trend-down">Mark for 2 Sections</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid-split" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '2rem' }}>
+                <div className="glass-table-container" style={{ padding: '1.5rem' }}>
+                    <h3 style={{ marginTop: 0 }}>Upcoming Classes</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {[
+                            { time: '09:30 - 10:30', subject: 'Computer Networks', room: 'CSE-302', type: 'Theory' },
+                            { time: '11:30 - 12:30', subject: 'Data Science', room: 'CSE-304', type: 'Theory' },
+                            { time: '14:00 - 16:00', subject: 'Web Technologies Lab', room: 'Lab-2', type: 'Lab' }
+                        ].map((cls, i) => (
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#f8fafc', borderRadius: '12px', borderLeft: `4px solid ${cls.type === 'Lab' ? '#3b82f6' : '#10b981'}` }}>
+                                <div>
+                                    <div style={{ fontWeight: '700', color: '#0f172a' }}>{cls.subject}</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.room} • {cls.type}</div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ fontWeight: '600', color: '#334155' }}>{cls.time}</div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="glass-table-container" style={{ padding: '1.5rem' }}>
+                    <h3 style={{ marginTop: 0 }}>Quick Actions</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <button
+                            className="btn-action primary"
+                            style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            onClick={() => onNavigate('attendance')}
+                        >
+                            <Icons.Check /> Mark Attendance
+                        </button>
+                        <button
+                            className="btn-action"
+                            style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            onClick={() => onNavigate('students')}
+                        >
+                            <Icons.Users /> Student List
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function SectionStudentList() {
+    const [students, setStudents] = useState([])
+
+    useEffect(() => {
+        // Fetch real students or usage mocks if empty
+        fetch(`${API_BASE_URL}/api/students`).then(res => res.json()).then(data => {
+            if (Array.isArray(data) && data.length > 0) setStudents(data)
+            else setStudents([
+                { rollNumber: '21131A0501', name: 'Student One', year: '3', semester: '1' },
+                { rollNumber: '21131A0502', name: 'Student Two', year: '3', semester: '1' },
+                { rollNumber: '21131A0503', name: 'Student Three', year: '3', semester: '1' },
+            ])
+        }).catch(e => console.error(e))
+    }, [])
+
+    return (
+        <div className="glass-table-container">
+            <div className="table-header-premium">
+                <h3>My Students (CSE - III Year)</h3>
+                <button className="btn-action">Export List</button>
+            </div>
+            <table className="premium-table">
+                <thead>
+                    <tr>
+                        <th>Roll No</th>
+                        <th>Name</th>
+                        <th>Year</th>
+                        <th>Contact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {students.map((s, i) => (
+                        <tr key={i}>
+                            <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
+                            <td>{s.name}</td>
+                            <td>{s.year}-{s.semester}</td>
+                            <td><span style={{ color: '#3b82f6', cursor: 'pointer' }}>Email</span></td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    )
+}
+
+function FacultyTimetable({ currentUser }) {
+    // Reusing the robust timetable view from previous but simplified styling for "My Timetable"
+    return (
+        <div className="glass-table-container">
+            <div className="table-header-premium">
+                <h3>Weekly Schedule</h3>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Showing schedule for: {currentUser?.name}</span>
+            </div>
+            <div style={{ padding: '2rem', overflowX: 'auto' }}>
+                <table className="premium-table" style={{ textAlign: 'center' }}>
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>09:30-10:30</th>
+                            <th>10:30-11:30</th>
+                            <th>11:30-12:30</th>
+                            <th>02:00-03:00</th>
+                            <th>03:00-04:00</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
+                            <tr key={day}>
+                                <td style={{ fontWeight: '700' }}>{day}</td>
+                                <td>-</td>
+                                <td style={{ background: '#eff6ff', color: '#2563eb', fontWeight: '600' }}>CNS (CSE-A)</td>
+                                <td>-</td>
+                                <td style={{ background: '#f0fdf4', color: '#16a34a', fontWeight: '600' }}>Lab (CSE-B)</td>
+                                <td style={{ background: '#f0fdf4', color: '#16a34a', fontWeight: '600' }}>Lab (CSE-B)</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    )
+}
+
+function AttendanceManager() {
+    const [selectedSec, setSelectedSec] = useState('');
+
+    return (
+        <div>
+            <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
+                <h3 style={{ marginTop: 0 }}>Mark Attendance</h3>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                        <label className="input-label">Select Section / Class</label>
+                        <select className="modern-input" value={selectedSec} onChange={(e) => setSelectedSec(e.target.value)}>
+                            <option value="">-- Choose Class --</option>
+                            <option value="3A">III Year - Section A (CSE)</option>
+                            <option value="3B">III Year - Section B (CSE)</option>
+                            <option value="2A">II Year - Section A (ECE)</option>
+                        </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <label className="input-label">Date</label>
+                        <input type="date" className="modern-input" defaultValue={new Date().toISOString().split('T')[0]} />
+                    </div>
+                    <button className="btn-primary" style={{ width: 'auto', marginBottom: '2px' }}>Load Student List</button>
+                </div>
+            </div>
+
+            {selectedSec && (
+                <div className="glass-table-container">
+                    <div className="table-header-premium">
+                        <h3>Attendance Sheet: {selectedSec === '3A' ? 'III Year CSE - A' : selectedSec}</h3>
+                        <div>
+                            <span style={{ marginRight: '1rem', fontSize: '0.9rem' }}>Present: 45</span>
+                            <span style={{ fontSize: '0.9rem', color: '#ef4444' }}>Absent: 5</span>
+                        </div>
+                    </div>
+                    <table className="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Roll No</th>
+                                <th>Name</th>
+                                <th style={{ textAlign: 'center' }}>Status</th>
+                                <th>Remarks</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {[1, 2, 3, 4, 5].map(i => (
+                                <tr key={i}>
+                                    <td style={{ fontFamily: 'monospace' }}>21131A050{i}</td>
+                                    <td>Student {i}</td>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <div style={{ display: 'inline-flex', gap: '0.5rem', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
+                                            <button style={{ background: '#22c55e', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600' }}>P</button>
+                                            <button style={{ background: 'transparent', color: '#cbd5e1', border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600' }}>A</button>
+                                        </div>
+                                    </td>
+                                    <td><input className="search-input-premium" style={{ width: '100%', padding: '0.4rem' }} placeholder="Optional" /></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    <div style={{ padding: '1rem', textAlign: 'right' }}>
+                        <button className="btn-primary" style={{ width: '200px' }}>Submit Attendance</button>
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
+
+export default FacultyDashboard;
 
 function BookingModal({ currentUser, onClose }) {
     const [semesters] = useState([
