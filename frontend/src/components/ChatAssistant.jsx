@@ -51,7 +51,7 @@ const ChatAssistant = () => {
     };
 
     return (
-        <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, fontFamily: "'Inter', sans-serif" }}>
+        <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 2147483647, fontFamily: "'Inter', sans-serif" }}>
             {/* Chat Window */}
             {isOpen && (
                 <div className="chat-window fade-in-up" style={{
