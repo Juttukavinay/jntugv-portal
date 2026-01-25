@@ -218,38 +218,118 @@ function SectionStudentList() {
 }
 
 function FacultyTimetable({ currentUser }) {
-    // Reusing the robust timetable view from previous but simplified styling for "My Timetable"
+    const [timetable, setTimetable] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [selectedSemester, setSelectedSemester] = useState('I-B.Tech I Sem')
+
+    const fetchTimetable = useCallback(() => {
+        setTimetable(null)
+        setLoading(true)
+        fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) setTimetable(data[0])
+                else if (data && data.schedule) setTimetable(data)
+                else setTimetable(null)
+                setLoading(false)
+            })
+            .catch(err => {
+                console.error(err)
+                setLoading(false)
+            })
+    }, [selectedSemester])
+
+    useEffect(() => { fetchTimetable() }, [fetchTimetable]);
+
     return (
         <div className="glass-table-container">
             <div className="table-header-premium">
-                <h3>Weekly Schedule</h3>
-                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>Showing schedule for: {currentUser?.name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <h3>Class Timetable</h3>
+                    <select
+                        value={selectedSemester}
+                        onChange={(e) => setSelectedSemester(e.target.value)}
+                        className="search-input-premium"
+                        style={{ width: '220px', padding: '0.5rem' }}
+                    >
+                        <option value="I-B.Tech I Sem">I Year - I Sem</option>
+                        <option value="I-B.Tech II Sem">I Year - II Sem</option>
+                        <option value="II-B.Tech I Sem">II Year - I Sem</option>
+                        <option value="II-B.Tech II Sem">II Year - II Sem</option>
+                        <option value="III-B.Tech I Sem">III Year - I Sem</option>
+                        <option value="III-B.Tech II Sem">III Year - II Sem</option>
+                        <option value="IV-B.Tech I Sem">IV Year - I Sem</option>
+                        <option value="IV-B.Tech II Sem">IV Year - II Sem</option>
+                        <option value="I-M.Tech I Sem">M.Tech I-I Sem</option>
+                        <option value="I-MCA I Sem">MCA I-I Sem</option>
+                    </select>
+                </div>
+                <button className="btn-action" onClick={fetchTimetable} disabled={loading}>
+                    {loading ? 'Loading...' : '🔄 Refresh'}
+                </button>
             </div>
-            <div style={{ padding: '2rem', overflowX: 'auto' }}>
-                <table className="premium-table" style={{ textAlign: 'center' }}>
-                    <thead>
-                        <tr>
-                            <th>Day</th>
-                            <th>09:30-10:30</th>
-                            <th>10:30-11:30</th>
-                            <th>11:30-12:30</th>
-                            <th>02:00-03:00</th>
-                            <th>03:00-04:00</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-                            <tr key={day}>
-                                <td style={{ fontWeight: '700' }}>{day}</td>
-                                <td>-</td>
-                                <td style={{ background: '#eff6ff', color: '#2563eb', fontWeight: '600' }}>CNS (CSE-A)</td>
-                                <td>-</td>
-                                <td style={{ background: '#f0fdf4', color: '#16a34a', fontWeight: '600' }}>Lab (CSE-B)</td>
-                                <td style={{ background: '#f0fdf4', color: '#16a34a', fontWeight: '600' }}>Lab (CSE-B)</td>
+
+            <div style={{ padding: '1rem', overflowX: 'auto' }}>
+                {timetable ? (
+                    <table className="premium-table" style={{ textAlign: 'center', minWidth: '1000px' }}>
+                        <thead>
+                            <tr>
+                                <th>Day</th>
+                                <th>09:30-10:30</th>
+                                <th>10:30-11:30</th>
+                                <th>11:30-12:30</th>
+                                <th style={{ background: '#f8fafc', width: '50px' }}>Lunch</th>
+                                <th>02:00-03:00</th>
+                                <th>03:00-04:00</th>
+                                <th>04:00-05:00</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {timetable.schedule.map((day, dIndex) => {
+                                const morning = day.periods.filter(p => !p.time.includes('12:30') && !p.time.startsWith('02') && !p.time.startsWith('03') && !p.time.startsWith('04'));
+                                const afternoon = day.periods.filter(p => p.time.startsWith('02') || p.time.startsWith('03') || p.time.startsWith('04'));
+
+                                const renderBlock = (periods) => (
+                                    <div style={{ display: 'flex', gap: '4px', height: '100%' }}>
+                                        {periods.map((p, i) => (
+                                            <div key={i} style={{
+                                                flex: p.credits || 1,
+                                                background: p.type === 'Lab' ? '#eff6ff' : (p.type === 'Theory' ? '#fffbeb' : '#f4f4f5'),
+                                                padding: '8px',
+                                                borderRadius: '6px',
+                                                border: '1px solid #e2e8f0',
+                                                fontSize: '0.8rem',
+                                                minHeight: '60px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                justifyContent: 'center'
+                                            }}>
+                                                <div style={{ fontWeight: '700', color: '#1e293b' }}>{p.subject}</div>
+                                                {p.faculty && <div style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: '2px' }}>{p.faculty}</div>}
+                                                {p.room && <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{p.room}</div>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+
+                                return (
+                                    <tr key={dIndex}>
+                                        <td style={{ fontWeight: '700', color: '#334155' }}>{day.day}</td>
+                                        <td colSpan={3} style={{ padding: '6px' }}>{renderBlock(morning)}</td>
+                                        <td style={{ background: '#f1f5f9', fontWeight: 'bold', fontSize: '0.75rem', color: '#94a3b8', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>LUNCH</td>
+                                        <td colSpan={3} style={{ padding: '6px' }}>{renderBlock(afternoon)}</td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
+                ) : (
+                    <div style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
+                        <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📅</div>
+                        <h3>No timetable found for this semester</h3>
+                        <p>Please contact the HOD to generate the schedule.</p>
+                    </div>
+                )}
             </div>
         </div>
     )
