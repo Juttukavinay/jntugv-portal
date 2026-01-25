@@ -104,11 +104,11 @@ function Login() {
 
     const fillDemo = (role) => {
         const demos = {
-            principal: { email: 'principal@jntugv.edu', password: '9701458518' },
-            vice_principal: { email: 'viceprincipal@jntugv.edu', password: '9701458518' },
+            principal: { email: 'principal@jntugv.edu', password: 'Jntugv@2024' },
+            vice_principal: { email: 'viceprincipal@jntugv.edu', password: 'Jntugv@2024' },
             hod: { email: 'drch1@jntugv.edu.in', password: '9876543201' },
-            faculty: { email: 'btirimularao@jntugv.edu', password: '9701458518' },
-            student: { email: '21131A0501', password: 'password' }
+            faculty: { email: 'mranilwurity5@jntugv.edu.in', password: '9876543205' },
+            student: { email: '23vv5a1201@jntugv.edu', password: 'password' }
         }
         if (demos[role]) setCredentials(demos[role])
     }

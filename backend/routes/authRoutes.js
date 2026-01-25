@@ -10,12 +10,12 @@ router.post('/login', async (req, res) => {
 
     try {
         // 1. Check Principal (No OTP)
-        if (email === 'principal@jntugv.edu' && password === '9701458518') {
+        if (email === 'principal@jntugv.edu' && password === 'Jntugv@2024') {
             return res.json({ role: 'principal', name: 'Principal Dashboard', email });
         }
 
         // 1.5 Check Vice Principal
-        if (email === 'viceprincipal@jntugv.edu' && password === '9701458518') {
+        if (email === 'viceprincipal@jntugv.edu' && password === 'Jntugv@2024') {
             return res.json({ role: 'vice_principal', name: 'Vice Principal', email });
         }
 

@@ -57,4 +57,22 @@ router.put('/assign-hod', async (req, res) => {
     }
 });
 
+// Delete a department
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Optional: Check if department has faculty or students before deleting?
+        // For now, simple delete as requested.
+        await Department.findByIdAndDelete(id);
+
+        // Also update any faculty associated with this department? 
+        // Or leave them? For now, we just delete the department record.
+
+        res.status(200).json({ message: 'Department deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;

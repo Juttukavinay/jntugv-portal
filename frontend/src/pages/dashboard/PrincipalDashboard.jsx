@@ -352,9 +352,31 @@ function DepartmentPanel() {
                                 {editingDept === dept.name ? (
                                     <button className="btn-action" onClick={() => setEditingDept(null)}>Cancel</button>
                                 ) : (
-                                    <button className="btn-action primary" onClick={() => setEditingDept(dept.name)}>
-                                        {dept.hodName ? 'Reassign' : 'Assign HOD'}
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <button className="btn-action primary" onClick={() => setEditingDept(dept.name)}>
+                                            {dept.hodName ? 'Reassign' : 'Assign HOD'}
+                                        </button>
+                                        <button
+                                            className="btn-action"
+                                            style={{ background: '#fee2e2', color: '#ef4444', border: '1px solid #fca5a5' }}
+                                            onClick={async () => {
+                                                if (window.confirm(`Are you sure you want to delete ${dept.name}?`)) {
+                                                    try {
+                                                        const res = await fetch(`${API_BASE_URL}/api/departments/${dept._id}`, { method: 'DELETE' });
+                                                        if (res.ok) {
+                                                            setDepartments(prev => prev.filter(d => d._id !== dept._id));
+                                                        } else {
+                                                            alert('Failed to delete department');
+                                                        }
+                                                    } catch (e) {
+                                                        console.error(e);
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
                                 )}
                             </td>
                         </tr>
