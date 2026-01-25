@@ -10,11 +10,14 @@ import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
 import ChatAssistant from './components/ChatAssistant'
+import ErrorBoundary from './components/ErrorBoundary'
 
 function App() {
   return (
     <Router>
-      <ChatAssistant />
+      <ErrorBoundary>
+        <ChatAssistant />
+      </ErrorBoundary>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />

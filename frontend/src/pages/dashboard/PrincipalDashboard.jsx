@@ -126,7 +126,7 @@ function DashboardOverview({ onNavigate }) {
                 faculty: Array.isArray(f) ? f.length : 0,
                 depts: Array.isArray(d) ? d.length : 0
             });
-        });
+        }).catch(err => console.error("Failed to load dashboard stats", err));
     }, []);
 
     return (

@@ -1,11 +1,20 @@
 import { Navigate, useLocation } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-    const user = JSON.parse(localStorage.getItem('user'));
     const location = useLocation();
+    let user = null;
+
+    try {
+        const storedUser = localStorage.getItem('user');
+        if (storedUser && storedUser !== "undefined") {
+            user = JSON.parse(storedUser);
+        }
+    } catch (error) {
+        console.error("Auth Error: Corrupted user data", error);
+        localStorage.removeItem('user'); // Auto-fix
+    }
 
     if (!user) {
-        // Redirect to login if no user found
         return <Navigate to="/login" replace state={{ from: location }} />;
     }
 
