@@ -9,9 +9,12 @@ import StudentDashboard from './pages/dashboard/StudentDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
+import ChatAssistant from './components/ChatAssistant'
+
 function App() {
   return (
     <Router>
+      <ChatAssistant />
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
