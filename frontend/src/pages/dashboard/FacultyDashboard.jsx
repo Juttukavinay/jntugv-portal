@@ -217,10 +217,19 @@ function SectionStudentList() {
     )
 }
 
+import { createPortal } from 'react-dom'
+
 function FacultyTimetable({ currentUser }) {
     const [timetable, setTimetable] = useState(null)
     const [loading, setLoading] = useState(false)
     const [selectedSemester, setSelectedSemester] = useState('I-B.Tech I Sem')
+
+    // Booking States
+    const [bookingSlot, setBookingSlot] = useState(null)
+    const [isAllocationModalOpen, setIsAllocationModalOpen] = useState(false)
+
+    // Personal Schedule States
+    const [mySchedule, setMySchedule] = useState(null)
 
     const fetchTimetable = useCallback(() => {
         setTimetable(null)
@@ -239,13 +248,76 @@ function FacultyTimetable({ currentUser }) {
             })
     }, [selectedSemester])
 
-    useEffect(() => { fetchTimetable() }, [fetchTimetable]);
+    const fetchMySchedule = useCallback(() => {
+        // Fetch all timetables and filter by current user's name
+        // Ideally this should be a dedicated API endpoint /api/timetables/my-schedule?facultyName=...
+        // For now, we reuse the all timetables endpoint or if available.
+        // Let's try to mock the filter logic based on all available timetables if possible, 
+        // or just rely on the current view for now (optimally we want a real endpoint).
+        // I'll implement a robust client-side filter for demonstration if server not ready:
+        fetch(`${API_BASE_URL}/api/timetables`)
+            .then(res => res.json())
+            .then(data => {
+                // Aggregate all periods where faculty == currentUser.name
+                const allArray = Array.isArray(data) ? data : [data]
+                const myPeriods = []
+                allArray.forEach(tt => {
+                    if (!tt.schedule) return;
+                    tt.schedule.forEach(day => {
+                        day.periods.forEach(p => {
+                            if (p.faculty === currentUser.name) {
+                                myPeriods.push({
+                                    day: day.day,
+                                    time: p.time,
+                                    subject: p.subject,
+                                    semester: tt.className || tt.semester, // Fallback
+                                    room: p.room
+                                })
+                            }
+                        })
+                    })
+                })
+                setMySchedule(myPeriods)
+            })
+    }, [currentUser])
+
+    useEffect(() => {
+        fetchTimetable();
+        if (currentUser) fetchMySchedule();
+    }, [fetchTimetable, fetchMySchedule, currentUser]);
+
+    const handleSlotClick = (dayIndex, periodIndex, periodData) => {
+        // Only allow booking if slot is free or assigned to self (to edit)
+        // Adjust logic as needed. The prompt says "assign part class to their as classes".
+        // Let's assume one can overwrite or book empty slots.
+
+        // Find existing data
+        const day = timetable.schedule[dayIndex];
+        const period = day.periods[periodIndex];
+
+        setBookingSlot({
+            dayIndex,
+            periodIndex,
+            day: day.day,
+            time: period.time,
+            currentSubject: period.subject === '-' ? '' : period.subject,
+            currentFaculty: period.faculty,
+            semester: selectedSemester
+        })
+        setIsAllocationModalOpen(true)
+    }
+
+    const handleAllocationSuccess = () => {
+        setIsAllocationModalOpen(false)
+        fetchTimetable()
+        fetchMySchedule()
+    }
 
     return (
         <div className="glass-table-container">
             <div className="table-header-premium">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <h3>Class Timetable</h3>
+                    <h3>Class Timetable (Book Slots)</h3>
                     <select
                         value={selectedSemester}
                         onChange={(e) => setSelectedSemester(e.target.value)}
@@ -269,6 +341,7 @@ function FacultyTimetable({ currentUser }) {
                 </button>
             </div>
 
+            {/* BOOKING GRID */}
             <div style={{ padding: '1rem', overflowX: 'auto' }}>
                 {timetable ? (
                     <table className="premium-table" style={{ textAlign: 'center', minWidth: '1000px' }}>
@@ -289,26 +362,46 @@ function FacultyTimetable({ currentUser }) {
                                 const morning = day.periods.filter(p => !p.time.includes('12:30') && !p.time.startsWith('02') && !p.time.startsWith('03') && !p.time.startsWith('04'));
                                 const afternoon = day.periods.filter(p => p.time.startsWith('02') || p.time.startsWith('03') || p.time.startsWith('04'));
 
-                                const renderBlock = (periods) => (
+                                const renderBlock = (periods, baseIndex = 0) => (
                                     <div style={{ display: 'flex', gap: '4px', height: '100%' }}>
-                                        {periods.map((p, i) => (
-                                            <div key={i} style={{
-                                                flex: p.credits || 1,
-                                                background: p.type === 'Lab' ? '#eff6ff' : (p.type === 'Theory' ? '#fffbeb' : '#f4f4f5'),
-                                                padding: '8px',
-                                                borderRadius: '6px',
-                                                border: '1px solid #e2e8f0',
-                                                fontSize: '0.8rem',
-                                                minHeight: '60px',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                justifyContent: 'center'
-                                            }}>
-                                                <div style={{ fontWeight: '700', color: '#1e293b' }}>{p.subject}</div>
-                                                {p.faculty && <div style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: '2px' }}>{p.faculty}</div>}
-                                                {p.room && <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{p.room}</div>}
-                                            </div>
-                                        ))}
+                                        {periods.map((p, i) => {
+                                            // We need correct index in original array. 
+                                            // Assuming order is preserved, morning is 0,1,2. Afternoon is 3,4,5 usually?
+                                            // ACTUALLY: periods is a filtered subset. We need the real index in day.periods to update.
+                                            const realIndex = day.periods.indexOf(p);
+
+                                            return (
+                                                <div key={i}
+                                                    onClick={() => handleSlotClick(dIndex, realIndex, p)}
+                                                    style={{
+                                                        flex: p.credits || 1,
+                                                        background: p.type === 'Lab' ? '#eff6ff' : (p.type === 'Theory' ? '#fffbeb' : '#f4f4f5'),
+                                                        padding: '8px',
+                                                        borderRadius: '6px',
+                                                        border: '1px solid #e2e8f0',
+                                                        fontSize: '0.8rem',
+                                                        minHeight: '60px',
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        justifyContent: 'center',
+                                                        cursor: 'pointer',
+                                                        transition: 'transform 0.1s',
+                                                    }}
+                                                    title="Click to Book/Edit"
+                                                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                                                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                                >
+                                                    <div style={{ fontWeight: '700', color: '#1e293b' }}>{p.subject}</div>
+                                                    {p.faculty ? (
+                                                        <div style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: '2px', fontWeight: '600' }}>
+                                                            {p.faculty === currentUser.name ? '👤 You' : p.faculty}
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontStyle: 'italic' }}>Available</div>
+                                                    )}
+                                                </div>
+                                            )
+                                        })}
                                     </div>
                                 );
 
@@ -327,8 +420,142 @@ function FacultyTimetable({ currentUser }) {
                     <div style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
                         <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>📅</div>
                         <h3>No timetable found for this semester</h3>
-                        <p>Please contact the HOD to generate the schedule.</p>
                     </div>
+                )}
+            </div>
+
+            {/* MY PERSONAL SCHEDULE SECTION */}
+            <div style={{ marginTop: '3rem', padding: '1rem', borderTop: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div style={{ padding: '8px', borderRadius: '8px', background: '#f0fdf4', color: '#16a34a' }}><Icons.Calendar /></div>
+                    <h3 style={{ margin: 0 }}>My Weekly Schedule</h3>
+                </div>
+
+                {!mySchedule || mySchedule.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem' }}>You have no classes allocated yet.</div>
+                ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                        {mySchedule.map((cls, idx) => (
+                            <div key={idx} style={{ background: 'white', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0', borderLeft: '4px solid #3b82f6', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                    <span style={{ fontWeight: '700', fontSize: '0.9rem', color: '#64748b' }}>{cls.day}</span>
+                                    <span style={{ background: '#eff6ff', color: '#2563eb', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '600' }}>{cls.time}</span>
+                                </div>
+                                <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem' }}>{cls.subject}</h4>
+                                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.semester} • {cls.room || 'N/A'}</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* ALLOCATION MODAL */}
+            {isAllocationModalOpen && bookingSlot && createPortal(
+                <AllocationModal
+                    slot={bookingSlot}
+                    currentUser={currentUser}
+                    onClose={() => setIsAllocationModalOpen(false)}
+                    onSuccess={handleAllocationSuccess}
+                />,
+                document.body
+            )}
+        </div>
+    )
+}
+
+function AllocationModal({ slot, currentUser, onClose, onSuccess }) {
+    const [status, setStatus] = useState('idle') // idle, submitting, success
+    const [subject, setSubject] = useState(slot.currentSubject)
+    const [assignToMe, setAssignToMe] = useState(true)
+
+    const handleConfirm = async () => {
+        setStatus('submitting')
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/timetables/update`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    semester: slot.semester,
+                    dayIndex: slot.dayIndex,
+                    periodIndex: slot.periodIndex,
+                    subject: subject || 'Free', // or whatever logic
+                    faculty: assignToMe ? currentUser.name : '', // If toggle off, maybe clear or keep? Assuming "Me" for now.
+                    // If we want to allow assigning OTHERS, we need a dropdown. The prompt says "allocated by themselves", so Self is priority.
+                })
+            })
+
+            if (res.ok) {
+                setStatus('success')
+                setTimeout(() => {
+                    onSuccess()
+                }, 1500) // Wait for animation
+            } else {
+                alert('Booking failed')
+                setStatus('idle')
+            }
+        } catch (e) {
+            console.error(e)
+            setStatus('idle')
+        }
+    }
+
+    return (
+        <div className="modal-overlay">
+            <div className="modal-content glass-panel" style={{ maxWidth: '400px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+
+                {status === 'success' ? (
+                    <div className="success-animation" style={{ padding: '2rem' }}>
+                        <div style={{
+                            width: '80px', height: '80px', margin: '0 auto 1rem',
+                            borderRadius: '50%', background: '#22c55e', color: 'white',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '3rem', boxShadow: '0 0 20px rgba(34, 197, 94, 0.4)'
+                        }}>
+                            ✓
+                        </div>
+                        <h3 style={{ color: '#16a34a' }}>Slot Booked!</h3>
+                        <p style={{ color: '#64748b' }}>You have successfully assigned this class.</p>
+                    </div>
+                ) : (
+                    <>
+                        <h3 style={{ marginTop: 0 }}>Confirm Allocation</h3>
+                        <p style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                            {slot.semester} • {slot.day} • {slot.time}
+                        </p>
+
+                        <div style={{ textAlign: 'left', margin: '1.5rem 0' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 'bold' }}>Subject</label>
+                            <input
+                                className="modern-input"
+                                value={subject}
+                                onChange={e => setSubject(e.target.value)}
+                                placeholder="Enter Subject Name"
+                                style={{ width: '100%', marginBottom: '1rem' }}
+                            />
+
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                                <input
+                                    type="checkbox"
+                                    checked={assignToMe}
+                                    onChange={e => setAssignToMe(e.target.checked)}
+                                    style={{ width: '18px', height: '18px' }}
+                                />
+                                <span>Assign to <b>{currentUser.name}</b> (Me)</span>
+                            </label>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+                            <button className="btn-action" onClick={onClose} disabled={status === 'submitting'}>Cancel</button>
+                            <button
+                                className="btn-action primary"
+                                onClick={handleConfirm}
+                                disabled={status === 'submitting' || !subject}
+                                style={{ minWidth: '120px' }}
+                            >
+                                {status === 'submitting' ? '...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </>
                 )}
             </div>
         </div>
