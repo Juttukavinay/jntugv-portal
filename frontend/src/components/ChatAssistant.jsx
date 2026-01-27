@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import API_BASE_URL from '../config';
 
 const ChatAssistant = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -22,7 +23,7 @@ const ChatAssistant = () => {
         scrollToBottom();
     }, [messages, isOpen]);
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!input.trim()) return;
 
         const userMsg = { id: Date.now(), text: input, sender: 'user' };
@@ -30,24 +31,29 @@ const ChatAssistant = () => {
         setInput('');
         setIsTyping(true);
 
-        // Simulate AI processing
-        setTimeout(() => {
-            const botResponse = generateResponse(userMsg.text);
-            setMessages(prev => [...prev, { id: Date.now() + 1, text: botResponse, sender: 'bot' }]);
-            setIsTyping(false);
-        }, 1200);
-    };
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/chat/ask`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: userMsg.text,
+                    // You could pass user context here if needed
+                })
+            });
 
-    const generateResponse = (text) => {
-        const lower = text.toLowerCase();
-        if (lower.includes('timetable') || lower.includes('schedule')) return "You can manage or view timetables in the 'My Timetable' tab. Faculty can book slots directly by clicking on them.";
-        if (lower.includes('attendance')) return "Attendance marking is available in the 'Attendance' section. You can mark students present/absent for your specific sections.";
-        if (lower.includes('student')) return "Student directories can be accessed via the 'Students' tab. You can view profiles, academic history, and contact details there.";
-        if (lower.includes('exam') || lower.includes('result')) return "Exam schedules and results are handled by the Exam Cell module. Please check the 'Exams' tab if available.";
-        if (lower.includes('leave') || lower.includes('holiday')) return "You can apply for leave in the 'Profile' section. Upcoming holidays are listed in the Academic Calendar.";
-        if (lower.includes('lab')) return "Lab sessions are highlighted in Blue in your timetable. Ensure lab assistants are assigned before the session starts.";
-        if (lower.includes('hello') || lower.includes('hi')) return "Hello there! ready to assist you.";
-        return "I'm trained to assist with JNTU-GV portal tasks. You can ask me about Timetables, Attendance, Students, or Lab sessions.";
+            const data = await response.json();
+
+            if (response.ok) {
+                setMessages(prev => [...prev, { id: Date.now() + 1, text: data.reply, sender: 'bot' }]);
+            } else {
+                setMessages(prev => [...prev, { id: Date.now() + 1, text: "Sorry, I'm having trouble retrieving that info right now.", sender: 'bot' }]);
+            }
+        } catch (error) {
+            console.error("Chat Error", error);
+            setMessages(prev => [...prev, { id: Date.now() + 1, text: "Network error. Please try again later.", sender: 'bot' }]);
+        } finally {
+            setIsTyping(false);
+        }
     };
 
     return (
@@ -70,16 +76,16 @@ const ChatAssistant = () => {
                     overflow: 'hidden'
                 }}>
                     {/* Header */}
-                    <div style={{ 
-                        padding: '1.2rem', 
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', 
+                    <div style={{
+                        padding: '1.2rem',
+                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
                         color: 'white',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '12px'
                     }}>
-                        <div style={{ 
-                            width: '32px', height: '32px', background: 'white', borderRadius: '50%', 
+                        <div style={{
+                            width: '32px', height: '32px', background: 'white', borderRadius: '50%',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             color: '#2563eb', fontWeight: 'bold'
                         }}>AI</div>
@@ -93,12 +99,12 @@ const ChatAssistant = () => {
                     {/* Messages Area */}
                     <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {messages.map(msg => (
-                            <div key={msg.id} style={{ 
+                            <div key={msg.id} style={{
                                 alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
                                 maxWidth: '80%',
                             }}>
-                                <div style={{ 
-                                    padding: '10px 16px', 
+                                <div style={{
+                                    padding: '10px 16px',
                                     borderRadius: msg.sender === 'user' ? '12px 12px 0 12px' : '12px 12px 12px 0',
                                     background: msg.sender === 'user' ? '#3b82f6' : '#334155',
                                     color: msg.sender === 'user' ? 'white' : '#e2e8f0',
@@ -108,7 +114,7 @@ const ChatAssistant = () => {
                                 }}>
                                     {msg.text}
                                 </div>
-                                {msg.sender === 'bot' && <span style={{ fontSize: '0.65rem', color: '#64748b', marginLeft: '4px', marginTop: '4px', display:'block' }}>AI Assistant</span>}
+                                {msg.sender === 'bot' && <span style={{ fontSize: '0.65rem', color: '#64748b', marginLeft: '4px', marginTop: '4px', display: 'block' }}>AI Assistant</span>}
                             </div>
                         ))}
                         {isTyping && (
@@ -123,25 +129,25 @@ const ChatAssistant = () => {
 
                     {/* Input Area */}
                     <div style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '0.5rem', background: '#0f172a' }}>
-                        <input 
+                        <input
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyPress={e => e.key === 'Enter' && handleSend()}
                             placeholder="Type a message..."
-                            style={{ 
-                                flex: 1, 
-                                background: '#1e293b', 
-                                border: '1px solid #334155', 
-                                padding: '10px 14px', 
-                                borderRadius: '20px', 
+                            style={{
+                                flex: 1,
+                                background: '#1e293b',
+                                border: '1px solid #334155',
+                                padding: '10px 14px',
+                                borderRadius: '20px',
                                 color: 'white',
                                 outline: 'none'
                             }}
                         />
-                        <button 
+                        <button
                             onClick={handleSend}
-                            style={{ 
-                                width: '40px', height: '40px', borderRadius: '50%', 
+                            style={{
+                                width: '40px', height: '40px', borderRadius: '50%',
                                 background: '#3b82f6', border: 'none', color: 'white',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 cursor: 'pointer', transition: 'transform 0.2s'
@@ -155,7 +161,7 @@ const ChatAssistant = () => {
 
             {/* Float Button */}
             {!isOpen && (
-                <button 
+                <button
                     onClick={() => setIsOpen(true)}
                     className="pulse-animation"
                     style={{

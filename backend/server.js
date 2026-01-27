@@ -29,6 +29,7 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
 
 app.get('/', (req, res) => {
     res.send('API is running...');
