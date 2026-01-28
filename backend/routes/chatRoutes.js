@@ -45,6 +45,8 @@ router.post('/ask', async (req, res) => {
         }
 
         // 2. Generate Answer with Gemini
+        // Using gemini-1.5-flash as default. 
+        // Note: If you get a 404, ensure "Generative Language API" is enabled in Google Cloud Console.
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
@@ -71,7 +73,11 @@ router.post('/ask', async (req, res) => {
 
     } catch (error) {
         console.error("AI Chat Error Details:", error);
-        res.status(500).json({ reply: "I'm having trouble connecting to the university brain right now. Please try again later." });
+        // Check for specific 404 error which means model not found or API not enabled
+        if (error.message && error.message.includes('404')) {
+            console.error("CRITICAL: The Gemini Model was not found. Please check if the API is enabled in Google AI Studio.");
+        }
+        res.status(500).json({ reply: "I'm having trouble connecting to the university brain right now. (Error: " + (error.message || "Unknown") + ")" });
     }
 });
 
