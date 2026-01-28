@@ -13,7 +13,8 @@ const ChatAssistant = () => {
     const location = useLocation();
 
     // Only show on dashboard pages
-    if (!location.pathname.includes('/dashboard')) return null;
+    // if (!location.pathname.includes('/dashboard')) return null;
+    console.log("ChatAssistant Mounted. Path:", location.pathname);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

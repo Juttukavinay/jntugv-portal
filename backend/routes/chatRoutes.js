@@ -8,37 +8,44 @@ const Timetable = require('../models/timetableModel');
 const Department = require('../models/departmentModel');
 
 // Initialize Gemini
+// Make sure GEMINI_API_KEY is in your .env file
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 router.post('/ask', async (req, res) => {
     try {
-        const { question, userContext } = req.body; 
-        // userContext could contain role, userId, etc. to personalize logic
+        const { question, userContext } = req.body;
+
+        console.log("Received Question:", question);
 
         if (!process.env.GEMINI_API_KEY) {
             return res.status(500).json({ reply: "AI Configuration Error: GEMINI_API_KEY is missing." });
         }
 
         // 1. Fetch relevant "Knowledge" from our Database (Context Injection)
-        // In a full RAG, we would use vector search here. 
-        // For this "Instant" version, we'll fetch key summaries.
-        
-        const [subjects, departments, facultyCount] = await Promise.all([
-            Subject.find({}, 'courseName courseCode semester credits').limit(20), // Limit to avoid token overflow if huge
-            Department.find({}, 'deptName'),
-            Faculty.countDocuments()
-        ]);
+        let subjects = [], departments = [], facultyCount = 0;
+        let dbContext = "";
 
-        // Construct a context string
-        const dbContext = `
-        Current University Stats:
-        - Departments: ${departments.map(d => d.deptName).join(', ')}
-        - Total Faculty: ${facultyCount}
-        - Sample Subjects: ${subjects.map(s => `${s.courseName} (${s.courseCode})`).join(', ')}
-        `;
+        try {
+            [subjects, departments, facultyCount] = await Promise.all([
+                Subject.find({}, 'courseName courseCode semester credits').limit(20),
+                Department.find({}, 'deptName'),
+                Faculty.countDocuments()
+            ]);
 
-        // 2. Prepare the Model
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+            // Construct a context string
+            dbContext = `
+            Current University Stats:
+            - Departments: ${departments.map(d => d.deptName).join(', ')}
+            - Total Faculty: ${facultyCount}
+            - Sample Subjects: ${subjects.map(s => `${s.courseName} (${s.courseCode})`).join(', ')}
+            `;
+        } catch (dbError) {
+            console.error("Database Context Error (Proceeding without DB context):", dbError.message);
+            dbContext = "Database context unavailable. Answer based on general knowledge only.";
+        }
+
+        // 2. Generate Answer with Gemini
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
         You are the official AI Assistant for the JNTU-GV (Jawaharlal Nehru Technological University - Gurajada Vizianagaram) University Portal.
@@ -47,16 +54,15 @@ router.post('/ask', async (req, res) => {
         Here is some real-time data from the university database:
         ${dbContext}
 
-        User Question: "${question}"
-
         Guidelines:
         - Be helpful, professional, and friendly.
         - If the user asks about specific dynamic data (like "My attendance" or "Timetable") that isn't in the snippet above, kindly explain that you can guide them to the respective dashboard tab (e.g., "Please check the 'Attendance' tab for your personal records").
         - If the question is general (like "What is data structures?"), answer it using your general knowledge.
         - Keep answers concise and strictly relevant to the portal context.
+
+        User Question: ${question}
         `;
 
-        // 3. Generate Answer
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
@@ -64,7 +70,7 @@ router.post('/ask', async (req, res) => {
         res.json({ reply: text });
 
     } catch (error) {
-        console.error("AI Chat Error:", error);
+        console.error("AI Chat Error Details:", error);
         res.status(500).json({ reply: "I'm having trouble connecting to the university brain right now. Please try again later." });
     }
 });
