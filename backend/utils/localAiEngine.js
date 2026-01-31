@@ -26,7 +26,15 @@ async function handleOfflineRequest(question) {
     }
 
     // Default Fallback
-    return "I am the JNTU-GV Offline Assistant. I can help with:\n- 'Check for clashes'\n- 'Where is Professor [Name]'\n- 'Find free rooms'\n- 'University statistics'\n\n(Note: Online Gemini is currently disabled, so I'm using local database logic).";
+    return "Greetings. I am your JNTU-GV Academic Assistant. While my advanced neural processing (Gemini) is currently restricted, I can still provide authoritative data from our internal records. 
+
+I am specialized in:
+- ** Timetable Audit **: Ask me to 'Check for clashes'.
+- ** Faculty Directory **: Inquire about a specific professor, e.g., 'Where is Professor Smith?'.
+- ** Facility Management **: Ask for 'Room availability' or hall locations.
+- ** Institutional Metrics **: Request 'University statistics'.
+
+How may I assist you with your academic inquiries today ? ";
 }
 
 async function detectClashes() {

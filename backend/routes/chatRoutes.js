@@ -45,12 +45,18 @@ router.post('/ask', async (req, res) => {
             return res.status(500).json({ reply: "AI Configuration Error: GEMINI_API_KEY is missing." });
         }
 
-        // 1. Context Injection logic remains same
+        // 1. Context Injection + Local Search
         let dbContext = "";
+        const { handleOfflineRequest } = require('../utils/localAiEngine');
+        const localResult = await handleOfflineRequest(question);
+
+        // Determine if local engine found specific data (not just the fallback help message)
+        const isSpecificLocalResult = localResult && !localResult.includes("Offline Assistant");
+
         if (!skipContext) {
             try {
                 const [subjects, departments, faculties, classes, courses, attendanceStats, timetables] = await Promise.all([
-                    Subject.find({}).limit(30),
+                    Subject.find({}).limit(50),
                     Department.find({}),
                     Faculty.find({}),
                     Timetable.distinct('className'),
@@ -59,19 +65,22 @@ router.post('/ask', async (req, res) => {
                     Timetable.find({})
                 ]);
                 const studentCount = await Student.countDocuments();
-                const workloadMap = faculties.map(f => {
-                    let hrs = 0;
-                    timetables.forEach(tt => tt.schedule.forEach(day => day.periods.forEach(p => {
-                        if (p.faculty === f.name) hrs += (p.type === 'Lab' ? 3 : (p.credits || 1));
-                    })));
-                    return `${f.name}: ${hrs}/${f.designation?.includes('Prof') ? 14 : 16}h`;
-                }).slice(0, 15).join(', ');
 
-                dbContext = `UNIVERSITY CONTEXT:\nDepts: ${departments.map(d => d.deptName).join(', ')}\nFaculty Workload: ${workloadMap}\nStudents: ${studentCount}\nActive Semesters: ${classes.join(', ')}`;
-            } catch (e) { console.error(e); }
+                dbContext = `UNIVERSITY DATA SNAPSHOT:
+- Departments: ${departments.map(d => d.deptName).join(', ')}
+- Total Students: ${studentCount}
+- Active Semesters: ${classes.join(', ')}
+- Database Search Result: ${isSpecificLocalResult ? localResult : "No specific record found, use general knowledge."}`;
+            } catch (e) { console.error("Context build error:", e); }
         }
 
-        const systemInstruction = `You are the JNTU-GV University Smart Assistant. Use the following data if relevant: ${dbContext}. Keep answers professional. History is provided for context. Answer academic questions or portal-specific ones correctly.`;
+        const systemInstruction = `You are the JNTU-GV University Smart Assistant, a highly professional academic aide. 
+Your goal is to provide authoritative, accurate, and concise information about JNTU-GV University.
+If specific database results are provided in the context, prioritize them. 
+If the user asks for clashes, professor locations, or statistics, refer to the Database Search Result.
+Maintain a formal, helpful, and "Professor-like" tone at all times.
+DATA CONTEXT:
+${dbContext}`;
 
         const modelsToTry = ["gemini-2.0-flash", "gemini-pro-latest"];
         let text = "";
@@ -79,17 +88,20 @@ router.post('/ask', async (req, res) => {
         for (const modelName of modelsToTry) {
             try {
                 const model = genAI.getGenerativeModel({ model: modelName, systemInstruction });
-                let geminiHistory = history.map(msg => ({ role: msg.sender === 'user' ? 'user' : 'model', parts: [{ text: msg.text }] }));
+                let geminiHistory = history.map(msg => ({
+                    role: msg.sender === 'user' ? 'user' : 'model',
+                    parts: [{ text: msg.text }]
+                }));
                 const chat = model.startChat({ history: geminiHistory });
                 const result = await chat.sendMessage(question);
                 text = (await result.response).text();
                 if (text) break;
-            } catch (err) { console.warn(modelName, err.message); }
+            } catch (err) { console.warn(`Model ${modelName} failed:`, err.message); }
         }
 
+        // If Gemini fails or returns empty, use the local engine directly
         if (!text) {
-            const { handleOfflineRequest } = require('../utils/localAiEngine');
-            text = await handleOfflineRequest(question);
+            text = localResult;
         }
 
         // --- PERSISTENCE LOGIC ---
