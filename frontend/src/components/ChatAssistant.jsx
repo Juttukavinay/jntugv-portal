@@ -5,7 +5,7 @@ import API_BASE_URL from '../config';
 const ChatAssistant = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { id: 1, text: "Hello! I'm your JNTU-GV AI Assistant. How can I help you manage your academic tasks today?", sender: 'bot' }
+        { id: 1, text: "Greetings. I am the JNTU-GV Academic Assistant. How may I facilitate your institutional or academic inquiries today?", sender: 'bot' }
     ]);
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
