@@ -3,6 +3,7 @@ import API_BASE_URL from '../../config'
 import { useNavigate } from 'react-router-dom'
 import '../../App.css'
 import GlobalLoader from '../../components/GlobalLoader'
+import CommunicationCenter from '../../components/CommunicationCenter'
 
 // --- ICONS ---
 const Icons = {
@@ -11,7 +12,8 @@ const Icons = {
     Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>,
     Award: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></svg>,
     LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
-    Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+    Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+    Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 }
 
 function StudentDashboard() {
@@ -235,6 +237,7 @@ function StudentDashboard() {
             case 'timetable': return <TimetableTab />;
             case 'results': return <ResultsTab />;
             case 'library': return <LibraryTab />;
+            case 'notices': return <CommunicationCenter user={currentUser} />;
             default: return <OverviewTab />;
         }
     }
@@ -256,6 +259,7 @@ function StudentDashboard() {
                     <NavItem icon={<Icons.Calendar />} label="My Timetable" active={activeTab === 'timetable'} onClick={() => { setActiveTab('timetable'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Award />} label="Exam Results" active={activeTab === 'results'} onClick={() => { setActiveTab('results'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Book />} label="Library Books" active={activeTab === 'library'} onClick={() => { setActiveTab('library'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Mail />} label="Notices" active={activeTab === 'notices'} onClick={() => { setActiveTab('notices'); setMobileMenuOpen(false); }} />
                 </nav>
 
                 <div className="sidebar-footer">

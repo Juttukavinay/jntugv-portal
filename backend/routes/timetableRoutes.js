@@ -7,10 +7,34 @@ const Faculty = require('../models/facultyModel');
 // GET
 router.get('/', async (req, res) => {
     try {
-        const { semester } = req.query;
+        const { semester, facultyName } = req.query;
         let query = {};
         if (semester) query.className = semester;
+
         const timetables = await Timetable.find(query);
+
+        if (facultyName) {
+            let myPeriods = [];
+            timetables.forEach(tt => {
+                if (!tt.schedule) return;
+                tt.schedule.forEach(day => {
+                    day.periods.forEach(p => {
+                        if (p.faculty === facultyName || (p.assistants && p.assistants.includes(facultyName))) {
+                            myPeriods.push({
+                                day: day.day,
+                                time: p.time,
+                                subject: p.subject,
+                                semester: tt.className,
+                                room: p.room,
+                                type: p.type
+                            });
+                        }
+                    });
+                });
+            });
+            return res.json(myPeriods);
+        }
+
         res.json(timetables);
     } catch (e) {
         res.status(500).json({ message: e.message });
@@ -153,7 +177,8 @@ router.post('/generate', async (req, res) => {
                 if (placed) break;
                 if (strat === 'afternoon') {
                     for (let i of dayIndices) {
-                        if (!days[i].afternoonConfig) {
+                        // Check if day already has a lab (either morning or afternoon)
+                        if (!days[i].afternoonConfig && !days[i].morningConfig) {
                             days[i].afternoonConfig = lab.type;
                             days[i].assignedLab = lab;
                             placed = true; break;
@@ -161,9 +186,10 @@ router.post('/generate', async (req, res) => {
                     }
                 }
                 else if (strat === 'morning') {
-                    if (lab.type === 'Lab3') {
+                    if (lab.type === 'Lab3' || lab.type === 'Lab2') {
                         for (let i of dayIndices) {
-                            if (!days[i].morningConfig) {
+                            // Check if day already has a lab (either morning or afternoon)
+                            if (!days[i].morningConfig && !days[i].afternoonConfig) {
                                 days[i].morningConfig = 'Lab';
                                 days[i].assignedMorningLab = lab;
                                 placed = true; break;
@@ -581,8 +607,26 @@ router.put('/update', async (req, res) => {
 
                         if (conflict.length > 0) {
                             return res.status(409).json({
-                                message: `Conflict detected! Faculty '${conflict.join(', ')}' is already booked in ${t.className} at ${p.time}.`
+                                message: `Time Conflict! Faculty '${conflict.join(', ')}' is already booked in ${t.className} at ${p.time}.`
                             });
+                        }
+                    }
+
+                    // 4. Policy Check: One Lab Per Day
+                    const isTargetLab = subject && subject.toLowerCase().includes('lab');
+                    if (isTargetLab) {
+                        const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
+                        if (pIsLab) {
+                            const bookedFaculty = [];
+                            if (p.faculty && p.faculty !== 'N/A') bookedFaculty.push(p.faculty);
+                            if (p.assistants && Array.isArray(p.assistants)) bookedFaculty.push(...p.assistants);
+
+                            const labConflict = involvedFaculty.filter(f => bookedFaculty.includes(f));
+                            if (labConflict.length > 0) {
+                                return res.status(409).json({
+                                    message: `Policy Violation: '${labConflict.join(', ')}' already has another Lab on ${daySchedule.day} in ${t.className}. Max 1 lab per day allowed.`
+                                });
+                            }
                         }
                     }
                 }

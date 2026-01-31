@@ -28,7 +28,10 @@ const ChatAssistant = () => {
         if (!input.trim()) return;
 
         const userMsg = { id: Date.now(), text: input, sender: 'user' };
-        setMessages(prev => [...prev, userMsg]);
+        // Create the new history including the current message
+        const newMessages = [...messages, userMsg];
+
+        setMessages(newMessages);
         setInput('');
         setIsTyping(true);
 
@@ -38,7 +41,7 @@ const ChatAssistant = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     question: userMsg.text,
-                    // You could pass user context here if needed
+                    history: messages.slice(-10), // Send last 10 messages for context
                 })
             });
 
@@ -79,82 +82,140 @@ const ChatAssistant = () => {
                     {/* Header */}
                     <div style={{
                         padding: '1.2rem',
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                        background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
                         color: 'white',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '12px'
                     }}>
                         <div style={{
-                            width: '32px', height: '32px', background: 'white', borderRadius: '50%',
+                            width: '38px', height: '38px', background: 'rgba(255,255,255,0.2)',
+                            borderRadius: '12px', backdropFilter: 'blur(4px)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: '#2563eb', fontWeight: 'bold'
-                        }}>AI</div>
+                            fontSize: '1.2rem'
+                        }}>🤖</div>
                         <div>
-                            <h4 style={{ margin: 0, fontSize: '1rem' }}>JNTU-GV Assistant</h4>
-                            <span style={{ fontSize: '0.75rem', opacity: 0.9 }}>● Online</span>
+                            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: '600', letterSpacing: '0.5px' }}>JNTU-GV AI</h4>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '6px', height: '6px', background: '#4ade80', borderRadius: '50%' }}></span>
+                                <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>Active Now</span>
+                            </div>
                         </div>
-                        <button onClick={() => setIsOpen(false)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'white', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
+                        <button onClick={() => setIsOpen(false)} style={{
+                            marginLeft: 'auto', background: 'rgba(255,255,255,0.1)', border: 'none',
+                            color: 'white', width: '30px', height: '30px', borderRadius: '8px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            cursor: 'pointer', transition: 'all 0.2s'
+                        }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
                     </div>
 
                     {/* Messages Area */}
-                    <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{
+                        flex: 1, padding: '1.2rem', overflowY: 'auto', display: 'flex',
+                        flexDirection: 'column', gap: '1.2rem',
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: 'rgba(255,255,255,0.1) transparent'
+                    }}>
                         {messages.map(msg => (
                             <div key={msg.id} style={{
                                 alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                                maxWidth: '80%',
+                                maxWidth: '85%',
+                                animation: 'messageSlide 0.3s ease-out'
                             }}>
                                 <div style={{
-                                    padding: '10px 16px',
-                                    borderRadius: msg.sender === 'user' ? '12px 12px 0 12px' : '12px 12px 12px 0',
-                                    background: msg.sender === 'user' ? '#3b82f6' : '#334155',
-                                    color: msg.sender === 'user' ? 'white' : '#e2e8f0',
-                                    fontSize: '0.9rem',
-                                    lineHeight: '1.4',
-                                    boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
+                                    padding: '12px 16px',
+                                    borderRadius: msg.sender === 'user' ? '20px 20px 4px 20px' : '20px 20px 20px 4px',
+                                    background: msg.sender === 'user'
+                                        ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)'
+                                        : 'rgba(255,255,255,0.05)',
+                                    border: msg.sender === 'user' ? 'none' : '1px solid rgba(255,255,255,0.1)',
+                                    color: 'white',
+                                    fontSize: '0.92rem',
+                                    lineHeight: '1.5',
+                                    boxShadow: msg.sender === 'user' ? '0 4px 15px rgba(79, 70, 229, 0.3)' : 'none',
+                                    whiteSpace: 'pre-wrap'
                                 }}>
                                     {msg.text}
                                 </div>
-                                {msg.sender === 'bot' && <span style={{ fontSize: '0.65rem', color: '#64748b', marginLeft: '4px', marginTop: '4px', display: 'block' }}>AI Assistant</span>}
+                                <span style={{
+                                    fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)',
+                                    padding: '4px 8px', display: 'block',
+                                    textAlign: msg.sender === 'user' ? 'right' : 'left'
+                                }}>
+                                    {msg.sender === 'user' ? 'You' : 'AI Assistant'}
+                                </span>
                             </div>
                         ))}
                         {isTyping && (
-                            <div style={{ alignSelf: 'flex-start', padding: '10px 16px', background: '#334155', borderRadius: '12px', display: 'flex', gap: '4px' }}>
-                                <div className="typing-dot" style={{ width: '6px', height: '6px', background: '#94a3b8', borderRadius: '50%', animation: 'bounce 1.4s infinite ease-in-out both' }}></div>
-                                <div className="typing-dot" style={{ width: '6px', height: '6px', background: '#94a3b8', borderRadius: '50%', animation: 'bounce 1.4s infinite ease-in-out both 0.2s' }}></div>
-                                <div className="typing-dot" style={{ width: '6px', height: '6px', background: '#94a3b8', borderRadius: '50%', animation: 'bounce 1.4s infinite ease-in-out both 0.4s' }}></div>
+                            <div style={{ alignSelf: 'flex-start', padding: '12px 20px', background: 'rgba(255,255,255,0.05)', borderRadius: '20px', display: 'flex', gap: '6px' }}>
+                                <div className="typing-dot" style={{ width: '6px', height: '6px', background: '#818cf8', borderRadius: '50%', animation: 'bounce 1.4s infinite ease-in-out both' }}></div>
+                                <div className="typing-dot" style={{ width: '6px', height: '6px', background: '#818cf8', borderRadius: '50%', animation: 'bounce 1.4s infinite ease-in-out both 0.2s' }}></div>
+                                <div className="typing-dot" style={{ width: '6px', height: '6px', background: '#818cf8', borderRadius: '50%', animation: 'bounce 1.4s infinite ease-in-out both 0.4s' }}></div>
                             </div>
                         )}
                         <div ref={messagesEndRef} />
                     </div>
 
                     {/* Input Area */}
-                    <div style={{ padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', gap: '0.5rem', background: '#0f172a' }}>
-                        <input
+                    <div style={{
+                        padding: '1.2rem',
+                        borderTop: '1px solid rgba(255,255,255,0.1)',
+                        display: 'flex', gap: '0.8rem',
+                        background: 'rgba(15, 23, 42, 0.98)',
+                        alignItems: 'center'
+                    }}>
+                        <textarea
                             value={input}
                             onChange={e => setInput(e.target.value)}
-                            onKeyPress={e => e.key === 'Enter' && handleSend()}
-                            placeholder="Type a message..."
+                            onKeyDown={e => {
+                                if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSend();
+                                }
+                            }}
+                            placeholder="Ask JNTU-GV AI..."
+                            rows="1"
                             style={{
                                 flex: 1,
-                                background: '#1e293b',
-                                border: '1px solid #334155',
-                                padding: '10px 14px',
-                                borderRadius: '20px',
+                                background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                padding: '12px 16px',
+                                borderRadius: '15px',
                                 color: 'white',
-                                outline: 'none'
+                                outline: 'none',
+                                resize: 'none',
+                                fontSize: '0.9rem',
+                                transition: 'all 0.2s',
+                                maxHeight: '100px',
+                                fontFamily: 'inherit'
+                            }}
+                            onFocus={(e) => {
+                                e.target.style.background = 'rgba(255,255,255,0.05)';
+                                e.target.style.borderColor = '#6366f1';
+                            }}
+                            onBlur={(e) => {
+                                e.target.style.background = 'rgba(255,255,255,0.03)';
+                                e.target.style.borderColor = 'rgba(255,255,255,0.1)';
                             }}
                         />
                         <button
                             onClick={handleSend}
+                            disabled={!input.trim()}
                             style={{
-                                width: '40px', height: '40px', borderRadius: '50%',
-                                background: '#3b82f6', border: 'none', color: 'white',
+                                width: '42px', height: '42px', borderRadius: '12px',
+                                background: input.trim() ? 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' : '#334155',
+                                border: 'none', color: 'white',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                cursor: 'pointer', transition: 'transform 0.2s'
+                                cursor: input.trim() ? 'pointer' : 'default',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxShadow: input.trim() ? '0 4px 12px rgba(79, 70, 229, 0.3)' : 'none'
                             }}
+                            onMouseEnter={(e) => { if (input.trim()) e.currentTarget.style.transform = 'translateY(-2px)' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)' }}
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                         </button>
                     </div>
                 </div>
@@ -166,36 +227,59 @@ const ChatAssistant = () => {
                     onClick={() => setIsOpen(true)}
                     className="pulse-animation"
                     style={{
-                        width: '60px',
-                        height: '60px',
-                        borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                        width: '65px',
+                        height: '65px',
+                        borderRadius: '20px',
+                        background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
                         border: 'none',
                         color: 'white',
-                        boxShadow: '0 10px 25px rgba(37, 99, 235, 0.4)',
+                        boxShadow: '0 10px 30px rgba(79, 70, 229, 0.5)',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        transition: 'transform 0.3s'
+                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
+                        e.currentTarget.style.boxShadow = '0 15px 35px rgba(79, 70, 229, 0.6)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                        e.currentTarget.style.boxShadow = '0 10px 30px rgba(79, 70, 229, 0.5)';
+                    }}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <div style={{ position: 'relative' }}>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <span style={{
+                            position: 'absolute', top: '-5px', right: '-5px',
+                            width: '12px', height: '12px', background: '#4ade80',
+                            borderRadius: '50%', border: '2px solid #4f46e5'
+                        }}></span>
+                    </div>
                 </button>
             )}
 
             <style>{`
-                @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-                .pulse-animation { animation: pulse-shadow 2s infinite; }
+                @keyframes bounce { 0%, 80%, 100% { transform: scale(0); opacity: 0.3; } 40% { transform: scale(1); opacity: 1; } }
+                .pulse-animation { animation: pulse-shadow 3s infinite; }
                 @keyframes pulse-shadow {
-                    0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7); }
-                    70% { box-shadow: 0 0 0 15px rgba(37, 99, 235, 0); }
-                    100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+                    0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.6); }
+                    70% { box-shadow: 0 0 0 20px rgba(99, 102, 241, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
                 }
-                .fade-in-up { animation: fadeInUp 0.3s ease-out; }
-                @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+                .fade-in-up { 
+                    animation: fadeInUp 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+                    transform-origin: bottom right;
+                }
+                @keyframes fadeInUp { 
+                    from { opacity: 0; transform: translateY(30px) scale(0.9); } 
+                    to { opacity: 1; transform: translateY(0) scale(1); } 
+                }
+                @keyframes messageSlide {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
             `}</style>
         </div>
     );

@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
+import CommunicationCenter from '../../components/CommunicationCenter'
 
 // --- ICONS (Inline SVG for Premium Look) ---
 const Icons = {
@@ -14,7 +15,9 @@ const Icons = {
     Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
     LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
     Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
-    Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+    Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>,
+    Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>,
+    Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 }
 
 // --- MAIN HOD DASHBOARD ---
@@ -36,6 +39,8 @@ function HodDashboard() {
             case 'faculty': return <FacultyManager />;
             case 'timetable': return <TimetableManager />;
             case 'subjects': return <SubjectsManager />;
+            case 'attendance': return <AttendanceManager />;
+            case 'notices': return <CommunicationCenter user={user} />;
             default: return <HodOverview onNavigate={setActiveTab} user={user} />;
         }
     };
@@ -58,6 +63,8 @@ function HodDashboard() {
                     <NavItem icon={<Icons.Users />} label="Faculty Mgmt" active={activeTab === 'faculty'} onClick={() => setActiveTab('faculty')} />
                     <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
+                    <NavItem icon={<Icons.Check />} label="My Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
+                    <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} />
                 </nav>
 
                 <div className="sidebar-footer">
@@ -120,27 +127,35 @@ function HodOverview({ onNavigate, user }) {
     const [stats, setStats] = useState({ students: 0, faculty: 0, alerts: 0 });
     const [loading, setLoading] = useState(true);
 
+    const [mySchedule, setMySchedule] = useState([]);
+
     useEffect(() => {
         setLoading(true);
+        const dayMap = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const today = dayMap[new Date().getDay()];
+
         Promise.all([
             fetch(`${API_BASE_URL}/api/students`).then(res => res.json()),
-            fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json())
-        ]).then(([s, f]) => {
-            // In real app, filter s & f by HOD Department if API doesn't do it
-            // Assuming API returns all, and we display stats. 
-            // Better to show "My Dept" counts, but for now Total counts or mocked "My Dept" logic
-            // We'll use total counts for visual impact as per previous Dashboard
+            fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()),
+            fetch(`${API_BASE_URL}/api/timetables?facultyName=${encodeURIComponent(user.name || '')}`).then(res => res.json())
+        ]).then(([s, f, sched]) => {
             setStats({
                 students: Array.isArray(s) ? s.length : 0,
                 faculty: Array.isArray(f) ? f.length : 0,
                 alerts: 2
             });
+
+            if (Array.isArray(sched)) {
+                setMySchedule(sched);
+            }
             setLoading(false);
         }).catch(err => {
             console.error(err);
             setLoading(false);
         });
-    }, []);
+    }, [user.name]);
+
+    const todayClasses = mySchedule.filter(c => c.day === (['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()]));
 
     return (
         <div>
@@ -153,39 +168,53 @@ function HodOverview({ onNavigate, user }) {
             <div className="modern-stats-grid">
                 <div className="premium-stat-card">
                     <div className="stat-icon-wrapper" style={{ background: '#eff6ff', color: '#2563eb' }}><Icons.GradCap /></div>
-                    <div className="stat-content"><h5>Total Students</h5><h3>{stats.students}</h3><span className="stat-trend trend-up">Enrolled</span></div>
+                    <div className="stat-content"><h5>Dept. Students</h5><h3>{stats.students}</h3><span className="stat-trend trend-up">Registered</span></div>
                 </div>
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#f3e8ff', color: '#9333ea' }}><Icons.Users /></div>
-                    <div className="stat-content"><h5>Faculty Members</h5><h3>{stats.faculty}</h3><span className="stat-trend trend-neutral">Active</span></div>
+                    <div className="stat-icon-wrapper" style={{ background: '#fef2f2', color: '#ef4444' }}><Icons.Calendar /></div>
+                    <div className="stat-content"><h5>My Classes Today</h5><h3>{todayClasses.length}</h3><span className="stat-trend trend-neutral">Next: {todayClasses[0]?.time || 'None'}</span></div>
                 </div>
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#fff7ed', color: '#ea580c' }}><Icons.Calendar /></div>
-                    <div className="stat-content"><h5>Timetables</h5><h3>Active</h3><span className="stat-trend">Updated</span></div>
+                    <div className="stat-icon-wrapper" style={{ background: '#f0fdf4', color: '#16a34a' }}><Icons.Check /></div>
+                    <div className="stat-content"><h5>Attendance Status</h5><h3>{todayClasses.length > 0 ? 'Pending' : 'Completed'}</h3><span className="stat-trend">Updates daily</span></div>
                 </div>
             </div>
 
-            <div className="grid-split" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                <div className="premium-stat-card" onClick={() => onNavigate('timetable')} style={{ cursor: 'pointer', display: 'block', transition: 'transform 0.2s', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                        <div style={{ padding: '10px', background: '#eff6ff', borderRadius: '10px', color: '#2563eb' }}><Icons.Calendar /></div>
-                        <h3 style={{ margin: 0 }}>Timetable Manager</h3>
+            <div className="grid-split" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+                <div className="glass-table-container" style={{ padding: '1.5rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                        <h3 style={{ margin: 0 }}>My Classes Today ({['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][new Date().getDay()]})</h3>
+                        <button className="btn-action primary" onClick={() => onNavigate('attendance')} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>Mark Attendance</button>
                     </div>
-                    <p style={{ color: '#64748b' }}>Generate and manage weekly schedules for all years.</p>
+                    {todayClasses.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {todayClasses.map((cls, i) => (
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#f8fafc', borderRadius: '12px', borderLeft: `4px solid ${cls.type === 'Lab' ? '#3b82f6' : '#10b981'}` }}>
+                                    <div>
+                                        <div style={{ fontWeight: '700', color: '#0f172a' }}>{cls.subject}</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.semester} • {cls.room || 'TBD'}</div>
+                                    </div>
+                                    <div style={{ fontWeight: '600', color: '#334155' }}>{cls.time}</div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem' }}>No classes scheduled for you today.</div>
+                    )}
                 </div>
-                <div className="premium-stat-card" onClick={() => onNavigate('subjects')} style={{ cursor: 'pointer', display: 'block', transition: 'transform 0.2s', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                        <div style={{ padding: '10px', background: '#fff7ed', borderRadius: '10px', color: '#ea580c' }}><Icons.Book /></div>
-                        <h3 style={{ margin: 0 }}>Curriculum</h3>
+
+                <div className="glass-table-container" style={{ padding: '1.5rem' }}>
+                    <h3 style={{ margin: '0 0 1.5rem 0' }}>Quick Management</h3>
+                    <div className="grid-split" style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div className="stat-card-mini" onClick={() => onNavigate('timetable')} style={{ cursor: 'pointer', padding: '1rem', background: '#eff6ff', borderRadius: '12px', textAlign: 'center' }}>
+                            <div style={{ color: '#2563eb', marginBottom: '0.5rem' }}><Icons.Calendar /></div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>Manage Timetables</div>
+                        </div>
+                        <div className="stat-card-mini" onClick={() => onNavigate('faculty')} style={{ cursor: 'pointer', padding: '1rem', background: '#f5f3ff', borderRadius: '12px', textAlign: 'center' }}>
+                            <div style={{ color: '#7c3aed', marginBottom: '0.5rem' }}><Icons.Users /></div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>Faculty Workload</div>
+                        </div>
                     </div>
-                    <p style={{ color: '#64748b' }}>Update subject lists, credits, and electives.</p>
-                </div>
-                <div className="premium-stat-card" onClick={() => onNavigate('students')} style={{ cursor: 'pointer', display: 'block', transition: 'transform 0.2s', border: '1px solid #e2e8f0' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                        <div style={{ padding: '10px', background: '#f0fdf4', borderRadius: '10px', color: '#16a34a' }}><Icons.GradCap /></div>
-                        <h3 style={{ margin: 0 }}>Students</h3>
-                    </div>
-                    <p style={{ color: '#64748b' }}>Manage student directory and performance.</p>
                 </div>
             </div>
         </div>
@@ -328,14 +357,35 @@ function StudentManager() {
 }
 function FacultyManager() {
     const [faculty, setFaculty] = useState([]);
+    const [workloads, setWorkloads] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState('');
     const [currentFac, setCurrentFac] = useState(null);
     const [formData, setFormData] = useState({});
 
-    useEffect(() => {
-        fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFaculty).catch(console.error);
+    const fetchFacultyData = useCallback(() => {
+        setLoading(true);
+        Promise.all([
+            fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()),
+            fetch(`${API_BASE_URL}/api/faculty/workload`).then(res => res.json())
+        ]).then(([facultyData, workloadData]) => {
+            setFaculty(Array.isArray(facultyData) ? facultyData : []);
+            setWorkloads(Array.isArray(workloadData) ? workloadData : []);
+            setLoading(false);
+        }).catch(err => {
+            console.error(err);
+            setLoading(false);
+        });
     }, []);
+
+    useEffect(() => {
+        fetchFacultyData();
+    }, [fetchFacultyData]);
+
+    const getWorkload = (name) => {
+        return workloads.find(w => w.name === name) || { currentHours: 0, targetHours: 16, percentage: 0 };
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -378,22 +428,37 @@ function FacultyManager() {
                 </div>
                 <div style={{ overflowX: 'auto' }}>
                     <table className="premium-table">
-                        <thead><tr><th>Name</th><th>Designation</th><th>Mobile</th><th>Type</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Name</th><th>Designation</th><th>Workload (Target)</th><th>Availability</th><th>Action</th></tr></thead>
                         <tbody>
-                            {faculty.map(f => (
-                                <tr key={f._id}>
-                                    <td style={{ fontWeight: '600' }}>{f.name}</td>
-                                    <td>{f.designation}</td>
-                                    <td>{f.mobileNumber}</td>
-                                    <td><span className="badge-role">{f.type}</span></td>
-                                    <td>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button onClick={() => { setModalType('edit'); setCurrentFac(f); setFormData(f); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #e2e8f0', background: '#fff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Edit"><Icons.Edit /></button>
-                                            <button onClick={() => { setModalType('delete'); setCurrentFac(f); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #fee2e2', background: '#fff', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Delete"><Icons.Trash /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {faculty.map(f => {
+                                const work = getWorkload(f.name);
+                                return (
+                                    <tr key={f._id}>
+                                        <td style={{ fontWeight: '600' }}>{f.name}</td>
+                                        <td><div style={{ fontSize: '0.85rem' }}>{f.designation}</div><div style={{ fontSize: '0.7rem', color: '#64748b' }}>{f.type}</div></td>
+                                        <td style={{ minWidth: '150px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '4px' }}>
+                                                <span>{work.currentHours} / {work.targetHours} Hrs</span>
+                                                <span style={{ fontWeight: 'bold', color: work.percentage > 100 ? '#ef4444' : '#16a34a' }}>{work.percentage}%</span>
+                                            </div>
+                                            <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${work.percentage}%`, height: '100%', background: work.percentage > 100 ? '#ef4444' : '#3b82f6', transition: 'width 0.3s ease' }} />
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span style={{ padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', background: work.currentHours < work.targetHours ? '#dcfce7' : '#fee2e2', color: work.currentHours < work.targetHours ? '#166534' : '#991b1b' }}>
+                                                {work.currentHours < work.targetHours ? 'Available' : 'Occupied'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button onClick={() => { setModalType('edit'); setCurrentFac(f); setFormData(f); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #e2e8f0', background: '#fff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Edit"><Icons.Edit /></button>
+                                                <button onClick={() => { setModalType('delete'); setCurrentFac(f); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #fee2e2', background: '#fff', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Delete"><Icons.Trash /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
@@ -546,7 +611,12 @@ function TimetableManager() {
                                             {periods.map((p, i) => (
                                                 <div key={i} onClick={() => updateCell(dIndex, day.periods.indexOf(p))} style={{ flex: p.credits || 1, background: p.type === 'Lab' ? '#eff6ff' : (p.type === 'Theory' ? '#fffbeb' : '#f4f4f5'), padding: '6px', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.8rem' }}>
                                                     <div style={{ fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.subject}</div>
-                                                    {p.faculty && <div style={{ fontSize: '0.7rem', color: '#3b82f6' }}>{p.faculty}</div>}
+                                                    {p.faculty && <div style={{ fontSize: '0.65rem', color: '#2563eb', fontWeight: '700' }}>{p.faculty} (M)</div>}
+                                                    {p.assistants?.length > 0 && (
+                                                        <div style={{ fontSize: '0.6rem', color: '#64748b' }}>
+                                                            + {p.assistants.join(', ')}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -731,7 +801,6 @@ function SubjectsManager() {
         </div>
     );
 }
-
 function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
     const [subject, setSubject] = useState(initialData.currentSubject);
     const [mainFaculty, setMainFaculty] = useState(initialData.faculty);
@@ -754,20 +823,27 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
                 <input className="search-input-premium" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject or '-'" />
             </div>
             <div>
-                <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Main Faculty</label>
+                <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>
+                    {isLab ? 'Main Permanent Faculty (Professor)' : 'Assigned Faculty'}
+                </label>
                 <select className="search-input-premium" value={mainFaculty} onChange={e => setMainFaculty(e.target.value)}>
                     <option value="">-- Select --</option>
-                    <optgroup label="Regular">{renderOpts(regularFaculty)}</optgroup>
-                    <optgroup label="Contract">{renderOpts(contractFaculty)}</optgroup>
+                    <optgroup label="Regular / Permanent Professors">{renderOpts(regularFaculty)}</optgroup>
+                    <optgroup label="Contract Faculty">{renderOpts(contractFaculty)}</optgroup>
                 </select>
             </div>
             {isLab && (
                 <div>
-                    <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Assistants (Hold Ctrl)</label>
-                    <select multiple className="search-input-premium" style={{ height: '100px' }} value={assistants} onChange={handleAssistantChange}>
-                        <optgroup label="Contract (Recommended)">{renderOpts(contractFaculty)}</optgroup>
-                        <optgroup label="Regular">{renderOpts(regularFaculty)}</optgroup>
+                    <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>
+                        Lab Assistants (2 Contract Faculty)
+                    </label>
+                    <select multiple className="search-input-premium" style={{ height: '120px' }} value={assistants} onChange={handleAssistantChange}>
+                        <optgroup label="Contract Faculty (Preferred)">{renderOpts(contractFaculty)}</optgroup>
+                        <optgroup label="Regular Faculty">{renderOpts(regularFaculty)}</optgroup>
                     </select>
+                    <div style={{ fontSize: '0.7rem', color: '#2563eb', marginTop: '4px' }}>
+                        💡 Tip: Hold Ctrl to pick exactly 2 assistants as per lab norms.
+                    </div>
                 </div>
             )}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
@@ -785,6 +861,74 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
                     <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants })}>Save</button>
                 </div>
             </div>
+        </div>
+    );
+}
+
+function AttendanceManager() {
+    const [selectedSec, setSelectedSec] = useState('');
+    const [user, setUser] = useState({});
+
+    useEffect(() => {
+        const u = JSON.parse(localStorage.getItem('user'));
+        if (u) setUser(u);
+    }, []);
+
+    return (
+        <div>
+            <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
+                <h3 style={{ marginTop: 0 }}>Mark Attendance (My Classes)</h3>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
+                    <div style={{ flex: 1 }}>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Select Section / Class</label>
+                        <select className="search-input-premium" value={selectedSec} onChange={(e) => setSelectedSec(e.target.value)} style={{ width: '100%' }}>
+                            <option value="">-- Choose My Class --</option>
+                            <option value="III-B.Tech I Sem">III Year IT - A</option>
+                            <option value="IV-B.Tech I Sem">IV Year IT - A</option>
+                        </select>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Date</label>
+                        <input type="date" className="search-input-premium" style={{ width: '100%' }} defaultValue={new Date().toISOString().split('T')[0]} />
+                    </div>
+                    <button className="btn-action primary">Load Students</button>
+                </div>
+            </div>
+
+            {selectedSec && (
+                <div className="glass-table-container">
+                    <div className="table-header-premium">
+                        <h3>Attendance Sheet: {selectedSec}</h3>
+                        <div style={{ background: '#f8fafc', padding: '8px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '600' }}>
+                            <span style={{ color: '#16a34a' }}>Present: 0</span> | <span style={{ color: '#ef4444' }}>Absent: 0</span>
+                        </div>
+                    </div>
+                    <table className="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Roll No</th>
+                                <th>Name</th>
+                                <th style={{ textAlign: 'center' }}>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody style={{ textAlign: 'center' }}>
+                            <tr key="demo">
+                                <td style={{ fontFamily: 'monospace' }}>2231A0501</td>
+                                <td>Demo Student</td>
+                                <td>
+                                    <div style={{ display: 'inline-flex', gap: '0.5rem', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
+                                        <button style={{ background: '#22c55e', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>P</button>
+                                        <button style={{ background: 'transparent', color: '#64748b', border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>A</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style={{ padding: '1.5rem', textAlign: 'right' }}>
+                        <button className="btn-action primary" style={{ width: '200px' }}>Submit Attendance</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

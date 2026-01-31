@@ -1,84 +1,127 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const ChatSession = require('../models/chatModel');
 const Subject = require('../models/subjectModel');
+const Department = require('../models/departmentModel');
 const Faculty = require('../models/facultyModel');
 const Student = require('../models/studentModel');
+const Attendance = require('../models/attendanceModel');
+const Course = require('../models/courseModel');
 const Timetable = require('../models/timetableModel');
-const Department = require('../models/departmentModel');
 
-// Initialize Gemini
-// Make sure GEMINI_API_KEY is in your .env file
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+
+// @route   GET /api/chat/history/:userId
+// @desc    Get all chat sessions for a user
+router.get('/history/:userId', async (req, res) => {
+    try {
+        const sessions = await ChatSession.find({ userId: req.params.userId }).sort({ updatedAt: -1 });
+        res.json(sessions);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+// @route   GET /api/chat/session/:sessionId
+// @desc    Get a single chat session
+router.get('/session/:sessionId', async (req, res) => {
+    try {
+        const session = await ChatSession.findById(req.params.sessionId);
+        res.json(session);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 router.post('/ask', async (req, res) => {
     try {
-        const { question, userContext } = req.body;
+        const { question, history = [], skipContext, userId, sessionId } = req.body;
 
-        console.log("Received Question:", question);
+        console.log("Received Question from:", userId, "| Session:", sessionId);
 
         if (!process.env.GEMINI_API_KEY) {
             return res.status(500).json({ reply: "AI Configuration Error: GEMINI_API_KEY is missing." });
         }
 
-        // 1. Fetch relevant "Knowledge" from our Database (Context Injection)
-        let subjects = [], departments = [], facultyCount = 0;
+        // 1. Context Injection logic remains same
         let dbContext = "";
+        if (!skipContext) {
+            try {
+                const [subjects, departments, faculties, classes, courses, attendanceStats, timetables] = await Promise.all([
+                    Subject.find({}).limit(30),
+                    Department.find({}),
+                    Faculty.find({}),
+                    Timetable.distinct('className'),
+                    Course.find({}),
+                    Attendance.aggregate([{ $group: { _id: "$subject", count: { $sum: 1 } } }]),
+                    Timetable.find({})
+                ]);
+                const studentCount = await Student.countDocuments();
+                const workloadMap = faculties.map(f => {
+                    let hrs = 0;
+                    timetables.forEach(tt => tt.schedule.forEach(day => day.periods.forEach(p => {
+                        if (p.faculty === f.name) hrs += (p.type === 'Lab' ? 3 : (p.credits || 1));
+                    })));
+                    return `${f.name}: ${hrs}/${f.designation?.includes('Prof') ? 14 : 16}h`;
+                }).slice(0, 15).join(', ');
 
-        try {
-            [subjects, departments, facultyCount] = await Promise.all([
-                Subject.find({}, 'courseName courseCode semester credits').limit(20),
-                Department.find({}, 'deptName'),
-                Faculty.countDocuments()
-            ]);
-
-            // Construct a context string
-            dbContext = `
-            Current University Stats:
-            - Departments: ${departments.map(d => d.deptName).join(', ')}
-            - Total Faculty: ${facultyCount}
-            - Sample Subjects: ${subjects.map(s => `${s.courseName} (${s.courseCode})`).join(', ')}
-            `;
-        } catch (dbError) {
-            console.error("Database Context Error (Proceeding without DB context):", dbError.message);
-            dbContext = "Database context unavailable. Answer based on general knowledge only.";
+                dbContext = `UNIVERSITY CONTEXT:\nDepts: ${departments.map(d => d.deptName).join(', ')}\nFaculty Workload: ${workloadMap}\nStudents: ${studentCount}\nActive Semesters: ${classes.join(', ')}`;
+            } catch (e) { console.error(e); }
         }
 
-        // 2. Generate Answer with Gemini
-        // Using gemini-1.5-flash as default. 
-        // Note: If you get a 404, ensure "Generative Language API" is enabled in Google Cloud Console.
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const systemInstruction = `You are the JNTU-GV University Smart Assistant. Use the following data if relevant: ${dbContext}. Keep answers professional. History is provided for context. Answer academic questions or portal-specific ones correctly.`;
 
-        const prompt = `
-        You are the official AI Assistant for the JNTU-GV (Jawaharlal Nehru Technological University - Gurajada Vizianagaram) University Portal.
-        Your goal is to assist Students, Faculty, and HODs with their queries.
-        
-        Here is some real-time data from the university database:
-        ${dbContext}
+        const modelsToTry = ["gemini-2.0-flash", "gemini-pro-latest"];
+        let text = "";
 
-        Guidelines:
-        - Be helpful, professional, and friendly.
-        - If the user asks about specific dynamic data (like "My attendance" or "Timetable") that isn't in the snippet above, kindly explain that you can guide them to the respective dashboard tab (e.g., "Please check the 'Attendance' tab for your personal records").
-        - If the question is general (like "What is data structures?"), answer it using your general knowledge.
-        - Keep answers concise and strictly relevant to the portal context.
+        for (const modelName of modelsToTry) {
+            try {
+                const model = genAI.getGenerativeModel({ model: modelName, systemInstruction });
+                let geminiHistory = history.map(msg => ({ role: msg.sender === 'user' ? 'user' : 'model', parts: [{ text: msg.text }] }));
+                const chat = model.startChat({ history: geminiHistory });
+                const result = await chat.sendMessage(question);
+                text = (await result.response).text();
+                if (text) break;
+            } catch (err) { console.warn(modelName, err.message); }
+        }
 
-        User Question: ${question}
-        `;
+        if (!text) {
+            const { handleOfflineRequest } = require('../utils/localAiEngine');
+            text = await handleOfflineRequest(question);
+        }
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        // --- PERSISTENCE LOGIC ---
+        if (userId) {
+            let session;
+            if (sessionId && sessionId !== 'new') {
+                session = await ChatSession.findById(sessionId);
+            }
+
+            if (!session) {
+                session = new ChatSession({
+                    userId,
+                    title: question.substring(0, 30) + (question.length > 30 ? '...' : ''),
+                    messages: []
+                });
+            }
+
+            session.messages.push({ id: Date.now().toString(), sender: 'user', text: question });
+            session.messages.push({ id: (Date.now() + 1).toString(), sender: 'bot', text: text });
+            session.lastMessage = text;
+            await session.save();
+
+            return res.json({ reply: text, sessionId: session._id });
+        }
 
         res.json({ reply: text });
 
     } catch (error) {
-        console.error("AI Chat Error Details:", error);
-        // Check for specific 404 error which means model not found or API not enabled
-        if (error.message && error.message.includes('404')) {
-            console.error("CRITICAL: The Gemini Model was not found. Please check if the API is enabled in Google AI Studio.");
-        }
-        res.status(500).json({ reply: "I'm having trouble connecting to the university brain right now. (Error: " + (error.message || "Unknown") + ")" });
+        console.error("AI Route Error:", error);
+        res.status(500).json({ reply: "I'm having trouble retrieving that information right now." });
     }
 });
 
 module.exports = router;
+

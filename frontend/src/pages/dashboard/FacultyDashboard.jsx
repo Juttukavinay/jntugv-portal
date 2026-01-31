@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
+import CommunicationCenter from '../../components/CommunicationCenter'
 
 // --- ICONS (Consistent with Principal) ---
 const Icons = {
@@ -10,7 +11,8 @@ const Icons = {
     Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>,
     Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
     LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
-    Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+    Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 }
 
 function FacultyDashboard() {
@@ -43,6 +45,7 @@ function FacultyDashboard() {
                     <NavItem icon={<Icons.Calendar />} label="My Timetable" active={activeTab === 'timetable'} onClick={() => { setActiveTab('timetable'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Users />} label="My Students" active={activeTab === 'students'} onClick={() => { setActiveTab('students'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Check />} label="Attendance" active={activeTab === 'attendance'} onClick={() => { setActiveTab('attendance'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => { setActiveTab('notices'); setMobileMenuOpen(false); }} />
                 </nav>
 
                 <div className="sidebar-footer">
@@ -82,6 +85,7 @@ function FacultyDashboard() {
                     {activeTab === 'timetable' && <FacultyTimetable currentUser={currentUser} />}
                     {activeTab === 'students' && <SectionStudentList />}
                     {activeTab === 'attendance' && <AttendanceManager />}
+                    {activeTab === 'notices' && <CommunicationCenter user={currentUser} />}
                 </div>
             </main>
         </div>
@@ -100,6 +104,18 @@ function NavItem({ icon, label, active, onClick }) {
 // --- SUB COMPONENTS ---
 
 function FacultyOverview({ currentUser, onNavigate }) {
+    const [workload, setWorkload] = useState({ currentHours: 0, targetHours: 16, percentage: 0 });
+
+    useEffect(() => {
+        if (!currentUser?.name) return;
+        fetch(`${API_BASE_URL}/api/faculty/workload`)
+            .then(res => res.json())
+            .then(data => {
+                const myWork = data.find(w => w.name === currentUser.name);
+                if (myWork) setWorkload(myWork);
+            }).catch(console.error);
+    }, [currentUser]);
+
     return (
         <div>
             <div style={{ marginBottom: '2rem' }}>
@@ -117,11 +133,13 @@ function FacultyOverview({ currentUser, onNavigate }) {
                     </div>
                 </div>
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#f0fdf4', color: '#16a34a' }}><Icons.Check /></div>
+                    <div className="stat-icon-wrapper" style={{ background: '#f5f3ff', color: '#7c3aed' }}><Icons.Users /></div>
                     <div className="stat-content">
-                        <h5>Attendance</h5>
-                        <h3>Pending</h3>
-                        <span className="stat-trend trend-down">Mark for 2 Sections</span>
+                        <h5>Teaching Workload</h5>
+                        <h3>{workload.currentHours || 0} / {workload.targetHours || 16}</h3>
+                        <span className="stat-trend" style={{ color: workload.percentage > 100 ? '#ef4444' : '#16a34a' }}>
+                            {workload.percentage || 0}% Compliance
+                        </span>
                     </div>
                 </div>
             </div>
@@ -341,7 +359,7 @@ function FacultyTimetable({ currentUser }) {
                     {loading ? 'Refreshing...' : '🔄 Refresh'}
                 </button>
             </div>
-            
+
             {loading && <GlobalLoader />}
 
             {/* BOOKING GRID */}
@@ -396,8 +414,20 @@ function FacultyTimetable({ currentUser }) {
                                                 >
                                                     <div style={{ fontWeight: '700', color: '#1e293b' }}>{p.subject}</div>
                                                     {p.faculty ? (
-                                                        <div style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: '2px', fontWeight: '600' }}>
-                                                            {p.faculty === currentUser.name ? '👤 You' : p.faculty}
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                            <div style={{ fontSize: '0.75rem', color: '#1e40af', fontWeight: '700' }}>
+                                                                {p.faculty === currentUser.name ? '👤 You (M)' : `${p.faculty} (M)`}
+                                                            </div>
+                                                            {p.assistants?.includes(currentUser.name) && (
+                                                                <div style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 'bold' }}>
+                                                                    ✨ You are Assisting
+                                                                </div>
+                                                            )}
+                                                            {p.assistants?.length > 0 && (
+                                                                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>
+                                                                    Ast: {p.assistants.join(', ')}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     ) : (
                                                         <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontStyle: 'italic' }}>Available</div>
@@ -467,9 +497,16 @@ function FacultyTimetable({ currentUser }) {
 }
 
 function AllocationModal({ slot, currentUser, onClose, onSuccess }) {
-    const [status, setStatus] = useState('idle') // idle, submitting, success
+    const [status, setStatus] = useState('idle')
     const [subject, setSubject] = useState(slot.currentSubject)
     const [assignToMe, setAssignToMe] = useState(true)
+    const [assistants, setAssistants] = useState(slot.assistants || [])
+    const [facultyList, setFacultyList] = useState([])
+    const isLab = (subject || '').toLowerCase().includes('lab')
+
+    useEffect(() => {
+        fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFacultyList).catch(console.error);
+    }, [])
 
     const handleConfirm = async () => {
         setStatus('submitting')
@@ -481,9 +518,9 @@ function AllocationModal({ slot, currentUser, onClose, onSuccess }) {
                     semester: slot.semester,
                     dayIndex: slot.dayIndex,
                     periodIndex: slot.periodIndex,
-                    subject: subject || 'Free', // or whatever logic
-                    faculty: assignToMe ? currentUser.name : '', // If toggle off, maybe clear or keep? Assuming "Me" for now.
-                    // If we want to allow assigning OTHERS, we need a dropdown. The prompt says "allocated by themselves", so Self is priority.
+                    subject: subject || '-',
+                    faculty: assignToMe ? currentUser.name : (slot.currentFaculty || ''),
+                    assistants: assistants
                 })
             })
 
@@ -536,15 +573,33 @@ function AllocationModal({ slot, currentUser, onClose, onSuccess }) {
                                 style={{ width: '100%', marginBottom: '1rem' }}
                             />
 
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', marginBottom: '1.5rem' }}>
                                 <input
                                     type="checkbox"
                                     checked={assignToMe}
                                     onChange={e => setAssignToMe(e.target.checked)}
                                     style={{ width: '18px', height: '18px' }}
                                 />
-                                <span>Assign to <b>{currentUser.name}</b> (Me)</span>
+                                <span>Assign as <b>Main Faculty</b> ({currentUser.name})</span>
                             </label>
+
+                            {isLab && (
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', fontWeight: 'bold' }}>Select 2 Lab Assistants (Contract)</label>
+                                    <select
+                                        multiple
+                                        className="modern-input"
+                                        style={{ width: '100%', height: '80px' }}
+                                        value={assistants}
+                                        onChange={e => setAssistants(Array.from(e.target.selectedOptions, o => o.value))}
+                                    >
+                                        {facultyList.filter(f => f.name !== currentUser.name).map(f => (
+                                            <option key={f._id} value={f.name}>{f.name} ({f.type})</option>
+                                        ))}
+                                    </select>
+                                    <p style={{ fontSize: '0.7rem', color: '#64748b', marginTop: '4px' }}>Ctrl + Click to select multiple.</p>
+                                </div>
+                            )}
                         </div>
 
                         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
