@@ -11,16 +11,14 @@ const ChatAssistant = () => {
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef(null);
     const location = useLocation();
-    const user = JSON.parse(localStorage.getItem('user'));
 
-    // 1. Hide on login/landing pages
-    const publicPages = ['/', '/login'];
-    if (publicPages.includes(location.pathname)) return null;
+    // 1. Only show on dashboard routes
+    // This effectively hides it on '/' and '/login'
+    if (!location.pathname.includes('/dashboard')) {
+        return null;
+    }
 
-    // 2. Only show if logged in
-    if (!user) return null;
-
-    console.log("ChatAssistant active for role:", user.role);
+    console.log("ChatAssistant active on dashboard path:", location.pathname);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
