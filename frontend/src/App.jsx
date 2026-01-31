@@ -33,6 +33,11 @@ function App() {
             <VicePrincipalDashboard />
           </ProtectedRoute>
         } />
+        <Route path="/dashboard/vice_principal" element={
+          <ProtectedRoute>
+            <VicePrincipalDashboard />
+          </ProtectedRoute>
+        } />
         <Route path="/dashboard/faculty" element={
           <ProtectedRoute>
             <FacultyDashboard />
