@@ -12,13 +12,7 @@ const ChatAssistant = () => {
     const messagesEndRef = useRef(null);
     const location = useLocation();
 
-    // 1. Only show on dashboard routes
-    // This effectively hides it on '/' and '/login'
-    if (!location.pathname.includes('/dashboard')) {
-        return null;
-    }
-
-    console.log("ChatAssistant active on dashboard path:", location.pathname);
+    console.log("ChatAssistant rendering on:", location.pathname);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
