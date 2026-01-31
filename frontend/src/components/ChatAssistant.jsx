@@ -20,10 +20,7 @@ const ChatAssistant = () => {
     // 2. Only show if logged in
     if (!user) return null;
 
-    // 3. Hide for Vice Principal (as per previous requirements)
-    if (user.role === 'vice-principal') return null;
-
-    console.log("ChatAssistant active for:", user.role);
+    console.log("ChatAssistant active for role:", user.role);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
