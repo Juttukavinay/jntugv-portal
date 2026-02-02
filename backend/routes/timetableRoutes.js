@@ -628,91 +628,150 @@ router.put('/update', async (req, res) => {
                             });
                         }
                     }
-                }
-            }
 
-            // 5. Faculty Lab Weekly/Semester Limits
-            const isTargetLab = subject && subject.toLowerCase().includes('lab');
-            if (isTargetLab) {
-                for (const fName of involvedFaculty) {
-                    const facultyData = await Faculty.findOne({ name: fName });
-                    if (!facultyData) continue;
+                    // 5. Assistant Limit Check
+                    if (assistants && assistants.length > 2) {
+                        return res.status(400).json({ message: 'A maximum of 2 assistants are allowed per slot.' });
+                    }
 
-                    let weeklyLabCount = 0;
-                    for (const t of allTimetables) {
-                        t.schedule.forEach(day => {
-                            day.periods.forEach(p => {
-                                const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
-                                if (pIsLab && (p.faculty === fName || (p.assistants && p.assistants.includes(fName)))) {
-                                    weeklyLabCount++;
-                                }
+                    // 6. Faculty Workload Limits by Designation
+                    const isTargetLab = subject && subject.toLowerCase().includes('lab');
+                    const targetCredits = isTargetLab ? (targetPeriod.credits || 3) : (targetPeriod.credits || 1);
+
+                    for (const fName of involvedFaculty) {
+                        const facultyData = await Faculty.findOne({ name: fName });
+                        if (!facultyData) continue;
+
+                        // Calculate current workload
+                        let currentWorkload = 0;
+                        allTimetables.forEach(tt => {
+                            tt.schedule.forEach(day => {
+                                day.periods.forEach(p => {
+                                    // Skip the slot we are currently editing to avoid double counting
+                                    if (tt.className === semester && day.day === timetable.schedule[dayIndex].day && p.time === targetPeriod.time) {
+                                        return;
+                                    }
+
+                                    if (p.faculty === fName || (p.assistants && p.assistants.includes(fName))) {
+                                        const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
+                                        if (pIsLab) {
+                                            currentWorkload += p.credits || 3;
+                                        } else if (p.type !== 'Free' && p.type !== 'Break' && p.type !== 'Activity') {
+                                            currentWorkload += p.credits || 1;
+                                        }
+                                    }
+                                });
                             });
                         });
-                    }
 
-                    // Permanent Faculty Limit: 1 Lab per week
-                    if (facultyData.designation && facultyData.designation.toLowerCase().includes('permanent') || facultyData.type === 'Permanent') {
-                        if (weeklyLabCount >= 1) {
-                            return res.status(409).json({ message: `Permanent Faculty '${fName}' is limited to 1 Lab per week. Current: ${weeklyLabCount}` });
+                        // Determine limit based on designation
+                        let limit = 22; // Default
+                        const desig = (facultyData.designation || '').toLowerCase();
+                        if (desig.includes('professor') && !desig.includes('associate') && !desig.includes('assistant')) {
+                            limit = 10;
+                        } else if (desig.includes('associate')) {
+                            limit = 16;
+                        } else if (desig.includes('assistant') || facultyData.type === 'Contract') {
+                            limit = 22;
+                        }
+
+                        if (currentWorkload + targetCredits > limit) {
+                            return res.status(409).json({
+                                message: `Workload Limit Exceeded! '${fName}' (${facultyData.designation}) has ${currentWorkload} hrs. Adding this ${targetCredits} hr slot exceeds their ${limit} hr limit.`
+                            });
                         }
                     }
-                    // Regular Faculty Limit: 1 Lab per week (User request interpreted as 1 per week)
-                    else if (facultyData.type === 'Regular') {
-                        if (weeklyLabCount >= 1) {
-                            return res.status(409).json({ message: `Regular Faculty '${fName}' is limited to 1 Lab per week.` });
+
+                    // 7. Policy Check: One Lab Per Day (Refined)
+                    if (isTargetLab) {
+                        for (const fName of involvedFaculty) {
+                            const facultyData = await Faculty.findOne({ name: fName });
+                            if (!facultyData) continue;
+                            const desig = (facultyData.designation || '').toLowerCase();
+
+                            let dailyLabCount = 0;
+                            const today = timetable.schedule[dayIndex].day;
+
+                            // Check all timetables for another lab on the SAME day for this faculty
+                            for (const t of allTimetables) {
+                                const daySched = t.schedule.find(d => d.day === today);
+                                if (!daySched) continue;
+
+                                daySched.periods.forEach(p => {
+                                    // Skip current slot
+                                    if (t.className === semester && daySched.day === today && p.time === targetPeriod.time) return;
+
+                                    const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
+                                    if (pIsLab && (p.faculty === fName || (p.assistants && p.assistants.includes(fName)))) {
+                                        dailyLabCount++;
+                                    }
+                                });
+                            }
+
+                            // Policy: Max 1 lab per day
+                            if (dailyLabCount >= 1) {
+                                return res.status(409).json({ message: `Policy Violation: '${fName}' already has a Lab assigned on ${today}. Only 1 lab per day allowed.` });
+                            }
+
+                            // Policy: Max 1 lab per week for Permanent/Regular
+                            let weeklyLabCount = 0;
+                            allTimetables.forEach(t => {
+                                t.schedule.forEach(day => {
+                                    day.periods.forEach(p => {
+                                        if (t.className === semester && day.day === today && p.time === targetPeriod.time) return;
+                                        const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
+                                        if (pIsLab && (p.faculty === fName || (p.assistants && p.assistants.includes(fName)))) {
+                                            weeklyLabCount++;
+                                        }
+                                    });
+                                });
+                            });
+
+                            if ((facultyData.type === 'Regular' || desig.includes('permanent') || facultyData.type === 'Permanent') && weeklyLabCount >= 1) {
+                                return res.status(409).json({ message: `Policy Violation: Regular/Permanent Faculty '${fName}' is limited to 1 Lab per week. Existing: ${weeklyLabCount}` });
+                            }
                         }
                     }
                 }
+
+                // --- WING CHECK ---
+                const { wing } = req.body;
+                if (wing && !['Wing 1', 'Wing 2'].includes(wing)) {
+                    return res.status(400).json({ message: 'Only Wing 1 and Wing 2 are allowed for labs.' });
+                }
+
+                // No conflict, proceed to update
+                targetPeriod.subject = subject;
+                targetPeriod.faculty = faculty || 'N/A';
+                targetPeriod.assistants = assistants || [];
+                targetPeriod.wing = wing || targetPeriod.wing;
+                targetPeriod.room = room || targetPeriod.room;
+
+                // If booking, mark as locked/fixed
+                if (faculty || (assistants && assistants.length > 0)) {
+                    // Determine type based on Subject Name (e.g. "IT Workshop (Lab)")
+                    const isLab = subject && subject.toLowerCase().includes('lab');
+                    targetPeriod.type = isLab ? 'Lab' : 'Lecture';
+                    targetPeriod.isFixed = true;
+                } else {
+                    // If clearing (subject is '-')
+                    if (subject === '-') {
+                        targetPeriod.faculty = '';
+                        targetPeriod.assistants = [];
+                        targetPeriod.isFixed = false;
+                        targetPeriod.type = 'Free';
+                    }
+                }
+
+                timetable.markModified('schedule');
+                await timetable.save();
+                res.json(timetable);
+
+            } catch (e) {
+                console.error(e);
+                res.status(500).json({ message: e.message });
             }
-        }
-
-        // --- WING CHECK ---
-        const { wing } = req.body;
-        if (wing && !['Wing 1', 'Wing 2'].includes(wing)) {
-            return res.status(400).json({ message: 'Only Wing 1 and Wing 2 are allowed for labs.' });
-        }
-
-        // No conflict, proceed to update
-        targetPeriod.subject = subject;
-        targetPeriod.wing = wing || targetPeriod.wing;
-
-        // Allow updating faculty even if it's an empty string (to release slot)
-        if (faculty !== undefined) {
-            targetPeriod.faculty = faculty;
-        }
-
-        // Update assistants
-        if (assistants !== undefined) {
-            targetPeriod.assistants = assistants;
-        }
-
-        if (room) targetPeriod.room = room;
-
-        // If booking, mark as locked/fixed
-        if (faculty || (assistants && assistants.length > 0)) {
-            // Determine type based on Subject Name (e.g. "IT Workshop (Lab)")
-            const isLab = subject && subject.toLowerCase().includes('lab');
-            targetPeriod.type = isLab ? 'Lab' : 'Lecture';
-            targetPeriod.isFixed = true;
-        } else {
-            // If clearing (subject is '-')
-            if (subject === '-') {
-                targetPeriod.faculty = '';
-                targetPeriod.assistants = [];
-                targetPeriod.isFixed = false;
-                targetPeriod.type = 'Free';
-            }
-        }
-
-        timetable.markModified('schedule');
-        await timetable.save();
-        res.json(timetable);
-
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: e.message });
-    }
-});
+        });
 
 // GET WORKLOAD
 router.get('/workload', async (req, res) => {
