@@ -184,7 +184,9 @@ router.post('/save', async (req, res) => {
             courseName: sub.courseName,
             category: sub.category || 'PC',
             credits: sub.credits,
-            L: sub.L || 0, T: sub.T || 0, P: sub.P || 0
+            L: sub.L || 0, T: sub.T || 0, P: sub.P || 0,
+            assignedFaculty: sub.assignedFaculty || 'N/A',
+            assignedAssistants: sub.assignedAssistants || []
         }));
 
         await Subject.insertMany(dbSubjects);

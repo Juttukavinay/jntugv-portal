@@ -10,7 +10,9 @@ const subjectSchema = mongoose.Schema({
     L: { type: Number, default: 0 },
     T: { type: Number, default: 0 },
     P: { type: Number, default: 0 },
-    credits: { type: Number, required: true }
+    credits: { type: Number, required: true },
+    assignedFaculty: { type: String, default: 'N/A' },
+    assignedAssistants: { type: [String], default: [] }
 }, {
     timestamps: true
 });

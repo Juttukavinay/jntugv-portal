@@ -635,7 +635,6 @@ router.put('/update', async (req, res) => {
                     }
 
                     // 6. Faculty Workload Limits by Designation
-                    const isTargetLab = subject && subject.toLowerCase().includes('lab');
                     const targetCredits = isTargetLab ? (targetPeriod.credits || 3) : (targetPeriod.credits || 1);
 
                     for (const fName of involvedFaculty) {

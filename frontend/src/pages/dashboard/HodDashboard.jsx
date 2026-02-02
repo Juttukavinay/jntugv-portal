@@ -38,12 +38,19 @@ function HodDashboard() {
             case 'students': return <StudentManager />;
             case 'faculty': return <FacultyManager />;
             case 'timetable': return <TimetableManager />;
-            case 'subjects': return <SubjectsManager />;
+            case 'subjects': return <SubjectsManager facultyList={allFaculty} />;
+            case 'allocations': return <AllocationManager facultyList={allFaculty} />;
             case 'attendance': return <AttendanceManager />;
             case 'notices': return <CommunicationCenter user={user} />;
-            default: return <HodOverview onNavigate={setActiveTab} user={user} />;
+            default: return <HodOverview onNavigate={setActiveTab} user={user} totalFaculty={allFaculty.length} />;
         }
     };
+
+    // Global fetch for faculty to share across components
+    const [allFaculty, setAllFaculty] = useState([]);
+    useEffect(() => {
+        fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setAllFaculty).catch(console.error);
+    }, []);
 
     return (
         <div className="dashboard-container">
@@ -63,6 +70,7 @@ function HodDashboard() {
                     <NavItem icon={<Icons.Users />} label="Faculty Mgmt" active={activeTab === 'faculty'} onClick={() => setActiveTab('faculty')} />
                     <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
+                    <NavItem icon={<Icons.Users />} label="Allocation Lists" active={activeTab === 'allocations'} onClick={() => setActiveTab('allocations')} />
                     <NavItem icon={<Icons.Check />} label="My Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
                     <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} />
                 </nav>
@@ -172,11 +180,11 @@ function HodOverview({ onNavigate, user }) {
                 </div>
                 <div className="premium-stat-card">
                     <div className="stat-icon-wrapper" style={{ background: '#fef2f2', color: '#ef4444' }}><Icons.Calendar /></div>
-                    <div className="stat-content"><h5>My Classes Today</h5><h3>{todayClasses.length}</h3><span className="stat-trend trend-neutral">Next: {todayClasses[0]?.time || 'None'}</span></div>
+                    <div className="stat-content"><h5>Classes Allocation</h5><h3 onClick={() => onNavigate('allocations')} style={{ cursor: 'pointer' }}>View Lists</h3><span className="stat-trend trend-neutral">Progressing</span></div>
                 </div>
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#f0fdf4', color: '#16a34a' }}><Icons.Check /></div>
-                    <div className="stat-content"><h5>Attendance Status</h5><h3>{todayClasses.length > 0 ? 'Pending' : 'Completed'}</h3><span className="stat-trend">Updates daily</span></div>
+                    <div className="stat-icon-wrapper" style={{ background: '#f5f3ff', color: '#7c3aed' }}><Icons.Users /></div>
+                    <div className="stat-content"><h5>Lab Allocations</h5><h3 onClick={() => onNavigate('allocations')} style={{ cursor: 'pointer' }}>Manage Labs</h3><span className="stat-trend">Set via Curriculum</span></div>
                 </div>
             </div>
 
@@ -672,7 +680,7 @@ function TimetableManager() {
         </>
     );
 }
-function SubjectsManager() {
+function SubjectsManager({ facultyList }) {
     const [subjects, setSubjects] = useState([]);
     const [regulation, setRegulation] = useState('R23');
     const [activeCourse, setActiveCourse] = useState('B.Tech');
@@ -687,12 +695,12 @@ function SubjectsManager() {
     useEffect(() => {
         const safeSubjects = Array.isArray(subjects) ? subjects : [];
         const current = safeSubjects.filter(s => s && s.semester === semesterName);
-        if (current.length > 0) setEditRows(current.map(s => ({ ...s })));
-        else setEditRows([{ sNo: 1, category: 'PC', courseCode: '', courseName: '', L: '', T: '', P: '', credits: '', semester: semesterName }]);
+        if (current.length > 0) setEditRows(current.map(s => ({ ...s, assignedFaculty: s.assignedFaculty || '', assignedAssistants: s.assignedAssistants || [] })));
+        else setEditRows([{ sNo: 1, category: 'PC', courseCode: '', courseName: '', L: '', T: '', P: '', credits: '', semester: semesterName, assignedFaculty: '', assignedAssistants: [] }]);
     }, [subjects, semesterName]);
 
     const handleSubjectChange = (index, field, value) => { const newRows = [...editRows]; newRows[index] = { ...newRows[index], [field]: value }; setEditRows(newRows); }
-    const addSubjectRow = () => setEditRows([...editRows, { sNo: editRows.length + 1, category: 'PC', semester: semesterName }]);
+    const addSubjectRow = () => setEditRows([...editRows, { sNo: editRows.length + 1, category: 'PC', semester: semesterName, assignedFaculty: '', assignedAssistants: [] }]);
 
     const saveSubjects = async () => {
         const validRows = editRows.filter(r => r.courseName);
@@ -771,7 +779,7 @@ function SubjectsManager() {
             </div>
             <div style={{ overflowX: 'auto' }}>
                 <table className="premium-table">
-                    <thead><tr><th style={{ width: '50px' }}>S.No</th><th>Category</th><th>Code</th><th>Title</th><th>L</th><th>T</th><th>P</th><th>C</th><th>Action</th></tr></thead>
+                    <thead><tr><th style={{ width: '50px' }}>S.No</th><th>Category</th><th>Code</th><th>Title</th><th>L</th><th>T</th><th>P</th><th>C</th><th>Main Faculty</th><th>Assistants (Labs)</th><th>Action</th></tr></thead>
                     <tbody>
                         {editRows.map((row, i) => (
                             <tr key={i} style={{ background: '#fff' }}>
@@ -788,6 +796,28 @@ function SubjectsManager() {
                                 <td><input value={row.P || ''} onChange={e => handleSubjectChange(i, 'P', e.target.value)} className="modern-input" style={{ width: '40px', textAlign: 'center', padding: '4px' }} /></td>
                                 <td><input value={row.credits || ''} onChange={e => handleSubjectChange(i, 'credits', e.target.value)} className="modern-input" style={{ width: '40px', textAlign: 'center', padding: '4px', fontWeight: 'bold' }} /></td>
                                 <td>
+                                    <select
+                                        value={row.assignedFaculty || ''}
+                                        onChange={e => handleSubjectChange(i, 'assignedFaculty', e.target.value)}
+                                        className="modern-input"
+                                        style={{ width: '150px', padding: '4px' }}
+                                    >
+                                        <option value="">-- Main --</option>
+                                        {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select
+                                        multiple
+                                        value={row.assignedAssistants || []}
+                                        onChange={e => handleSubjectChange(i, 'assignedAssistants', Array.from(e.target.selectedOptions, o => o.value))}
+                                        className="modern-input"
+                                        style={{ width: '150px', padding: '4px', height: '40px' }}
+                                    >
+                                        {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
+                                    </select>
+                                </td>
+                                <td>
                                     <button
                                         onClick={() => deleteSubject(i)}
                                         className="btn-action"
@@ -802,8 +832,8 @@ function SubjectsManager() {
                     </tbody>
                 </table>
                 <button onClick={addSubjectRow} style={{ width: '100%', padding: '12px', marginTop: '10px', border: '2px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', cursor: 'pointer', background: '#f8fafc', fontWeight: '600' }}>+ Add Row</button>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
@@ -945,6 +975,91 @@ function AttendanceManager() {
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+function AllocationManager({ facultyList }) {
+    const [subjects, setSubjects] = useState([]);
+    const [semester, setSemester] = useState('I-B.Tech I Sem');
+
+    useEffect(() => {
+        fetch(`${API_BASE_URL}/api/subjects?t=${Date.now()}`).then(res => res.json()).then(setSubjects).catch(console.error);
+    }, []);
+
+    const filtered = Array.isArray(subjects) ? subjects.filter(s => s && s.semester === semester) : [];
+    const theory = filtered.filter(s => (s.L > 0 || s.T > 0) && !s.courseName.toLowerCase().includes('lab'));
+    const labs = filtered.filter(s => s.P > 0 || s.courseName.toLowerCase().includes('lab'));
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div className="glass-table-container fade-in-up">
+                <div className="table-header-premium" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3>Classes Allocation (Theory)</h3>
+                    <select value={semester} onChange={e => setSemester(e.target.value)} className="search-input-premium" style={{ width: '250px' }}>
+                        <option value="I-B.Tech I Sem">I Year - I Sem</option><option value="I-B.Tech II Sem">I Year - II Sem</option>
+                        <option value="II-B.Tech I Sem">II Year - I Sem</option><option value="II-B.Tech II Sem">II Year - II Sem</option>
+                        <option value="III-B.Tech I Sem">III Year - I Sem</option><option value="III-B.Tech II Sem">III Year - II Sem</option>
+                        <option value="IV-B.Tech I Sem">IV Year - I Sem</option><option value="IV-B.Tech II Sem">IV Year - II Sem</option>
+                    </select>
+                </div>
+                <div style={{ padding: '1rem' }}>
+                    <table className="premium-table">
+                        <thead><tr><th>Code</th><th>Subject Name</th><th>Credits (L-T-P)</th><th>Allocated Faculty</th><th>Type</th></tr></thead>
+                        <tbody>
+                            {theory.length > 0 ? theory.map((s, i) => (
+                                <tr key={i}>
+                                    <td>{s.courseCode}</td>
+                                    <td style={{ fontWeight: '700' }}>{s.courseName}</td>
+                                    <td>{s.credits} ({s.L}-{s.T}-{s.P})</td>
+                                    <td>
+                                        {s.assignedFaculty && s.assignedFaculty !== 'N/A' ? (
+                                            <span style={{ color: '#2563eb', fontWeight: '800' }}>👤 {s.assignedFaculty}</span>
+                                        ) : (
+                                            <span style={{ color: '#ef4444', fontStyle: 'italic' }}>Pending Allocation</span>
+                                        )}
+                                    </td>
+                                    <td><span className="badge-role" style={{ background: '#fffbeb', color: '#b45309' }}>Theory</span></td>
+                                </tr>
+                            )) : <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No theory subjects found for this semester.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div className="glass-table-container fade-in-up" style={{ animationDelay: '0.1s' }}>
+                <div className="table-header-premium">
+                    <h3>Laboratory & Project Allocation</h3>
+                </div>
+                <div style={{ padding: '1rem' }}>
+                    <table className="premium-table">
+                        <thead><tr><th>Code</th><th>Lab/Project Title</th><th>Primary Faculty (M)</th><th>Assistants (Max 2)</th><th>Status</th></tr></thead>
+                        <tbody>
+                            {labs.length > 0 ? labs.map((s, i) => (
+                                <tr key={i}>
+                                    <td>{s.courseCode}</td>
+                                    <td style={{ fontWeight: '700' }}>{s.courseName}</td>
+                                    <td>
+                                        {s.assignedFaculty && s.assignedFaculty !== 'N/A' ? (
+                                            <span style={{ color: '#2563eb', fontWeight: '800' }}>👤 {s.assignedFaculty}</span>
+                                        ) : (
+                                            <span style={{ color: '#ef4444' }}>Not Set</span>
+                                        )}
+                                    </td>
+                                    <td>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                            {s.assignedAssistants && s.assignedAssistants.length > 0 ? s.assignedAssistants.map((a, j) => (
+                                                <span key={j} style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '600' }}>{a}</span>
+                                            )) : <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>None</span>}
+                                        </div>
+                                    </td>
+                                    <td><span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8' }}>Lab/Practical</span></td>
+                                </tr>
+                            )) : <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No lab subjects found.</td></tr>}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     );
 }
