@@ -577,200 +577,133 @@ router.put('/update', async (req, res) => {
             const allTimetables = await Timetable.find({});
 
             for (const t of allTimetables) {
-                // Check same day
                 const daySchedule = t.schedule.find(d => d.day === timetable.schedule[dayIndex].day);
                 if (!daySchedule) continue;
 
                 for (const p of daySchedule.periods) {
-                    // Skip the exact same slot we are modifying (if updating same timetable)
-                    // Note: This logic assumes strict period structure match or unique IDs. 
-                    // Simpler: If same ClassName, Day, and PeriodIndex, skip.
                     if (t.className === semester &&
                         daySchedule.day === timetable.schedule[dayIndex].day &&
                         daySchedule.periods.indexOf(p) === periodIndex) {
                         continue;
                     }
 
-                    // Check Time Overlap
                     const pTime = parseTime(p.time);
                     const isOverlap = (targetTime.start < pTime.end) && (pTime.start < targetTime.end);
 
                     if (isOverlap) {
-                        // Check Faculty Overlap
-                        // Existing booked faculty in this slot 'p'
                         const bookedFaculty = [];
                         if (p.faculty && p.faculty !== 'N/A') bookedFaculty.push(p.faculty);
                         if (p.assistants && Array.isArray(p.assistants)) bookedFaculty.push(...p.assistants);
 
-                        // Intersection
                         const conflict = involvedFaculty.filter(f => bookedFaculty.includes(f));
-
                         if (conflict.length > 0) {
                             return res.status(409).json({
                                 message: `Time Conflict! Faculty '${conflict.join(', ')}' is already booked in ${t.className} at ${p.time}.`
                             });
                         }
                     }
-
-                    // 4. Policy Check: One Lab Per Day
-                    const isTargetLab = subject && subject.toLowerCase().includes('lab');
-                    const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
-
-                    if (isTargetLab && pIsLab) {
-                        const bookedFaculty = [];
-                        if (p.faculty && p.faculty !== 'N/A') bookedFaculty.push(p.faculty);
-                        if (p.assistants && Array.isArray(p.assistants)) bookedFaculty.push(...p.assistants);
-
-                        const labConflict = involvedFaculty.filter(f => bookedFaculty.includes(f));
-                        if (labConflict.length > 0) {
-                            return res.status(409).json({
-                                message: `Policy Violation: '${labConflict.join(', ')}' already has another Lab on ${daySchedule.day} in ${t.className}. Max 1 lab per day allowed.`
-                            });
-                        }
-                    }
-
-                    // 5. Assistant Limit Check
-                    if (assistants && assistants.length > 2) {
-                        return res.status(400).json({ message: 'A maximum of 2 assistants are allowed per slot.' });
-                    }
-
-                    // 6. Faculty Workload Limits by Designation
-                    const targetCredits = isTargetLab ? (targetPeriod.credits || 3) : (targetPeriod.credits || 1);
-
-                    for (const fName of involvedFaculty) {
-                        const facultyData = await Faculty.findOne({ name: fName });
-                        if (!facultyData) continue;
-
-                        // Calculate current workload
-                        let currentWorkload = 0;
-                        allTimetables.forEach(tt => {
-                            tt.schedule.forEach(day => {
-                                day.periods.forEach(p => {
-                                    // Skip the slot we are currently editing to avoid double counting
-                                    if (tt.className === semester && day.day === timetable.schedule[dayIndex].day && p.time === targetPeriod.time) {
-                                        return;
-                                    }
-
-                                    if (p.faculty === fName || (p.assistants && p.assistants.includes(fName))) {
-                                        const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
-                                        if (pIsLab) {
-                                            currentWorkload += p.credits || 3;
-                                        } else if (p.type !== 'Free' && p.type !== 'Break' && p.type !== 'Activity') {
-                                            currentWorkload += p.credits || 1;
-                                        }
-                                    }
-                                });
-                            });
-                        });
-
-                        // Determine limit based on designation
-                        let limit = 22; // Default
-                        const desig = (facultyData.designation || '').toLowerCase();
-                        if (desig.includes('professor') && !desig.includes('associate') && !desig.includes('assistant')) {
-                            limit = 10;
-                        } else if (desig.includes('associate')) {
-                            limit = 16;
-                        } else if (desig.includes('assistant') || facultyData.type === 'Contract') {
-                            limit = 22;
-                        }
-
-                        if (currentWorkload + targetCredits > limit) {
-                            return res.status(409).json({
-                                message: `Workload Limit Exceeded! '${fName}' (${facultyData.designation}) has ${currentWorkload} hrs. Adding this ${targetCredits} hr slot exceeds their ${limit} hr limit.`
-                            });
-                        }
-                    }
-
-                    // 7. Policy Check: One Lab Per Day (Refined)
-                    if (isTargetLab) {
-                        for (const fName of involvedFaculty) {
-                            const facultyData = await Faculty.findOne({ name: fName });
-                            if (!facultyData) continue;
-                            const desig = (facultyData.designation || '').toLowerCase();
-
-                            let dailyLabCount = 0;
-                            const today = timetable.schedule[dayIndex].day;
-
-                            // Check all timetables for another lab on the SAME day for this faculty
-                            for (const t of allTimetables) {
-                                const daySched = t.schedule.find(d => d.day === today);
-                                if (!daySched) continue;
-
-                                daySched.periods.forEach(p => {
-                                    // Skip current slot
-                                    if (t.className === semester && daySched.day === today && p.time === targetPeriod.time) return;
-
-                                    const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
-                                    if (pIsLab && (p.faculty === fName || (p.assistants && p.assistants.includes(fName)))) {
-                                        dailyLabCount++;
-                                    }
-                                });
-                            }
-
-                            // Policy: Max 1 lab per day
-                            if (dailyLabCount >= 1) {
-                                return res.status(409).json({ message: `Policy Violation: '${fName}' already has a Lab assigned on ${today}. Only 1 lab per day allowed.` });
-                            }
-
-                            // Policy: Max 1 lab per week for Permanent/Regular
-                            let weeklyLabCount = 0;
-                            allTimetables.forEach(t => {
-                                t.schedule.forEach(day => {
-                                    day.periods.forEach(p => {
-                                        if (t.className === semester && day.day === today && p.time === targetPeriod.time) return;
-                                        const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
-                                        if (pIsLab && (p.faculty === fName || (p.assistants && p.assistants.includes(fName)))) {
-                                            weeklyLabCount++;
-                                        }
-                                    });
-                                });
-                            });
-
-                            if ((facultyData.type === 'Regular' || desig.includes('permanent') || facultyData.type === 'Permanent') && weeklyLabCount >= 1) {
-                                return res.status(409).json({ message: `Policy Violation: Regular/Permanent Faculty '${fName}' is limited to 1 Lab per week. Existing: ${weeklyLabCount}` });
-                            }
-                        }
-                    }
                 }
-
-                // --- WING CHECK ---
-                const { wing } = req.body;
-                if (wing && !['Wing 1', 'Wing 2'].includes(wing)) {
-                    return res.status(400).json({ message: 'Only Wing 1 and Wing 2 are allowed for labs.' });
-                }
-
-                // No conflict, proceed to update
-                targetPeriod.subject = subject;
-                targetPeriod.faculty = faculty || 'N/A';
-                targetPeriod.assistants = assistants || [];
-                targetPeriod.wing = wing || targetPeriod.wing;
-                targetPeriod.room = room || targetPeriod.room;
-
-                // If booking, mark as locked/fixed
-                if (faculty || (assistants && assistants.length > 0)) {
-                    // Determine type based on Subject Name (e.g. "IT Workshop (Lab)")
-                    const isLab = subject && subject.toLowerCase().includes('lab');
-                    targetPeriod.type = isLab ? 'Lab' : 'Lecture';
-                    targetPeriod.isFixed = true;
-                } else {
-                    // If clearing (subject is '-')
-                    if (subject === '-') {
-                        targetPeriod.faculty = '';
-                        targetPeriod.assistants = [];
-                        targetPeriod.isFixed = false;
-                        targetPeriod.type = 'Free';
-                    }
-                }
-
-                timetable.markModified('schedule');
-                await timetable.save();
-                res.json(timetable);
-
-            } catch (e) {
-                console.error(e);
-                res.status(500).json({ message: e.message });
             }
-        });
+
+            // 4. Assistant Limit Check
+            if (assistants && assistants.length > 2) {
+                return res.status(400).json({ message: 'A maximum of 2 assistants are allowed per slot.' });
+            }
+
+            // 5. Faculty Workload & Lab Policies
+            const isTargetLab = subject && subject.toLowerCase().includes('lab');
+            const targetCredits = isTargetLab ? (targetPeriod.credits || 3) : (targetPeriod.credits || 1);
+
+            for (const fName of involvedFaculty) {
+                const facultyData = await Faculty.findOne({ name: fName });
+                if (!facultyData) continue;
+                const desig = (facultyData.designation || '').toLowerCase();
+
+                // Calculate current workload
+                let currentWorkload = 0;
+                let dailyLabCount = 0;
+                let weeklyLabCount = 0;
+                const today = timetable.schedule[dayIndex].day;
+
+                allTimetables.forEach(tt => {
+                    tt.schedule.forEach(day => {
+                        day.periods.forEach(p => {
+                            // Skip the slot we are currently editing
+                            if (tt.className === semester && day.day === today && p.time === targetPeriod.time) return;
+
+                            if (p.faculty === fName || (p.assistants && p.assistants.includes(fName))) {
+                                const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
+                                if (pIsLab) {
+                                    currentWorkload += p.credits || 3;
+                                    weeklyLabCount++;
+                                    if (day.day === today) dailyLabCount++;
+                                } else if (p.type !== 'Free' && p.type !== 'Break' && p.type !== 'Activity') {
+                                    currentWorkload += p.credits || 1;
+                                }
+                            }
+                        });
+                    });
+                });
+
+                // Workload Limit
+                let limit = 22;
+                if (desig.includes('professor') && !desig.includes('associate') && !desig.includes('assistant')) limit = 10;
+                else if (desig.includes('associate')) limit = 16;
+
+                if (currentWorkload + targetCredits > limit) {
+                    return res.status(409).json({
+                        message: `Workload Limit Exceeded! '${fName}' (${facultyData.designation}) has ${currentWorkload} hrs. Max: ${limit} hrs.`
+                    });
+                }
+
+                // Lab Policies
+                if (isTargetLab) {
+                    if (dailyLabCount >= 1) {
+                        return res.status(409).json({ message: `Policy Violation: '${fName}' already has a Lab on ${today}. Max 1 per day.` });
+                    }
+                    if ((facultyData.type === 'Regular' || desig.includes('permanent') || facultyData.type === 'Permanent') && weeklyLabCount >= 1) {
+                        return res.status(409).json({ message: `Policy Violation: Regular/Permanent Faculty '${fName}' is limited to 1 Lab per week. Existing: ${weeklyLabCount}` });
+                    }
+                }
+            }
+        }
+
+        // --- WING CHECK ---
+        const { wing } = req.body;
+        if (wing && !['Wing 1', 'Wing 2'].includes(wing)) {
+            return res.status(400).json({ message: 'Only Wing 1 and Wing 2 are allowed for labs.' });
+        }
+
+        // No conflict, proceed to update
+        targetPeriod.subject = subject;
+        targetPeriod.faculty = faculty || 'N/A';
+        targetPeriod.assistants = assistants || [];
+        targetPeriod.wing = wing || targetPeriod.wing;
+        targetPeriod.room = room || targetPeriod.room;
+
+        // If booking, mark as locked/fixed
+        if (faculty || (assistants && assistants.length > 0)) {
+            const isLab = subject && subject.toLowerCase().includes('lab');
+            targetPeriod.type = isLab ? 'Lab' : 'Lecture';
+            targetPeriod.isFixed = true;
+        } else {
+            if (subject === '-') {
+                targetPeriod.faculty = '';
+                targetPeriod.assistants = [];
+                targetPeriod.isFixed = false;
+                targetPeriod.type = 'Free';
+            }
+        }
+
+        timetable.markModified('schedule');
+        await timetable.save();
+        res.json(timetable);
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: e.message });
+    }
+});
 
 // GET WORKLOAD
 router.get('/workload', async (req, res) => {
