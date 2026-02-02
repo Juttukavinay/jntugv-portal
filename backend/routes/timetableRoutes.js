@@ -614,62 +614,158 @@ router.put('/update', async (req, res) => {
 
                     // 4. Policy Check: One Lab Per Day
                     const isTargetLab = subject && subject.toLowerCase().includes('lab');
-                    if (isTargetLab) {
-                        const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
-                        if (pIsLab) {
-                            const bookedFaculty = [];
-                            if (p.faculty && p.faculty !== 'N/A') bookedFaculty.push(p.faculty);
-                            if (p.assistants && Array.isArray(p.assistants)) bookedFaculty.push(...p.assistants);
+                    const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
 
-                            const labConflict = involvedFaculty.filter(f => bookedFaculty.includes(f));
-                            if (labConflict.length > 0) {
-                                return res.status(409).json({
-                                    message: `Policy Violation: '${labConflict.join(', ')}' already has another Lab on ${daySchedule.day} in ${t.className}. Max 1 lab per day allowed.`
-                                });
-                            }
+                    if (isTargetLab && pIsLab) {
+                        const bookedFaculty = [];
+                        if (p.faculty && p.faculty !== 'N/A') bookedFaculty.push(p.faculty);
+                        if (p.assistants && Array.isArray(p.assistants)) bookedFaculty.push(...p.assistants);
+
+                        const labConflict = involvedFaculty.filter(f => bookedFaculty.includes(f));
+                        if (labConflict.length > 0) {
+                            return res.status(409).json({
+                                message: `Policy Violation: '${labConflict.join(', ')}' already has another Lab on ${daySchedule.day} in ${t.className}. Max 1 lab per day allowed.`
+                            });
                         }
                     }
                 }
             }
         }
 
-        // No conflict, proceed to update
-        targetPeriod.subject = subject;
+        // 5. Faculty Lab Weekly/Semester Limits
+        const isTargetLab = subject && subject.toLowerCase().includes('lab');
+        if (isTargetLab) {
+            for (const fName of involvedFaculty) {
+                const facultyData = await Faculty.findOne({ name: fName });
+                if (!facultyData) continue;
 
-        // Allow updating faculty even if it's an empty string (to release slot)
-        if (faculty !== undefined) {
-            targetPeriod.faculty = faculty;
-        }
+                let weeklyLabCount = 0;
+                for (const t of allTimetables) {
+                    t.schedule.forEach(day => {
+                        day.periods.forEach(p => {
+                            const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
+                            if (pIsLab && (p.faculty === fName || (p.assistants && p.assistants.includes(fName)))) {
+                                weeklyLabCount++;
+                            }
+                        });
+                    });
+                }
 
-        // Update assistants
-        if (assistants !== undefined) {
-            targetPeriod.assistants = assistants;
-        }
-
-        if (room) targetPeriod.room = room;
-
-        // If booking, mark as locked/fixed
-        if (faculty || (assistants && assistants.length > 0)) {
-            // Determine type based on Subject Name (e.g. "IT Workshop (Lab)")
-            const isLab = subject && subject.toLowerCase().includes('lab');
-            targetPeriod.type = isLab ? 'Lab' : 'Lecture';
-            targetPeriod.isFixed = true;
-        } else {
-            // If clearing (subject is '-')
-            if (subject === '-') {
-                targetPeriod.faculty = '';
-                targetPeriod.assistants = [];
-                targetPeriod.isFixed = false;
-                targetPeriod.type = 'Free';
+                // Permanent Faculty Limit: 1 Lab per week
+                if (facultyData.designation && facultyData.designation.toLowerCase().includes('permanent') || facultyData.type === 'Permanent') {
+                    if (weeklyLabCount >= 1) {
+                        return res.status(409).json({ message: `Permanent Faculty '${fName}' is limited to 1 Lab per week. Current: ${weeklyLabCount}` });
+                    }
+                }
+                // Regular Faculty Limit: 1 Lab per week (User request interpreted as 1 per week)
+                else if (facultyData.type === 'Regular') {
+                    if (weeklyLabCount >= 1) {
+                        return res.status(409).json({ message: `Regular Faculty '${fName}' is limited to 1 Lab per week.` });
+                    }
+                }
             }
         }
+    }
 
-        timetable.markModified('schedule');
-        await timetable.save();
-        res.json(timetable);
+        // --- WING CHECK ---
+        const { wing } = req.body;
+    if (wing && !['Wing 1', 'Wing 2'].includes(wing)) {
+        return res.status(400).json({ message: 'Only Wing 1 and Wing 2 are allowed for labs.' });
+    }
 
+    // No conflict, proceed to update
+    targetPeriod.subject = subject;
+    targetPeriod.wing = wing || targetPeriod.wing;
+
+    // Allow updating faculty even if it's an empty string (to release slot)
+    if (faculty !== undefined) {
+        targetPeriod.faculty = faculty;
+    }
+
+    // Update assistants
+    if (assistants !== undefined) {
+        targetPeriod.assistants = assistants;
+    }
+
+    if (room) targetPeriod.room = room;
+
+    // If booking, mark as locked/fixed
+    if (faculty || (assistants && assistants.length > 0)) {
+        // Determine type based on Subject Name (e.g. "IT Workshop (Lab)")
+        const isLab = subject && subject.toLowerCase().includes('lab');
+        targetPeriod.type = isLab ? 'Lab' : 'Lecture';
+        targetPeriod.isFixed = true;
+    } else {
+        // If clearing (subject is '-')
+        if (subject === '-') {
+            targetPeriod.faculty = '';
+            targetPeriod.assistants = [];
+            targetPeriod.isFixed = false;
+            targetPeriod.type = 'Free';
+        }
+    }
+
+    timetable.markModified('schedule');
+    await timetable.save();
+    res.json(timetable);
+
+} catch (e) {
+    console.error(e);
+    res.status(500).json({ message: e.message });
+}
+});
+
+// GET WORKLOAD
+router.get('/workload', async (req, res) => {
+    try {
+        const { department } = req.query;
+        let facultyQuery = {};
+        if (department) facultyQuery.department = department;
+
+        const facultyList = await Faculty.find(facultyQuery);
+        const timetables = await Timetable.find({});
+
+        const workloadResults = facultyList.map(f => {
+            let theoryHours = 0;
+            let labHours = 0;
+            let assignments = [];
+
+            timetables.forEach(tt => {
+                tt.schedule.forEach(day => {
+                    day.periods.forEach(p => {
+                        if (p.faculty === f.name || (p.assistants && p.assistants.includes(f.name))) {
+                            const isLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
+                            if (isLab) {
+                                labHours += p.credits || 3;
+                            } else if (p.type !== 'Free' && p.type !== 'Break' && p.type !== 'Activity') {
+                                theoryHours += p.credits || 1;
+                            }
+                            assignments.push({
+                                semester: tt.className,
+                                day: day.day,
+                                time: p.time,
+                                subject: p.subject,
+                                type: p.type
+                            });
+                        }
+                    });
+                });
+            });
+
+            return {
+                facultyName: f.name,
+                department: f.department,
+                designation: f.designation,
+                type: f.type,
+                theoryHours,
+                labHours,
+                totalHours: theoryHours + labHours,
+                assignments
+            };
+        });
+
+        res.json(workloadResults);
     } catch (e) {
-        console.error(e);
         res.status(500).json({ message: e.message });
     }
 });

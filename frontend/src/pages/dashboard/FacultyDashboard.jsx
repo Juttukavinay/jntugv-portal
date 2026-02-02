@@ -108,11 +108,15 @@ function FacultyOverview({ currentUser, onNavigate }) {
 
     useEffect(() => {
         if (!currentUser?.name) return;
-        fetch(`${API_BASE_URL}/api/faculty/workload`)
+        fetch(`${API_BASE_URL}/api/timetables/workload`)
             .then(res => res.json())
             .then(data => {
-                const myWork = data.find(w => w.name === currentUser.name);
-                if (myWork) setWorkload(myWork);
+                const myWork = data.find(w => w.facultyName === currentUser.name);
+                if (myWork) {
+                    const targetHours = 16;
+                    const percentage = Math.round((myWork.totalHours / targetHours) * 100);
+                    setWorkload({ ...myWork, targetHours, percentage });
+                }
             }).catch(console.error);
     }, [currentUser]);
 
@@ -136,9 +140,9 @@ function FacultyOverview({ currentUser, onNavigate }) {
                     <div className="stat-icon-wrapper" style={{ background: '#f5f3ff', color: '#7c3aed' }}><Icons.Users /></div>
                     <div className="stat-content">
                         <h5>Teaching Workload</h5>
-                        <h3>{workload.currentHours || 0} / {workload.targetHours || 16}</h3>
+                        <h3>{workload.totalHours || 0} / {workload.targetHours || 16} Hrs</h3>
                         <span className="stat-trend" style={{ color: workload.percentage > 100 ? '#ef4444' : '#16a34a' }}>
-                            {workload.percentage || 0}% Compliance
+                            {workload.percentage || 0}% Occupied (L:{workload.labHours || 0})
                         </span>
                     </div>
                 </div>

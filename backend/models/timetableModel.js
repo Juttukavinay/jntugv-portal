@@ -9,6 +9,7 @@ const periodSchema = new mongoose.Schema({
     credits: { type: Number, default: 0 },
     ltp: { type: String, default: '' },
     room: { type: String, default: '' },
+    wing: { type: String, default: '' },
     isFixed: { type: Boolean, default: false }
 }, { _id: false });
 

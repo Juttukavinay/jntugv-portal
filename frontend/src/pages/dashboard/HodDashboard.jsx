@@ -368,7 +368,7 @@ function FacultyManager() {
         setLoading(true);
         Promise.all([
             fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()),
-            fetch(`${API_BASE_URL}/api/faculty/workload`).then(res => res.json())
+            fetch(`${API_BASE_URL}/api/timetables/workload`).then(res => res.json())
         ]).then(([facultyData, workloadData]) => {
             setFaculty(Array.isArray(facultyData) ? facultyData : []);
             setWorkloads(Array.isArray(workloadData) ? workloadData : []);
@@ -384,7 +384,11 @@ function FacultyManager() {
     }, [fetchFacultyData]);
 
     const getWorkload = (name) => {
-        return workloads.find(w => w.name === name) || { currentHours: 0, targetHours: 16, percentage: 0 };
+        const w = workloads.find(w => w.facultyName === name);
+        if (!w) return { totalHours: 0, theoryHours: 0, labHours: 0, targetHours: 16, percentage: 0 };
+        const targetHours = 16;
+        const percentage = Math.round((w.totalHours / targetHours) * 100);
+        return { ...w, targetHours, percentage };
     };
 
     const handleSubmit = async (e) => {
@@ -438,16 +442,16 @@ function FacultyManager() {
                                         <td><div style={{ fontSize: '0.85rem' }}>{f.designation}</div><div style={{ fontSize: '0.7rem', color: '#64748b' }}>{f.type}</div></td>
                                         <td style={{ minWidth: '150px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '4px' }}>
-                                                <span>{work.currentHours} / {work.targetHours} Hrs</span>
+                                                <span>{work.totalHours} / {work.targetHours} Hrs (L:{work.labHours})</span>
                                                 <span style={{ fontWeight: 'bold', color: work.percentage > 100 ? '#ef4444' : '#16a34a' }}>{work.percentage}%</span>
                                             </div>
                                             <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${work.percentage}%`, height: '100%', background: work.percentage > 100 ? '#ef4444' : '#3b82f6', transition: 'width 0.3s ease' }} />
+                                                <div style={{ width: `${Math.min(work.percentage, 100)}%`, height: '100%', background: work.percentage > 100 ? '#ef4444' : '#3b82f6', transition: 'width 0.3s ease' }} />
                                             </div>
                                         </td>
                                         <td>
-                                            <span style={{ padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', background: work.currentHours < work.targetHours ? '#dcfce7' : '#fee2e2', color: work.currentHours < work.targetHours ? '#166534' : '#991b1b' }}>
-                                                {work.currentHours < work.targetHours ? 'Available' : 'Occupied'}
+                                            <span style={{ padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', background: work.totalHours < work.targetHours ? '#dcfce7' : '#fee2e2', color: work.totalHours < work.targetHours ? '#166534' : '#991b1b' }}>
+                                                {work.totalHours < work.targetHours ? 'Available' : 'Occupied'}
                                             </span>
                                         </td>
                                         <td>
@@ -805,6 +809,7 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
     const [subject, setSubject] = useState(initialData.currentSubject);
     const [mainFaculty, setMainFaculty] = useState(initialData.faculty);
     const [assistants, setAssistants] = useState(initialData.assistants || []);
+    const [wing, setWing] = useState(initialData.wing || '');
     const isLab = (subject || '').toLowerCase().includes('lab') || (subject || '').toLowerCase().includes('project');
 
     const contractFaculty = facultyList.filter(f => f.type === 'Contract');
@@ -846,6 +851,16 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
                     </div>
                 </div>
             )}
+            {isLab && (
+                <div>
+                    <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Laboratory Wing</label>
+                    <select className="search-input-premium" value={wing} onChange={e => setWing(e.target.value)}>
+                        <option value="">-- Select Wing --</option>
+                        <option value="Wing 1">Wing 1</option>
+                        <option value="Wing 2">Wing 2</option>
+                    </select>
+                </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                 <button
                     className="btn-action"
@@ -858,7 +873,7 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
                 </button>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <button className="btn-action" onClick={onCancel}>Cancel</button>
-                    <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants })}>Save</button>
+                    <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants, wing })}>Save</button>
                 </div>
             </div>
         </div>
