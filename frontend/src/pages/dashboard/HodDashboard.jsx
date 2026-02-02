@@ -40,6 +40,7 @@ function HodDashboard() {
             case 'timetable': return <TimetableManager />;
             case 'subjects': return <SubjectsManager facultyList={allFaculty} />;
             case 'allocations': return <AllocationManager facultyList={allFaculty} />;
+            case 'infrastructure': return <InfrastructureManager />;
             case 'attendance': return <AttendanceManager />;
             case 'notices': return <CommunicationCenter user={user} />;
             default: return <HodOverview onNavigate={setActiveTab} user={user} totalFaculty={allFaculty.length} />;
@@ -71,6 +72,7 @@ function HodDashboard() {
                     <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
                     <NavItem icon={<Icons.Users />} label="Allocation Lists" active={activeTab === 'allocations'} onClick={() => setActiveTab('allocations')} />
+                    <NavItem icon={<Icons.Building />} label="Campus Infra" active={activeTab === 'infrastructure'} onClick={() => setActiveTab('infrastructure')} />
                     <NavItem icon={<Icons.Check />} label="My Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
                     <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} />
                 </nav>
@@ -1129,6 +1131,202 @@ function AllocationManager({ facultyList }) {
                             )) : <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No lab subjects found.</td></tr>}
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function InfrastructureManager() {
+    const [rooms, setRooms] = useState([]);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const fetchRooms = useCallback(() => {
+        fetch(`${API_BASE_URL}/api/rooms`).then(res => res.json()).then(setRooms).catch(console.error);
+    }, []);
+
+    useEffect(() => { fetchRooms(); }, [fetchRooms]);
+
+    const handleRoomChange = (index, field, value) => {
+        const newRooms = [...rooms];
+        newRooms[index][field] = value;
+        setRooms(newRooms);
+    };
+
+    const addRoom = (type) => {
+        const newRoom = {
+            name: type === 'Lab' ? `New Lab ${rooms.filter(r => r.type === 'Lab').length + 1}` : `Room ${rooms.filter(r => r.type === 'Classroom').length + 101}`,
+            type: type,
+            wing: 'Wing 1',
+            capacity: 60,
+            morningSession: 'Available',
+            afternoonSession: 'Available'
+        };
+        setRooms([...rooms, newRoom]);
+    };
+
+    const deleteRoom = (index) => {
+        setRooms(rooms.filter((_, i) => i !== index));
+    };
+
+    const saveRooms = async () => {
+        setIsSaving(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/rooms/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rooms })
+            });
+            if (response.ok) {
+                alert('Infrastructure updated successfully!');
+                fetchRooms();
+            } else {
+                alert('Failed to save infrastructure data.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error saving data');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }} className="fade-in-up">
+            <div className="glass-table-container">
+                <div className="table-header-premium" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        <h3>University Infrastructure Manager</h3>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Manage Physical Classrooms and Laboratories</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={() => addRoom('Classroom')} className="btn-action primary" style={{ background: '#10b981' }}>+ Add Class</button>
+                        <button onClick={() => addRoom('Lab')} className="btn-action primary" style={{ background: '#3b82f6' }}>+ Add Lab</button>
+                        <button onClick={saveRooms} className="btn-action primary" disabled={isSaving}>
+                            {isSaving ? '⏳ Saving...' : '💾 Save Changes'}
+                        </button>
+                    </div>
+                </div>
+                <div style={{ padding: '1rem' }}>
+                    <table className="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Name / Identifier</th>
+                                <th>Type</th>
+                                <th>Location/Wing</th>
+                                <th>Capacity</th>
+                                <th>Morning (FN)</th>
+                                <th>Afternoon (AN)</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {rooms.length > 0 ? rooms.map((r, i) => (
+                                <tr key={i}>
+                                    <td>
+                                        <input
+                                            value={r.name}
+                                            onChange={e => handleRoomChange(i, 'name', e.target.value)}
+                                            className="modern-input"
+                                            style={{ fontWeight: '700', width: '150px' }}
+                                        />
+                                    </td>
+                                    <td>
+                                        <span className={`badge-role ${r.type === 'Lab' ? 'admin' : 'faculty'}`} style={{ padding: '4px 12px' }}>
+                                            {r.type}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <select
+                                            value={r.wing}
+                                            onChange={e => handleRoomChange(i, 'wing', e.target.value)}
+                                            className="modern-input"
+                                        >
+                                            <option value="Wing 1">Wing 1</option>
+                                            <option value="Wing 2">Wing 2</option>
+                                            <option value="Main Building">Main Bldg</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input
+                                            type="number"
+                                            value={r.capacity}
+                                            onChange={e => handleRoomChange(i, 'capacity', e.target.value)}
+                                            className="modern-input"
+                                            style={{ width: '60px', textAlign: 'center' }}
+                                        />
+                                    </td>
+                                    <td>
+                                        <select
+                                            value={r.morningSession}
+                                            onChange={e => handleRoomChange(i, 'morningSession', e.target.value)}
+                                            className="modern-input"
+                                            style={{
+                                                color: r.morningSession === 'Available' ? '#10b981' : '#ef4444',
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            <option value="Available">🟢 Available</option>
+                                            <option value="Occupied">🔴 Occupied</option>
+                                            <option value="Maintenance">🟠 Maintenance</option>
+                                            <option value="Reserved">🔵 Reserved</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select
+                                            value={r.afternoonSession}
+                                            onChange={e => handleRoomChange(i, 'afternoonSession', e.target.value)}
+                                            className="modern-input"
+                                            style={{
+                                                color: r.afternoonSession === 'Available' ? '#10b981' : '#ef4444',
+                                                fontWeight: 'bold'
+                                            }}
+                                        >
+                                            <option value="Available">🟢 Available</option>
+                                            <option value="Occupied">🔴 Occupied</option>
+                                            <option value="Maintenance">🟠 Maintenance</option>
+                                            <option value="Reserved">🔵 Reserved</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                            {r.type === 'Lab' ? 'Flexible Shift' : 'Fixed Row'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button onClick={() => deleteRoom(i)} className="btn-action" style={{ color: '#ef4444' }}>
+                                            <Icons.Trash />
+                                        </button>
+                                    </td>
+                                </tr>
+                            )) : (
+                                <tr>
+                                    <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                                        No infrastructure data found. Add classes or labs to get started.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div className="glass-table-container" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)' }}>
+                <h4 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>💡 Infrastructure Strategy</h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                    <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <h5 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>Lab Flexibility</h5>
+                        <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.5' }}>
+                            Labs are designed for multi-batch usage. You can mark them separately for Morning (FN) and Afternoon (AN) sessions to maximize batch throughput.
+                        </p>
+                    </div>
+                    <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                        <h5 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Wing Allocation</h5>
+                        <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.5' }}>
+                            Designate rooms to specific Wings to enable better student flow and clash detection during manual timetable adjustments.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
