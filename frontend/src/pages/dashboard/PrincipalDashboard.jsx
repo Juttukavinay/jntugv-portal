@@ -21,6 +21,12 @@ function PrincipalDashboard() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('overview');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+    const showToast = useCallback((message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 4000);
+    }, []);
 
     // Close mobile menu when tab changes
     useEffect(() => {
@@ -29,12 +35,12 @@ function PrincipalDashboard() {
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'students': return <StudentDirectory />;
-            case 'faculty': return <FacultyDirectory />;
-            case 'subjects': return <CurriculumView />;
-            case 'timetables': return <TimetableView />;
-            case 'departments': return <DepartmentPanel />;
-            case 'notices': return <CommunicationCenter user={JSON.parse(localStorage.getItem('user')) || { name: 'Principal', role: 'principal' }} />;
+            case 'students': return <StudentDirectory showToast={showToast} />;
+            case 'faculty': return <FacultyDirectory showToast={showToast} />;
+            case 'subjects': return <CurriculumView showToast={showToast} />;
+            case 'timetables': return <TimetableView showToast={showToast} />;
+            case 'departments': return <DepartmentPanel showToast={showToast} />;
+            case 'notices': return <CommunicationCenter user={JSON.parse(localStorage.getItem('user')) || { name: 'Principal', role: 'principal' }} showToast={showToast} />;
             default: return <DashboardOverview onNavigate={setActiveTab} />;
         }
     };
@@ -101,6 +107,29 @@ function PrincipalDashboard() {
                     {renderContent()}
                 </div>
             </main>
+
+            {/* Premium Notification Toast */}
+            {toast.show && (
+                <div className="toast-notification fade-in-up" style={{
+                    position: 'fixed',
+                    bottom: '2rem',
+                    right: '2rem',
+                    background: '#fff',
+                    padding: '1rem 1.5rem',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    zIndex: 9999,
+                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`
+                }}>
+                    <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
+                        {toast.type === 'success' ? <Icons.Check /> : '❌'}
+                    </div>
+                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{toast.message}</div>
+                </div>
+            )}
         </div>
     );
 }
@@ -241,7 +270,7 @@ function PremiumStatCard({ title, value, icon, color, trend, trendType }) {
 }
 
 // --- DEPARTMENT MANAGER ---
-function DepartmentPanel() {
+function DepartmentPanel({ showToast }) {
     const [departments, setDepartments] = useState([]);
     const [faculty, setFaculty] = useState([]);
     const [editingDept, setEditingDept] = useState(null);
@@ -298,12 +327,11 @@ function DepartmentPanel() {
                 body: JSON.stringify({ name: newDeptName })
             });
             if (res.ok) {
-                const saved = await res.json();
-                setDepartments([...departments, saved].sort((a, b) => a.name.localeCompare(b.name)));
+                showToast('Department added successfully');
                 setShowAddModal(false);
                 setNewDeptName('');
             } else {
-                alert('Failed to add department. It might already exist.');
+                showToast('Failed to add department. It might already exist.', 'error');
             }
         } catch (error) {
             console.error(error);
@@ -378,8 +406,9 @@ function DepartmentPanel() {
                                                         const res = await fetch(`${API_BASE_URL}/api/departments/${dept._id}`, { method: 'DELETE' });
                                                         if (res.ok) {
                                                             setDepartments(prev => prev.filter(d => d._id !== dept._id));
+                                                            showToast('Department deleted');
                                                         } else {
-                                                            alert('Failed to delete department');
+                                                            showToast('Failed to delete department', 'error');
                                                         }
                                                     } catch (e) {
                                                         console.error(e);
@@ -428,7 +457,7 @@ function DepartmentPanel() {
 }
 
 // --- STUDENT DIRECTORY ---
-function StudentDirectory() {
+function StudentDirectory({ showToast }) {
     const [students, setStudents] = useState([]);
     const [search, setSearch] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -447,11 +476,11 @@ function StudentDirectory() {
                 body: JSON.stringify(newStudent)
             });
             if (res.ok) {
-                const saved = await res.json();
+                showToast('Student added successfully');
                 setStudents([...students, saved]);
                 setShowModal(false);
             } else {
-                alert('Failed to add student. Roll number might differ.');
+                showToast('Failed to add student. Roll number might differ.', 'error');
             }
         } catch (error) {
             console.error("Failed to add student", error);

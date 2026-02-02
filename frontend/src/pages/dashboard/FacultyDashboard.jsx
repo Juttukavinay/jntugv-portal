@@ -21,6 +21,12 @@ function FacultyDashboard() {
     const [activeTab, setActiveTab] = useState('overview')
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
     const [mySubject, setMySubject] = useState('')
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+    const showToast = useCallback((message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 4000);
+    }, []);
 
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user')) || { name: 'Faculty Member', role: 'faculty' }
@@ -82,12 +88,35 @@ function FacultyDashboard() {
 
                 <div className="fade-in-up">
                     {activeTab === 'overview' && <FacultyOverview currentUser={currentUser} onNavigate={setActiveTab} />}
-                    {activeTab === 'timetable' && <FacultyTimetable currentUser={currentUser} />}
+                    {activeTab === 'timetable' && <FacultyTimetable currentUser={currentUser} showToast={showToast} />}
                     {activeTab === 'students' && <SectionStudentList />}
                     {activeTab === 'attendance' && <AttendanceManager />}
-                    {activeTab === 'notices' && <CommunicationCenter user={currentUser} />}
+                    {activeTab === 'notices' && <CommunicationCenter user={currentUser} showToast={showToast} />}
                 </div>
             </main>
+
+            {/* Premium Notification Toast */}
+            {toast.show && (
+                <div className="toast-notification fade-in-up" style={{
+                    position: 'fixed',
+                    bottom: '2rem',
+                    right: '2rem',
+                    background: '#fff',
+                    padding: '1rem 1.5rem',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    zIndex: 9999,
+                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`
+                }}>
+                    <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
+                        {toast.type === 'success' ? <Icons.Check /> : '❌'}
+                    </div>
+                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{toast.message}</div>
+                </div>
+            )}
         </div>
     )
 }
@@ -242,7 +271,7 @@ function SectionStudentList() {
 import GlobalLoader from '../../components/GlobalLoader'
 import { createPortal } from 'react-dom'
 
-function FacultyTimetable({ currentUser }) {
+function FacultyTimetable({ currentUser, showToast }) {
     const [timetable, setTimetable] = useState(null)
     const [loading, setLoading] = useState(false)
     const [selectedSemester, setSelectedSemester] = useState('I-B.Tech I Sem')
@@ -268,8 +297,9 @@ function FacultyTimetable({ currentUser }) {
             .catch(err => {
                 console.error(err)
                 setLoading(false)
+                showToast('Failed to load timetable', 'error')
             })
-    }, [selectedSemester])
+    }, [selectedSemester, showToast])
 
     const fetchMySchedule = useCallback(() => {
         // Fetch all timetables and filter by current user's name
@@ -492,6 +522,7 @@ function FacultyTimetable({ currentUser }) {
                 <AllocationModal
                     slot={bookingSlot}
                     currentUser={currentUser}
+                    showToast={showToast}
                     onClose={() => setIsAllocationModalOpen(false)}
                     onSuccess={handleAllocationSuccess}
                 />,
@@ -501,7 +532,7 @@ function FacultyTimetable({ currentUser }) {
     )
 }
 
-function AllocationModal({ slot, currentUser, onClose, onSuccess }) {
+function AllocationModal({ slot, currentUser, onClose, onSuccess, showToast }) {
     const [status, setStatus] = useState('idle')
     const [subject, setSubject] = useState(slot.currentSubject)
     const [assignToMe, setAssignToMe] = useState(true)
@@ -535,7 +566,7 @@ function AllocationModal({ slot, currentUser, onClose, onSuccess }) {
                     onSuccess()
                 }, 1500) // Wait for animation
             } else {
-                alert('Booking failed')
+                showToast('Booking failed', 'error')
                 setStatus('idle')
             }
         } catch (e) {

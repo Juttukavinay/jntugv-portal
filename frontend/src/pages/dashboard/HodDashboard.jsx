@@ -8,17 +8,13 @@ import CommunicationCenter from '../../components/CommunicationCenter'
 // --- ICONS (Inline SVG for Premium Look) ---
 const Icons = {
     Home: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
-    Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
     GradCap: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>,
     Building: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M16 18h.01" /></svg>,
     Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>,
     Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
     LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
-    Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>,
-    Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>,
-    Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>,
-    Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
-    Bot: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg>
+    Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
+    Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 }
 
 // --- MAIN HOD DASHBOARD ---
@@ -46,6 +42,7 @@ function HodDashboard() {
             case 'faculty': return <FacultyManager showToast={showToast} />;
             case 'timetable': return <TimetableManager showToast={showToast} />;
             case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} />;
+            case 'allocation': return <AllocationManager facultyList={allFaculty} showToast={showToast} />;
             case 'infrastructure': return <InfrastructureManager showToast={showToast} />;
             case 'attendance': return <AttendanceManager showToast={showToast} />;
             case 'notices': return <CommunicationCenter user={user} showToast={showToast} />;
@@ -77,6 +74,7 @@ function HodDashboard() {
                     <NavItem icon={<Icons.Users />} label="Faculty Mgmt" active={activeTab === 'faculty'} onClick={() => setActiveTab('faculty')} />
                     <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
+                    <NavItem icon={<Icons.Users />} label="Faculty Load" active={activeTab === 'allocation'} onClick={() => setActiveTab('allocation')} />
                     <NavItem icon={<Icons.Building />} label="Campus Infra" active={activeTab === 'infrastructure'} onClick={() => setActiveTab('infrastructure')} />
                     <NavItem icon={<Icons.Check />} label="My Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
                     <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} />
@@ -554,7 +552,7 @@ function FacultyManager({ showToast }) {
         </>
     );
 }
-function TimetableManager() {
+function TimetableManager({ showToast }) {
     const [timetable, setTimetable] = useState(null)
     const [loading, setLoading] = useState(false)
     const [selectedSemester, setSelectedSemester] = useState('I-B.Tech I Sem')
@@ -593,15 +591,27 @@ function TimetableManager() {
         try {
             const res = await fetch(`${API_BASE_URL}/api/timetables/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ semester: selectedSemester, options: genOptions }) })
             const data = await res.json()
-            if (res.ok) { alert(data.unallocated?.length > 0 ? `⚠️ Warnings:\n${data.unallocated.join('\n')}` : "✅ Success!"); fetchTimetable(); }
-            else alert("Error: " + data.message)
-        } catch (err) { alert("Failed to connect"); } finally { setLoading(false) }
+            if (res.ok) {
+                if (data.unallocated?.length > 0) showToast(`Generated with warnings: ${data.unallocated.length} slots skipped`, 'error');
+                else showToast("Timetable Generated Successfully!");
+                fetchTimetable();
+            }
+            else showToast("Error: " + data.message, 'error')
+        } catch (err) { showToast("Failed to connect", 'error'); } finally { setLoading(false) }
     }
-
     const updateCell = (dayIndex, periodIndex) => {
         const day = timetable.schedule[dayIndex];
         const period = day.periods[periodIndex];
-        setBookingSlot({ dayIndex, periodIndex, day: day.day, time: period.time, currentSubject: period.subject === '-' ? '' : period.subject, faculty: period.faculty || '', assistants: period.assistants || [] });
+        setBookingSlot({
+            dayIndex,
+            periodIndex,
+            day: day.day,
+            time: period.time,
+            currentSubject: (period.subject === '-' || !period.subject) ? '' : period.subject,
+            faculty: period.faculty || '',
+            assistants: period.assistants || [],
+            wing: period.wing || ''
+        });
         setShowBookingModal(true);
     }
 
@@ -618,7 +628,8 @@ function TimetableManager() {
                     assistants: details.assistants,
                     wing: details.wing,
                     semester: selectedSemester,
-                    updateAll: details.updateAll // Pass propagation flag
+                    updateAll: details.updateAll, // Pass propagation flag
+                    originalSubject: bookingSlot.currentSubject // Pass original subject for better propagation
                 })
             });
             if (res.ok) {
@@ -735,7 +746,7 @@ function TimetableManager() {
         </>
     );
 }
-function SubjectsManager({ facultyList }) {
+function SubjectsManager({ facultyList, showToast }) {
     const [subjects, setSubjects] = useState([]);
     const [regulation, setRegulation] = useState('R23');
     const [activeCourse, setActiveCourse] = useState('B.Tech');
@@ -759,9 +770,10 @@ function SubjectsManager({ facultyList }) {
 
     const saveSubjects = async () => {
         const validRows = editRows.filter(r => r.courseName);
-        if (validRows.length === 0) return alert("Please fill at least one subject");
+        if (validRows.length === 0) return showToast("Please fill at least one subject", 'error');
         const res = await fetch(`${API_BASE_URL}/api/courses/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regulation, activeCourse, courseName, department: 'IT', subjects: validRows.map(r => ({ ...r, semester: semesterName })) }) });
-        if ((await res.json()).success) { alert('Saved!'); fetchSubjects(); }
+        if ((await res.json()).success) { showToast('Saved Successfully!'); fetchSubjects(); }
+        else showToast('Failed to save', 'error');
     }
 
     const deleteSubject = async (index) => {
@@ -771,14 +783,15 @@ function SubjectsManager({ facultyList }) {
             try {
                 const res = await fetch(`${API_BASE_URL}/api/courses/subject/${row._id}`, { method: 'DELETE' });
                 if (res.ok) {
+                    showToast('Subject deleted');
                     setEditRows(editRows.filter((_, idx) => idx !== index));
                     fetchSubjects(); // Sync with global state
                 } else {
-                    alert("Failed to delete subject");
+                    showToast("Failed to delete subject", 'error');
                 }
             } catch (e) {
                 console.error(e);
-                alert("Error deleting subject");
+                showToast("Error deleting subject", 'error');
             }
         } else {
             // Local delete only
@@ -796,9 +809,9 @@ function SubjectsManager({ facultyList }) {
             const data = await res.json();
             if (data.success) {
                 setEditRows(data.subjects.map((s, i) => ({ sNo: s.sNo || i + 1, category: s.category || 'PC', courseCode: s.courseCode || '', courseName: s.courseName || '', L: s.L || 0, T: s.T || 0, P: s.P || 0, credits: s.credits || 0, semester: semesterName })));
-                alert('✅ Syllabus Parsed! Please review and save.');
-            } else alert('❌ Failed to parse: ' + data.message);
-        } catch (err) { alert('Error uploading file'); } finally { setIsUploading(false); e.target.value = null; }
+                showToast('✅ Syllabus Parsed! Review and save.');
+            } else showToast('❌ Failed to parse: ' + data.message, 'error');
+        } catch (err) { showToast('Error uploading file', 'error'); } finally { setIsUploading(false); e.target.value = null; }
     }
 
     return (
@@ -1014,7 +1027,7 @@ function AttendanceManager() {
     );
 }
 
-function AllocationManager({ facultyList }) {
+function AllocationManager({ facultyList, showToast }) {
     const [subjects, setSubjects] = useState([]);
     const [semester, setSemester] = useState('I-B.Tech I Sem');
     const [isSaving, setIsSaving] = useState(false);
@@ -1030,38 +1043,34 @@ function AllocationManager({ facultyList }) {
     };
 
     const saveChanges = async () => {
+        const currentSemSubjects = subjects.filter(s => s.semester === semester);
+        if (currentSemSubjects.length === 0) return showToast("No subjects to save", 'error');
+
         setIsSaving(true);
         try {
-            // Group subjects by their courseId to use the existing /save endpoint 
-            // OR we can create a new bulk update endpoint. 
-            // Given the current architecture, we'll hit the /save endpoint per semester or just loop updates.
-            // For simplicity and to match the 'Curriculum' style, we'll update the subjects for the current semester.
-            const currentSemSubjects = subjects.filter(s => s.semester === semester);
-
-            // We need a courseId. Let's find one from the first subject or fetch it.
-            if (currentSemSubjects.length === 0) return;
-            const courseId = currentSemSubjects[0].courseId;
-
+            // Find course metadata if possible, else use defaults
+            const first = currentSemSubjects[0];
             const response = await fetch(`${API_BASE_URL}/api/courses/save`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    semester,
-                    courseId, // The backend needs courseId to know which course's subjects to replace/update
+                    regulation: 'R23',
+                    department: 'IT',
+                    program: (semester.includes('M.Tech')) ? 'PG' : 'UG',
+                    courseName: (semester.includes('M.Tech')) ? 'M.Tech' : (semester.includes('MCA') ? 'MCA' : 'B.Tech'),
                     subjects: currentSemSubjects
                 })
             });
 
             if (response.ok) {
-                alert('Allocations saved successfully!');
+                showToast('Allocations saved successfully!');
                 fetchSubjects();
             } else {
                 const err = await response.json();
-                alert('Save failed: ' + err.message);
+                showToast('Save failed: ' + err.message, 'error');
             }
         } catch (error) {
-            console.error(error);
-            alert('Error saving allocations');
+            showToast('Error saving allocations', 'error');
         } finally {
             setIsSaving(false);
         }
@@ -1170,27 +1179,31 @@ function AllocationManager({ facultyList }) {
     );
 }
 
-function InfrastructureManager() {
+function InfrastructureManager({ showToast }) {
     const [rooms, setRooms] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
     const [addCount, setAddCount] = useState(1);
+    const [filterDept, setFilterDept] = useState('IT');
 
-    const fetchRooms = useCallback(() => {
-        fetch(`${API_BASE_URL}/api/rooms`).then(res => res.json()).then(setRooms).catch(console.error);
+    const fetchRooms = useCallback(async () => {
+        const res = await fetch(`${API_BASE_URL}/api/rooms`);
+        const data = await res.json();
+        setRooms(data);
     }, []);
 
     useEffect(() => { fetchRooms(); }, [fetchRooms]);
 
-    const handleRoomChange = (index, field, value) => {
-        const newRooms = [...rooms];
-        newRooms[index][field] = value;
-
-        // Auto-set default wing based on type if changing type
-        if (field === 'type') {
-            newRooms[index].wing = value === 'Lab' ? 'LAB 1' : 'AB1';
-        }
-
-        setRooms(newRooms);
+    const handleRoomChange = (roomObj, field, value) => {
+        setRooms(prev => prev.map(r => {
+            if (r === roomObj) {
+                const updated = { ...r, [field]: value };
+                if (field === 'type') {
+                    updated.wing = value === 'Lab' ? 'LAB 1' : 'AB1';
+                }
+                return updated;
+            }
+            return r;
+        }));
     };
 
     const addRoomsBulk = (type) => {
@@ -1206,14 +1219,15 @@ function InfrastructureManager() {
                 wing: type === 'Lab' ? 'LAB 1' : 'AB1',
                 morningSession: 'Available',
                 afternoonSession: 'Available',
-                department: 'IT'
+                department: filterDept === 'All' ? 'IT' : filterDept
             });
         }
         setRooms([...rooms, ...newBatch]);
+        showToast(`Locally added ${count} ${type}(s). Click Save to sync.`);
     };
 
-    const deleteRoom = (index) => {
-        setRooms(rooms.filter((_, i) => i !== index));
+    const deleteRoom = (roomObj) => {
+        setRooms(prev => prev.filter(r => r !== roomObj));
     };
 
     const saveRooms = async () => {
@@ -1225,26 +1239,42 @@ function InfrastructureManager() {
                 body: JSON.stringify({ rooms })
             });
             if (response.ok) {
-                alert('Infrastructure updated successfully!');
+                showToast('Infrastructure saved successfully!');
                 fetchRooms();
             } else {
-                alert('Failed to save infrastructure data.');
+                showToast('Failed to save infrastructure data.', 'error');
             }
         } catch (e) {
-            console.error(e);
-            alert('Error saving data');
+            showToast('Error saving data', 'error');
         } finally {
             setIsSaving(false);
         }
     };
 
+    const filteredRooms = rooms.filter(r => filterDept === 'All' || r.department === filterDept);
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }} className="fade-in-up">
             <div className="glass-table-container">
                 <div className="table-header-premium" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <h3>University Infrastructure Manager</h3>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Define and Manage Physical Assets (Classes & Labs)</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                        <div>
+                            <h3>University Infrastructure Manager</h3>
+                            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Define and Manage Physical Assets (Classes & Labs)</p>
+                        </div>
+                        <select
+                            value={filterDept}
+                            onChange={e => setFilterDept(e.target.value)}
+                            className="search-input-premium"
+                            style={{ width: '150px', padding: '6px' }}
+                        >
+                            <option value="All">All Depts</option>
+                            <option value="IT">IT</option>
+                            <option value="CSE">CSE</option>
+                            <option value="ECE">ECE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="CIVIL">CIVIL</option>
+                        </select>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -1280,12 +1310,12 @@ function InfrastructureManager() {
                             </tr>
                         </thead>
                         <tbody>
-                            {rooms.length > 0 ? rooms.map((r, i) => (
-                                <tr key={i}>
+                            {filteredRooms.length > 0 ? filteredRooms.map((r, i) => (
+                                <tr key={r._id || i}>
                                     <td>
                                         <input
                                             value={r.name}
-                                            onChange={e => handleRoomChange(i, 'name', e.target.value)}
+                                            onChange={e => handleRoomChange(r, 'name', e.target.value)}
                                             className="modern-input"
                                             style={{ fontWeight: '700', width: '130px' }}
                                         />
@@ -1293,7 +1323,7 @@ function InfrastructureManager() {
                                     <td>
                                         <select
                                             value={r.type}
-                                            onChange={e => handleRoomChange(i, 'type', e.target.value)}
+                                            onChange={e => handleRoomChange(r, 'type', e.target.value)}
                                             className="modern-input"
                                             style={{ padding: '6px' }}
                                         >
@@ -1305,7 +1335,7 @@ function InfrastructureManager() {
                                         {r.type === 'Classroom' ? (
                                             <select
                                                 value={r.wing}
-                                                onChange={e => handleRoomChange(i, 'wing', e.target.value)}
+                                                onChange={e => handleRoomChange(r, 'wing', e.target.value)}
                                                 className="modern-input"
                                                 style={{ padding: '6px' }}
                                             >
@@ -1317,7 +1347,7 @@ function InfrastructureManager() {
                                         ) : (
                                             <select
                                                 value={r.wing}
-                                                onChange={e => handleRoomChange(i, 'wing', e.target.value)}
+                                                onChange={e => handleRoomChange(r, 'wing', e.target.value)}
                                                 className="modern-input"
                                                 style={{ padding: '6px' }}
                                             >
@@ -1331,7 +1361,7 @@ function InfrastructureManager() {
                                     <td>
                                         <select
                                             value={r.department || 'IT'}
-                                            onChange={e => handleRoomChange(i, 'department', e.target.value)}
+                                            onChange={e => handleRoomChange(r, 'department', e.target.value)}
                                             className="modern-input"
                                             style={{ padding: '6px' }}
                                         >
@@ -1345,7 +1375,7 @@ function InfrastructureManager() {
                                     <td>
                                         <select
                                             value={r.morningSession}
-                                            onChange={e => handleRoomChange(i, 'morningSession', e.target.value)}
+                                            onChange={e => handleRoomChange(r, 'morningSession', e.target.value)}
                                             className="modern-input"
                                             style={{
                                                 color: r.morningSession === 'Available' ? '#10b981' : '#ef4444',
@@ -1361,7 +1391,7 @@ function InfrastructureManager() {
                                     <td>
                                         <select
                                             value={r.afternoonSession}
-                                            onChange={e => handleRoomChange(i, 'afternoonSession', e.target.value)}
+                                            onChange={e => handleRoomChange(r, 'afternoonSession', e.target.value)}
                                             className="modern-input"
                                             style={{
                                                 color: r.afternoonSession === 'Available' ? '#10b981' : '#ef4444',
@@ -1375,7 +1405,7 @@ function InfrastructureManager() {
                                         </select>
                                     </td>
                                     <td>
-                                        <button onClick={() => deleteRoom(i)} className="btn-action" style={{ color: '#ef4444' }}>
+                                        <button onClick={() => deleteRoom(r)} className="btn-action" style={{ color: '#ef4444' }}>
                                             <Icons.Trash />
                                         </button>
                                     </td>
@@ -1414,109 +1444,5 @@ function InfrastructureManager() {
 }
 
 
-function LocalAcademicBot() {
-    const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState([{ sender: 'bot', text: "Systems online. I am the JNTU-GV Offline Intelligence Engine. Ask me about **clashes**, **workloads**, or **department stats**. I process all logic locally." }]);
-    const [input, setInput] = useState('');
-    const [loading, setLoading] = useState(false);
-    const chatEndRef = useCallback(node => { if (node !== null) node.scrollIntoView({ behavior: "smooth" }); }, []);
-
-    const sendMessage = async (e) => {
-        e.preventDefault();
-        if (!input.trim() || loading) return;
-        const msg = input;
-        setInput('');
-        setMessages(prev => [...prev, { sender: 'user', text: msg }]);
-        setLoading(true);
-
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/chat/ask-offline`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ question: msg })
-            });
-            const data = await res.json();
-            setMessages(prev => [...prev, { sender: 'bot', text: data.reply }]);
-        } catch (err) {
-            setMessages(prev => [...prev, { sender: 'bot', text: "Error: My internal logic circuits failed to respond." }]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div style={{ position: 'fixed', bottom: '2rem', right: '7rem', zIndex: 1000 }}>
-            {isOpen ? (
-                <div className="glass-panel fade-in-up" style={{ width: '350px', height: '500px', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.4)', borderRadius: '20px', overflow: 'hidden' }}>
-                    <div style={{ padding: '1rem', background: 'linear-gradient(135deg, #1e293b 0%, #334155 100%)', color: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Icons.Bot />
-                            <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Offline Logic Engine</span>
-                        </div>
-                        <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '1.2rem' }}>×</button>
-                    </div>
-
-                    <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: '#f8fafc' }}>
-                        {messages.map((m, i) => (
-                            <div key={i} style={{
-                                alignSelf: m.sender === 'user' ? 'flex-end' : 'flex-start',
-                                maxWidth: '85%',
-                                padding: '0.8rem 1rem',
-                                borderRadius: m.sender === 'user' ? '15px 15px 0 15px' : '15px 15px 15px 0',
-                                background: m.sender === 'user' ? '#3b82f6' : '#fff',
-                                color: m.sender === 'user' ? '#fff' : '#1e293b',
-                                fontSize: '0.85rem',
-                                boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                                border: m.sender === 'bot' ? '1px solid #e2e8f0' : 'none',
-                                whiteSpace: 'pre-wrap',
-                                lineHeight: '1.5'
-                            }}>
-                                {m.text.split('**').map((part, idx) => idx % 2 === 1 ? <strong key={idx}>{part}</strong> : part)}
-                            </div>
-                        ))}
-                        {loading && <div style={{ alignSelf: 'flex-start', padding: '0.5rem', background: '#e2e8f0', borderRadius: '10px', fontSize: '0.7rem' }}>Thinking...</div>}
-                        <div ref={chatEndRef} />
-                    </div>
-
-                    <form onSubmit={sendMessage} style={{ padding: '1rem', background: '#fff', borderTop: '1px solid #e2e8f0', display: 'flex', gap: '0.5rem' }}>
-                        <input
-                            value={input}
-                            onChange={e => setInput(e.target.value)}
-                            placeholder="Ask internal logic..."
-                            className="modern-input"
-                            style={{ flex: 1, padding: '10px 15px' }}
-                        />
-                        <button type="submit" disabled={loading} style={{ background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '12px', padding: '0 15px', cursor: 'pointer' }}>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                        </button>
-                    </form>
-                </div>
-            ) : (
-                <button
-                    onClick={() => setIsOpen(true)}
-                    className="fade-in-up"
-                    style={{
-                        width: '60px',
-                        height: '60px',
-                        borderRadius: '30px',
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                        color: '#fff',
-                        border: 'none',
-                        cursor: 'pointer',
-                        boxShadow: '0 10px 25px rgba(37, 99, 235, 0.4)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        transition: 'transform 0.3s ease'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                >
-                    <Icons.Bot />
-                </button>
-            )}
-        </div>
-    );
-}
 
 export default HodDashboard;

@@ -670,9 +670,7 @@ router.put('/update', async (req, res) => {
 
         // --- WING CHECK ---
         const { wing } = req.body;
-        if (wing && !['Wing 1', 'Wing 2'].includes(wing)) {
-            return res.status(400).json({ message: 'Only Wing 1 and Wing 2 are allowed for labs.' });
-        }
+        // Validation removed to support dynamic block/wing names from infrastructure manager
 
         // No conflict, proceed to update
         targetPeriod.subject = subject;
@@ -684,18 +682,22 @@ router.put('/update', async (req, res) => {
         const isLab = subject && subject.toLowerCase().includes('lab');
 
         // Propagate to all slots if requested
-        if (req.body.updateAll && subject && subject !== '-') {
-            timetable.schedule.forEach(day => {
-                day.periods.forEach(p => {
-                    if (p.subject === subject) {
-                        p.faculty = faculty || 'N/A';
-                        p.assistants = assistants || [];
-                        p.type = isLab ? 'Lab' : 'Lecture';
-                        p.isFixed = true;
-                        if (wing) p.wing = wing;
-                    }
+        if (req.body.updateAll && (subject || req.body.originalSubject)) {
+            const searchSubject = req.body.originalSubject || subject;
+            if (searchSubject && searchSubject !== '-') {
+                timetable.schedule.forEach(day => {
+                    day.periods.forEach(p => {
+                        if (p.subject === searchSubject) {
+                            p.subject = subject; // Update name if it was changed
+                            p.faculty = faculty || 'N/A';
+                            p.assistants = assistants || [];
+                            p.type = isLab ? 'Lab' : 'Lecture';
+                            p.isFixed = true;
+                            if (wing) p.wing = wing;
+                        }
+                    });
                 });
-            });
+            }
         }
 
         // If booking, mark as locked/fixed for the primary slot

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import API_BASE_URL from '../config';
 
-const CommunicationCenter = ({ user }) => {
+const CommunicationCenter = ({ user, showToast }) => {
     const [messages, setMessages] = useState([]);
     const [activeMsg, setActiveMsg] = useState(null);
     const [isComposing, setIsComposing] = useState(false);
@@ -100,7 +100,8 @@ const CommunicationCenter = ({ user }) => {
                 body: JSON.stringify(body)
             });
             if (res.ok) {
-                alert('Sent successfully!');
+                if (showToast) showToast('Sent successfully!');
+                else alert('Sent successfully!');
                 setIsComposing(false);
                 setTitle('');
                 setContent('');
