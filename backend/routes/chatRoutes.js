@@ -135,5 +135,19 @@ ${dbContext}`;
     }
 });
 
+// @route   POST /api/chat/ask-offline
+// @desc    Get purely logical, local response bypassing Gemini
+router.post('/ask-offline', async (req, res) => {
+    try {
+        const { question } = req.body;
+        const { handleOfflineRequest } = require('../utils/localAiEngine');
+        const reply = await handleOfflineRequest(question);
+        res.json({ reply });
+    } catch (error) {
+        console.error("Offline AI Error:", error);
+        res.status(500).json({ reply: "My logic circuits are temporarily disconnected." });
+    }
+});
+
 module.exports = router;
 
