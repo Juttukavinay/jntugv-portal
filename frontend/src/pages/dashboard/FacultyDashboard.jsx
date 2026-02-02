@@ -422,6 +422,7 @@ function FacultyTimetable({ currentUser }) {
                                                             <div style={{ fontSize: '0.75rem', color: '#1e40af', fontWeight: '700' }}>
                                                                 {p.faculty === currentUser.name ? '👤 You (M)' : `${p.faculty} (M)`}
                                                             </div>
+                                                            {p.wing && <div style={{ fontSize: '0.65rem', color: '#059669', fontWeight: 'bold' }}>📍 {p.wing}</div>}
                                                             {p.assistants?.includes(currentUser.name) && (
                                                                 <div style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 'bold' }}>
                                                                     ✨ You are Assisting

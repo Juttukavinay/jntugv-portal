@@ -561,7 +561,7 @@ function TimetableManager() {
 
     const handleConfirmBooking = async (details) => {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/timetables/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dayIndex: bookingSlot.dayIndex, periodIndex: bookingSlot.periodIndex, subject: details.subject || '-', faculty: details.faculty, assistants: details.assistants, semester: selectedSemester }) });
+            const res = await fetch(`${API_BASE_URL}/api/timetables/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dayIndex: bookingSlot.dayIndex, periodIndex: bookingSlot.periodIndex, subject: details.subject || '-', faculty: details.faculty, assistants: details.assistants, wing: details.wing, semester: selectedSemester }) });
             if (res.ok) { alert('Slot Updated!'); setShowBookingModal(false); fetchTimetable(); }
             else alert('Error: ' + (await res.json()).message);
         } catch (e) { alert('Failed to update slot'); }
@@ -616,6 +616,7 @@ function TimetableManager() {
                                                 <div key={i} onClick={() => updateCell(dIndex, day.periods.indexOf(p))} style={{ flex: p.credits || 1, background: p.type === 'Lab' ? '#eff6ff' : (p.type === 'Theory' ? '#fffbeb' : '#f4f4f5'), padding: '6px', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.8rem' }}>
                                                     <div style={{ fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.subject}</div>
                                                     {p.faculty && <div style={{ fontSize: '0.65rem', color: '#2563eb', fontWeight: '700' }}>{p.faculty} (M)</div>}
+                                                    {p.wing && <div style={{ fontSize: '0.6rem', color: '#16a34a', fontWeight: 'bold', marginTop: '2px' }}>📍 {p.wing}</div>}
                                                     {p.assistants?.length > 0 && (
                                                         <div style={{ fontSize: '0.6rem', color: '#64748b' }}>
                                                             + {p.assistants.join(', ')}

@@ -178,7 +178,7 @@ function StudentDashboard() {
                                                 fontSize: '0.85rem'
                                             }}>
                                                 <div style={{ fontWeight: '600', color: '#1e293b', marginBottom: '2px' }}>{p.subject}</div>
-                                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{p.room || 'Room 101'}</div>
+                                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{p.room || (p.wing ? `📍 ${p.wing}` : 'Room 101')}</div>
                                             </div>
                                         </td>
                                     ))}
