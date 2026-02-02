@@ -681,9 +681,25 @@ router.put('/update', async (req, res) => {
         targetPeriod.wing = wing || targetPeriod.wing;
         targetPeriod.room = room || targetPeriod.room;
 
-        // If booking, mark as locked/fixed
+        const isLab = subject && subject.toLowerCase().includes('lab');
+
+        // Propagate to all slots if requested
+        if (req.body.updateAll && subject && subject !== '-') {
+            timetable.schedule.forEach(day => {
+                day.periods.forEach(p => {
+                    if (p.subject === subject) {
+                        p.faculty = faculty || 'N/A';
+                        p.assistants = assistants || [];
+                        p.type = isLab ? 'Lab' : 'Lecture';
+                        p.isFixed = true;
+                        if (wing) p.wing = wing;
+                    }
+                });
+            });
+        }
+
+        // If booking, mark as locked/fixed for the primary slot
         if (faculty || (assistants && assistants.length > 0)) {
-            const isLab = subject && subject.toLowerCase().includes('lab');
             targetPeriod.type = isLab ? 'Lab' : 'Lecture';
             targetPeriod.isFixed = true;
         } else {

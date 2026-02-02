@@ -26,6 +26,12 @@ function HodDashboard() {
     const [activeTab, setActiveTab] = useState('overview');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [user, setUser] = useState({});
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+    const showToast = useCallback((message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 4000);
+    }, []);
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user'));
@@ -35,13 +41,13 @@ function HodDashboard() {
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'students': return <StudentManager />;
-            case 'faculty': return <FacultyManager />;
-            case 'timetable': return <TimetableManager />;
-            case 'subjects': return <SubjectsManager facultyList={allFaculty} />;
-            case 'infrastructure': return <InfrastructureManager />;
-            case 'attendance': return <AttendanceManager />;
-            case 'notices': return <CommunicationCenter user={user} />;
+            case 'students': return <StudentManager showToast={showToast} />;
+            case 'faculty': return <FacultyManager showToast={showToast} />;
+            case 'timetable': return <TimetableManager showToast={showToast} />;
+            case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} />;
+            case 'infrastructure': return <InfrastructureManager showToast={showToast} />;
+            case 'attendance': return <AttendanceManager showToast={showToast} />;
+            case 'notices': return <CommunicationCenter user={user} showToast={showToast} />;
             default: return <HodOverview onNavigate={setActiveTab} user={user} totalFaculty={allFaculty.length} />;
         }
     };
@@ -115,6 +121,29 @@ function HodDashboard() {
                     {renderContent()}
                 </div>
             </main>
+
+            {/* Premium Notification Toast */}
+            {toast.show && (
+                <div className="toast-notification fade-in-up" style={{
+                    position: 'fixed',
+                    bottom: '2rem',
+                    right: '2rem',
+                    background: '#fff',
+                    padding: '1rem 1.5rem',
+                    borderRadius: '12px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    zIndex: 9999,
+                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`
+                }}>
+                    <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
+                        {toast.type === 'success' ? <Icons.Check /> : '❌'}
+                    </div>
+                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{toast.message}</div>
+                </div>
+            )}
         </div>
     );
 }
@@ -226,7 +255,7 @@ function HodOverview({ onNavigate, user }) {
 }
 
 // --- PLACEHOLDER COMPONENTS (To be filled) ---
-function StudentManager() {
+function StudentManager({ showToast }) {
     const [students, setStudents] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState('');
@@ -245,13 +274,23 @@ function StudentManager() {
         e.preventDefault();
         const url = modalType === 'add' ? `${API_BASE_URL}/api/students` : `${API_BASE_URL}/api/students/${currentStudent._id}`;
         const method = modalType === 'add' ? 'POST' : 'PUT';
-        await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
-        setIsModalOpen(false); fetchStudents();
+        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+        if (res.ok) {
+            showToast(`Student ${modalType === 'add' ? 'added' : 'updated'}!`);
+            setIsModalOpen(false); fetchStudents();
+        } else {
+            showToast('Failed to save student', 'error');
+        }
     };
 
     const confirmDelete = async () => {
-        await fetch(`${API_BASE_URL}/api/students/${currentStudent._id}`, { method: 'DELETE' });
-        setIsModalOpen(false); fetchStudents();
+        const res = await fetch(`${API_BASE_URL}/api/students/${currentStudent._id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast('Student deleted');
+            setIsModalOpen(false); fetchStudents();
+        } else {
+            showToast('Failed to delete student', 'error');
+        }
     };
 
     const handleBulkUpload = async (e) => {
@@ -261,9 +300,9 @@ function StudentManager() {
         try {
             const res = await fetch(`${API_BASE_URL}/api/students/upload`, { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) { alert(data.message); fetchStudents(); }
-            else alert('Error: ' + data.message);
-        } catch (err) { alert('Upload failed'); }
+            if (data.success) { showToast(data.message); fetchStudents(); }
+            else showToast('Error: ' + data.message, 'error');
+        } catch (err) { showToast('Upload failed', 'error'); }
         e.target.value = null;
     };
 
@@ -359,7 +398,7 @@ function StudentManager() {
         </>
     );
 }
-function FacultyManager() {
+function FacultyManager({ showToast }) {
     const [faculty, setFaculty] = useState([]);
     const [workloads, setWorkloads] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -399,13 +438,13 @@ function FacultyManager() {
         e.preventDefault();
         const url = modalType === 'add' ? `${API_BASE_URL}/api/faculty` : `${API_BASE_URL}/api/faculty/${currentFac._id}`;
         const method = modalType === 'add' ? 'POST' : 'PUT';
-        await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
-        setIsModalOpen(false); fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFaculty);
+        const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+        if (res.ok) { showToast(`Faculty ${modalType === 'add' ? 'added' : 'updated'}!`); setIsModalOpen(false); fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFaculty); }
     };
 
     const confirmDelete = async () => {
-        await fetch(`${API_BASE_URL}/api/faculty/${currentFac._id}`, { method: 'DELETE' });
-        setIsModalOpen(false); fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFaculty);
+        const res = await fetch(`${API_BASE_URL}/api/faculty/${currentFac._id}`, { method: 'DELETE' });
+        if (res.ok) { showToast('Faculty record deleted'); setIsModalOpen(false); fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFaculty); }
     };
 
     const handleBulkUpload = async (e) => {
@@ -415,9 +454,9 @@ function FacultyManager() {
         try {
             const res = await fetch(`${API_BASE_URL}/api/faculty/upload`, { method: 'POST', body: formData });
             const data = await res.json();
-            if (data.success) { alert(data.message); fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFaculty); }
-            else alert('Error: ' + data.message);
-        } catch (err) { alert('Upload failed'); }
+            if (data.success) { showToast(data.message); fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFaculty); }
+            else showToast('Error: ' + data.message, 'error');
+        } catch (err) { showToast('Upload failed', 'error'); }
         e.target.value = null;
     };
 
@@ -565,10 +604,27 @@ function TimetableManager() {
 
     const handleConfirmBooking = async (details) => {
         try {
-            const res = await fetch(`${API_BASE_URL}/api/timetables/update`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dayIndex: bookingSlot.dayIndex, periodIndex: bookingSlot.periodIndex, subject: details.subject || '-', faculty: details.faculty, assistants: details.assistants, wing: details.wing, semester: selectedSemester }) });
-            if (res.ok) { alert('Slot Updated!'); setShowBookingModal(false); fetchTimetable(); }
-            else alert('Error: ' + (await res.json()).message);
-        } catch (e) { alert('Failed to update slot'); }
+            const res = await fetch(`${API_BASE_URL}/api/timetables/update`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dayIndex: bookingSlot.dayIndex,
+                    periodIndex: bookingSlot.periodIndex,
+                    subject: details.subject || '-',
+                    faculty: details.faculty,
+                    assistants: details.assistants,
+                    wing: details.wing,
+                    semester: selectedSemester,
+                    updateAll: details.updateAll // Pass propagation flag
+                })
+            });
+            if (res.ok) {
+                showToast(details.updateAll ? 'All subject slots updated!' : 'Slot Updated!');
+                setShowBookingModal(false);
+                fetchTimetable();
+            }
+            else showToast('Error: ' + (await res.json()).message, 'error');
+        } catch (e) { showToast('Failed to update slot', 'error'); }
     }
 
     return (
@@ -775,7 +831,7 @@ function SubjectsManager({ facultyList }) {
             </div>
             <div style={{ overflowX: 'auto' }}>
                 <table className="premium-table">
-                    <thead><tr><th style={{ width: '50px' }}>S.No</th><th>Category</th><th>Code</th><th>Title</th><th>L</th><th>T</th><th>P</th><th>C</th><th>Main Faculty</th><th>Assistants (Labs)</th><th>Action</th></tr></thead>
+                    <thead><tr><th style={{ width: '50px' }}>S.No</th><th>Category</th><th>Code</th><th>Title</th><th>L</th><th>T</th><th>P</th><th>C</th><th>Action</th></tr></thead>
                     <tbody>
                         {editRows.map((row, i) => (
                             <tr key={i} style={{ background: '#fff' }}>
@@ -791,28 +847,6 @@ function SubjectsManager({ facultyList }) {
                                 <td><input value={row.T || ''} onChange={e => handleSubjectChange(i, 'T', e.target.value)} className="modern-input" style={{ width: '40px', textAlign: 'center', padding: '4px' }} /></td>
                                 <td><input value={row.P || ''} onChange={e => handleSubjectChange(i, 'P', e.target.value)} className="modern-input" style={{ width: '40px', textAlign: 'center', padding: '4px' }} /></td>
                                 <td><input value={row.credits || ''} onChange={e => handleSubjectChange(i, 'credits', e.target.value)} className="modern-input" style={{ width: '40px', textAlign: 'center', padding: '4px', fontWeight: 'bold' }} /></td>
-                                <td>
-                                    <select
-                                        value={row.assignedFaculty || ''}
-                                        onChange={e => handleSubjectChange(i, 'assignedFaculty', e.target.value)}
-                                        className="modern-input"
-                                        style={{ width: '150px', padding: '4px' }}
-                                    >
-                                        <option value="">-- Main --</option>
-                                        {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
-                                    </select>
-                                </td>
-                                <td>
-                                    <select
-                                        multiple
-                                        value={row.assignedAssistants || []}
-                                        onChange={e => handleSubjectChange(i, 'assignedAssistants', Array.from(e.target.selectedOptions, o => o.value))}
-                                        className="modern-input"
-                                        style={{ width: '150px', padding: '4px', height: '40px' }}
-                                    >
-                                        {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
-                                    </select>
-                                </td>
                                 <td>
                                     <button
                                         onClick={() => deleteSubject(i)}
@@ -837,6 +871,7 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
     const [mainFaculty, setMainFaculty] = useState(initialData.faculty);
     const [assistants, setAssistants] = useState(initialData.assistants || []);
     const [wing, setWing] = useState(initialData.wing || '');
+    const [updateAll, setUpdateAll] = useState(true);
     const isLab = (subject || '').toLowerCase().includes('lab') || (subject || '').toLowerCase().includes('project');
 
     const contractFaculty = facultyList.filter(f => f.type === 'Contract');
@@ -873,9 +908,6 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
                         <optgroup label="Contract Faculty (Preferred)">{renderOpts(contractFaculty)}</optgroup>
                         <optgroup label="Regular Faculty">{renderOpts(regularFaculty)}</optgroup>
                     </select>
-                    <div style={{ fontSize: '0.7rem', color: '#2563eb', marginTop: '4px' }}>
-                        💡 Tip: Hold Ctrl to pick exactly 2 assistants as per lab norms.
-                    </div>
                 </div>
             )}
             {isLab && (
@@ -888,19 +920,23 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
                     </select>
                 </div>
             )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', background: '#f8fafc', borderRadius: '8px' }}>
+                <input type="checkbox" checked={updateAll} onChange={e => setUpdateAll(e.target.checked)} id="syncAll" />
+                <label htmlFor="syncAll" style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '600', cursor: 'pointer' }}>Apply this faculty to ALL slots of this subject</label>
+            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                 <button
                     className="btn-action"
                     style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2' }}
                     onClick={() => {
-                        if (confirm('Clear this slot?')) onSubmit({ subject: '-', faculty: '', assistants: [] });
+                        if (confirm('Clear this slot?')) onSubmit({ subject: '-', faculty: '', assistants: [], updateAll: false });
                     }}
                 >
                     Clear Slot
                 </button>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <button className="btn-action" onClick={onCancel}>Cancel</button>
-                    <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants, wing })}>Save</button>
+                    <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants, wing, updateAll })}>Save</button>
                 </div>
             </div>
         </div>
