@@ -36,7 +36,6 @@ function VicePrincipalDashboard() {
             case 'subjects': return <CurriculumView />;
             case 'timetables': return <TimetableView />;
             case 'departments': return <DepartmentPanel />;
-            case 'ai-lab': return <AiPlayground />;
             case 'notices': return <CommunicationCenter user={user} />;
             default: return <DashboardOverview onNavigate={setActiveTab} />;
         }
@@ -62,8 +61,6 @@ function VicePrincipalDashboard() {
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
                     <NavItem icon={<Icons.Calendar />} label="Timetables" active={activeTab === 'timetables'} onClick={() => setActiveTab('timetables')} />
                     <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} />
-                    <div style={{ margin: '1rem 0', height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
-                    <NavItem icon={<Icons.Robot />} label="AI Lab" active={activeTab === 'ai-lab'} onClick={() => setActiveTab('ai-lab')} />
                 </nav>
 
                 <div className="sidebar-footer">
@@ -120,7 +117,6 @@ function NavItem({ icon, label, active, onClick }) {
 }
 
 import GlobalLoader from '../../components/GlobalLoader'
-import AiPlayground from './AiPlayground'
 
 // --- SUB-COMPONENTS ---
 

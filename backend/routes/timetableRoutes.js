@@ -630,89 +630,88 @@ router.put('/update', async (req, res) => {
                     }
                 }
             }
-        }
 
-        // 5. Faculty Lab Weekly/Semester Limits
-        const isTargetLab = subject && subject.toLowerCase().includes('lab');
-        if (isTargetLab) {
-            for (const fName of involvedFaculty) {
-                const facultyData = await Faculty.findOne({ name: fName });
-                if (!facultyData) continue;
+            // 5. Faculty Lab Weekly/Semester Limits
+            const isTargetLab = subject && subject.toLowerCase().includes('lab');
+            if (isTargetLab) {
+                for (const fName of involvedFaculty) {
+                    const facultyData = await Faculty.findOne({ name: fName });
+                    if (!facultyData) continue;
 
-                let weeklyLabCount = 0;
-                for (const t of allTimetables) {
-                    t.schedule.forEach(day => {
-                        day.periods.forEach(p => {
-                            const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
-                            if (pIsLab && (p.faculty === fName || (p.assistants && p.assistants.includes(fName)))) {
-                                weeklyLabCount++;
-                            }
+                    let weeklyLabCount = 0;
+                    for (const t of allTimetables) {
+                        t.schedule.forEach(day => {
+                            day.periods.forEach(p => {
+                                const pIsLab = (p.type === 'Lab' || (p.subject && p.subject.toLowerCase().includes('lab'))) && p.subject !== '-' && p.subject !== '';
+                                if (pIsLab && (p.faculty === fName || (p.assistants && p.assistants.includes(fName)))) {
+                                    weeklyLabCount++;
+                                }
+                            });
                         });
-                    });
-                }
-
-                // Permanent Faculty Limit: 1 Lab per week
-                if (facultyData.designation && facultyData.designation.toLowerCase().includes('permanent') || facultyData.type === 'Permanent') {
-                    if (weeklyLabCount >= 1) {
-                        return res.status(409).json({ message: `Permanent Faculty '${fName}' is limited to 1 Lab per week. Current: ${weeklyLabCount}` });
                     }
-                }
-                // Regular Faculty Limit: 1 Lab per week (User request interpreted as 1 per week)
-                else if (facultyData.type === 'Regular') {
-                    if (weeklyLabCount >= 1) {
-                        return res.status(409).json({ message: `Regular Faculty '${fName}' is limited to 1 Lab per week.` });
+
+                    // Permanent Faculty Limit: 1 Lab per week
+                    if (facultyData.designation && facultyData.designation.toLowerCase().includes('permanent') || facultyData.type === 'Permanent') {
+                        if (weeklyLabCount >= 1) {
+                            return res.status(409).json({ message: `Permanent Faculty '${fName}' is limited to 1 Lab per week. Current: ${weeklyLabCount}` });
+                        }
+                    }
+                    // Regular Faculty Limit: 1 Lab per week (User request interpreted as 1 per week)
+                    else if (facultyData.type === 'Regular') {
+                        if (weeklyLabCount >= 1) {
+                            return res.status(409).json({ message: `Regular Faculty '${fName}' is limited to 1 Lab per week.` });
+                        }
                     }
                 }
             }
         }
-    }
 
         // --- WING CHECK ---
         const { wing } = req.body;
-    if (wing && !['Wing 1', 'Wing 2'].includes(wing)) {
-        return res.status(400).json({ message: 'Only Wing 1 and Wing 2 are allowed for labs.' });
-    }
-
-    // No conflict, proceed to update
-    targetPeriod.subject = subject;
-    targetPeriod.wing = wing || targetPeriod.wing;
-
-    // Allow updating faculty even if it's an empty string (to release slot)
-    if (faculty !== undefined) {
-        targetPeriod.faculty = faculty;
-    }
-
-    // Update assistants
-    if (assistants !== undefined) {
-        targetPeriod.assistants = assistants;
-    }
-
-    if (room) targetPeriod.room = room;
-
-    // If booking, mark as locked/fixed
-    if (faculty || (assistants && assistants.length > 0)) {
-        // Determine type based on Subject Name (e.g. "IT Workshop (Lab)")
-        const isLab = subject && subject.toLowerCase().includes('lab');
-        targetPeriod.type = isLab ? 'Lab' : 'Lecture';
-        targetPeriod.isFixed = true;
-    } else {
-        // If clearing (subject is '-')
-        if (subject === '-') {
-            targetPeriod.faculty = '';
-            targetPeriod.assistants = [];
-            targetPeriod.isFixed = false;
-            targetPeriod.type = 'Free';
+        if (wing && !['Wing 1', 'Wing 2'].includes(wing)) {
+            return res.status(400).json({ message: 'Only Wing 1 and Wing 2 are allowed for labs.' });
         }
+
+        // No conflict, proceed to update
+        targetPeriod.subject = subject;
+        targetPeriod.wing = wing || targetPeriod.wing;
+
+        // Allow updating faculty even if it's an empty string (to release slot)
+        if (faculty !== undefined) {
+            targetPeriod.faculty = faculty;
+        }
+
+        // Update assistants
+        if (assistants !== undefined) {
+            targetPeriod.assistants = assistants;
+        }
+
+        if (room) targetPeriod.room = room;
+
+        // If booking, mark as locked/fixed
+        if (faculty || (assistants && assistants.length > 0)) {
+            // Determine type based on Subject Name (e.g. "IT Workshop (Lab)")
+            const isLab = subject && subject.toLowerCase().includes('lab');
+            targetPeriod.type = isLab ? 'Lab' : 'Lecture';
+            targetPeriod.isFixed = true;
+        } else {
+            // If clearing (subject is '-')
+            if (subject === '-') {
+                targetPeriod.faculty = '';
+                targetPeriod.assistants = [];
+                targetPeriod.isFixed = false;
+                targetPeriod.type = 'Free';
+            }
+        }
+
+        timetable.markModified('schedule');
+        await timetable.save();
+        res.json(timetable);
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: e.message });
     }
-
-    timetable.markModified('schedule');
-    await timetable.save();
-    res.json(timetable);
-
-} catch (e) {
-    console.error(e);
-    res.status(500).json({ message: e.message });
-}
 });
 
 // GET WORKLOAD
