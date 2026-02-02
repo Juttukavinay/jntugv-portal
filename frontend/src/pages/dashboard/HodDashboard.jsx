@@ -982,10 +982,55 @@ function AttendanceManager() {
 function AllocationManager({ facultyList }) {
     const [subjects, setSubjects] = useState([]);
     const [semester, setSemester] = useState('I-B.Tech I Sem');
+    const [isSaving, setIsSaving] = useState(false);
 
-    useEffect(() => {
+    const fetchSubjects = useCallback(() => {
         fetch(`${API_BASE_URL}/api/subjects?t=${Date.now()}`).then(res => res.json()).then(setSubjects).catch(console.error);
     }, []);
+
+    useEffect(() => { fetchSubjects(); }, [fetchSubjects]);
+
+    const handleUpdate = (id, field, value) => {
+        setSubjects(prev => prev.map(s => s._id === id ? { ...s, [field]: value } : s));
+    };
+
+    const saveChanges = async () => {
+        setIsSaving(true);
+        try {
+            // Group subjects by their courseId to use the existing /save endpoint 
+            // OR we can create a new bulk update endpoint. 
+            // Given the current architecture, we'll hit the /save endpoint per semester or just loop updates.
+            // For simplicity and to match the 'Curriculum' style, we'll update the subjects for the current semester.
+            const currentSemSubjects = subjects.filter(s => s.semester === semester);
+
+            // We need a courseId. Let's find one from the first subject or fetch it.
+            if (currentSemSubjects.length === 0) return;
+            const courseId = currentSemSubjects[0].courseId;
+
+            const response = await fetch(`${API_BASE_URL}/api/courses/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    semester,
+                    courseId, // The backend needs courseId to know which course's subjects to replace/update
+                    subjects: currentSemSubjects
+                })
+            });
+
+            if (response.ok) {
+                alert('Allocations saved successfully!');
+                fetchSubjects();
+            } else {
+                const err = await response.json();
+                alert('Save failed: ' + err.message);
+            }
+        } catch (error) {
+            console.error(error);
+            alert('Error saving allocations');
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     const filtered = Array.isArray(subjects) ? subjects.filter(s => s && s.semester === semester) : [];
     const theory = filtered.filter(s => (s.L > 0 || s.T > 0) && !s.courseName.toLowerCase().includes('lab'));
@@ -995,17 +1040,25 @@ function AllocationManager({ facultyList }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             <div className="glass-table-container fade-in-up">
                 <div className="table-header-premium" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3>Classes Allocation (Theory)</h3>
-                    <select value={semester} onChange={e => setSemester(e.target.value)} className="search-input-premium" style={{ width: '250px' }}>
-                        <option value="I-B.Tech I Sem">I Year - I Sem</option><option value="I-B.Tech II Sem">I Year - II Sem</option>
-                        <option value="II-B.Tech I Sem">II Year - I Sem</option><option value="II-B.Tech II Sem">II Year - II Sem</option>
-                        <option value="III-B.Tech I Sem">III Year - I Sem</option><option value="III-B.Tech II Sem">III Year - II Sem</option>
-                        <option value="IV-B.Tech I Sem">IV Year - I Sem</option><option value="IV-B.Tech II Sem">IV Year - II Sem</option>
-                    </select>
+                    <div>
+                        <h3>Classes Allocation (Theory)</h3>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Assign faculty to theory subjects here.</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <select value={semester} onChange={e => setSemester(e.target.value)} className="search-input-premium" style={{ width: '220px' }}>
+                            <option value="I-B.Tech I Sem">I Year - I Sem</option><option value="I-B.Tech II Sem">I Year - II Sem</option>
+                            <option value="II-B.Tech I Sem">II Year - I Sem</option><option value="II-B.Tech II Sem">II Year - II Sem</option>
+                            <option value="III-B.Tech I Sem">III Year - I Sem</option><option value="III-B.Tech II Sem">III Year - II Sem</option>
+                            <option value="IV-B.Tech I Sem">IV Year - I Sem</option><option value="IV-B.Tech II Sem">IV Year - II Sem</option>
+                        </select>
+                        <button className="btn-action primary" onClick={saveChanges} disabled={isSaving}>
+                            {isSaving ? '⏳ Saving...' : '💾 Save All'}
+                        </button>
+                    </div>
                 </div>
                 <div style={{ padding: '1rem' }}>
                     <table className="premium-table">
-                        <thead><tr><th>Code</th><th>Subject Name</th><th>Credits (L-T-P)</th><th>Allocated Faculty</th><th>Type</th></tr></thead>
+                        <thead><tr><th>Code</th><th>Subject Name</th><th>Credits</th><th>Assign Faculty</th><th>Type</th></tr></thead>
                         <tbody>
                             {theory.length > 0 ? theory.map((s, i) => (
                                 <tr key={i}>
@@ -1013,11 +1066,15 @@ function AllocationManager({ facultyList }) {
                                     <td style={{ fontWeight: '700' }}>{s.courseName}</td>
                                     <td>{s.credits} ({s.L}-{s.T}-{s.P})</td>
                                     <td>
-                                        {s.assignedFaculty && s.assignedFaculty !== 'N/A' ? (
-                                            <span style={{ color: '#2563eb', fontWeight: '800' }}>👤 {s.assignedFaculty}</span>
-                                        ) : (
-                                            <span style={{ color: '#ef4444', fontStyle: 'italic' }}>Pending Allocation</span>
-                                        )}
+                                        <select
+                                            className="modern-input"
+                                            style={{ width: '100%', padding: '6px' }}
+                                            value={s.assignedFaculty || ''}
+                                            onChange={e => handleUpdate(s._id, 'assignedFaculty', e.target.value)}
+                                        >
+                                            <option value="">-- Select Faculty --</option>
+                                            {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
+                                        </select>
                                     </td>
                                     <td><span className="badge-role" style={{ background: '#fffbeb', color: '#b45309' }}>Theory</span></td>
                                 </tr>
@@ -1040,18 +1097,26 @@ function AllocationManager({ facultyList }) {
                                     <td>{s.courseCode}</td>
                                     <td style={{ fontWeight: '700' }}>{s.courseName}</td>
                                     <td>
-                                        {s.assignedFaculty && s.assignedFaculty !== 'N/A' ? (
-                                            <span style={{ color: '#2563eb', fontWeight: '800' }}>👤 {s.assignedFaculty}</span>
-                                        ) : (
-                                            <span style={{ color: '#ef4444' }}>Not Set</span>
-                                        )}
+                                        <select
+                                            className="modern-input"
+                                            style={{ width: '100%', padding: '6px' }}
+                                            value={s.assignedFaculty || ''}
+                                            onChange={e => handleUpdate(s._id, 'assignedFaculty', e.target.value)}
+                                        >
+                                            <option value="">-- Main Faculty --</option>
+                                            {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
+                                        </select>
                                     </td>
                                     <td>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                            {s.assignedAssistants && s.assignedAssistants.length > 0 ? s.assignedAssistants.map((a, j) => (
-                                                <span key={j} style={{ background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: '600' }}>{a}</span>
-                                            )) : <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>None</span>}
-                                        </div>
+                                        <select
+                                            multiple
+                                            className="modern-input"
+                                            style={{ width: '100%', padding: '6px', height: '60px' }}
+                                            value={s.assignedAssistants || []}
+                                            onChange={e => handleUpdate(s._id, 'assignedAssistants', Array.from(e.target.selectedOptions, o => o.value))}
+                                        >
+                                            {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
+                                        </select>
                                     </td>
                                     <td><span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8' }}>Lab/Practical</span></td>
                                 </tr>
