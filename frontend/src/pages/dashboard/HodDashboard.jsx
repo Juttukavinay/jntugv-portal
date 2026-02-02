@@ -39,7 +39,6 @@ function HodDashboard() {
             case 'faculty': return <FacultyManager />;
             case 'timetable': return <TimetableManager />;
             case 'subjects': return <SubjectsManager facultyList={allFaculty} />;
-            case 'allocations': return <AllocationManager facultyList={allFaculty} />;
             case 'infrastructure': return <InfrastructureManager />;
             case 'attendance': return <AttendanceManager />;
             case 'notices': return <CommunicationCenter user={user} />;
@@ -71,7 +70,6 @@ function HodDashboard() {
                     <NavItem icon={<Icons.Users />} label="Faculty Mgmt" active={activeTab === 'faculty'} onClick={() => setActiveTab('faculty')} />
                     <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
-                    <NavItem icon={<Icons.Users />} label="Allocation Lists" active={activeTab === 'allocations'} onClick={() => setActiveTab('allocations')} />
                     <NavItem icon={<Icons.Building />} label="Campus Infra" active={activeTab === 'infrastructure'} onClick={() => setActiveTab('infrastructure')} />
                     <NavItem icon={<Icons.Check />} label="My Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
                     <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} />
@@ -181,12 +179,8 @@ function HodOverview({ onNavigate, user }) {
                     <div className="stat-content"><h5>Dept. Students</h5><h3>{stats.students}</h3><span className="stat-trend trend-up">Registered</span></div>
                 </div>
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#fef2f2', color: '#ef4444' }}><Icons.Calendar /></div>
-                    <div className="stat-content"><h5>Classes Allocation</h5><h3 onClick={() => onNavigate('allocations')} style={{ cursor: 'pointer' }}>View Lists</h3><span className="stat-trend trend-neutral">Progressing</span></div>
-                </div>
-                <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#f5f3ff', color: '#7c3aed' }}><Icons.Users /></div>
-                    <div className="stat-content"><h5>Lab Allocations</h5><h3 onClick={() => onNavigate('allocations')} style={{ cursor: 'pointer' }}>Manage Labs</h3><span className="stat-trend">Set via Curriculum</span></div>
+                    <div className="stat-icon-wrapper" style={{ background: '#f5f3ff', color: '#7c3aed' }}><Icons.Building /></div>
+                    <div className="stat-content"><h5>Infrastructure</h5><h3 onClick={() => onNavigate('infrastructure')} style={{ cursor: 'pointer' }}>Manage Rooms</h3><span className="stat-trend trend-neutral">Department Grid</span></div>
                 </div>
             </div>
 
@@ -1140,6 +1134,7 @@ function AllocationManager({ facultyList }) {
 function InfrastructureManager() {
     const [rooms, setRooms] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
+    const [addCount, setAddCount] = useState(1);
 
     const fetchRooms = useCallback(() => {
         fetch(`${API_BASE_URL}/api/rooms`).then(res => res.json()).then(setRooms).catch(console.error);
@@ -1150,19 +1145,32 @@ function InfrastructureManager() {
     const handleRoomChange = (index, field, value) => {
         const newRooms = [...rooms];
         newRooms[index][field] = value;
+
+        // Auto-set default wing based on type if changing type
+        if (field === 'type') {
+            newRooms[index].wing = value === 'Lab' ? 'LAB 1' : 'AB1';
+        }
+
         setRooms(newRooms);
     };
 
-    const addRoom = (type) => {
-        const newRoom = {
-            name: type === 'Lab' ? `New Lab ${rooms.filter(r => r.type === 'Lab').length + 1}` : `Room ${rooms.filter(r => r.type === 'Classroom').length + 101}`,
-            type: type,
-            wing: 'Wing 1',
-            capacity: 60,
-            morningSession: 'Available',
-            afternoonSession: 'Available'
-        };
-        setRooms([...rooms, newRoom]);
+    const addRoomsBulk = (type) => {
+        const count = parseInt(addCount) || 1;
+        const newBatch = [];
+        const existingClassCount = rooms.filter(r => r.type === 'Classroom').length;
+        const existingLabCount = rooms.filter(r => r.type === 'Lab').length;
+
+        for (let i = 0; i < count; i++) {
+            newBatch.push({
+                name: type === 'Lab' ? `Lab ${existingLabCount + i + 1}` : `Room ${existingClassCount + i + 101}`,
+                type: type,
+                wing: type === 'Lab' ? 'LAB 1' : 'AB1',
+                morningSession: 'Available',
+                afternoonSession: 'Available',
+                department: 'IT'
+            });
+        }
+        setRooms([...rooms, ...newBatch]);
     };
 
     const deleteRoom = (index) => {
@@ -1197,11 +1205,23 @@ function InfrastructureManager() {
                 <div className="table-header-premium" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                         <h3>University Infrastructure Manager</h3>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Manage Physical Classrooms and Laboratories</p>
+                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Define and Manage Physical Assets (Classes & Labs)</p>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button onClick={() => addRoom('Classroom')} className="btn-action primary" style={{ background: '#10b981' }}>+ Add Class</button>
-                        <button onClick={() => addRoom('Lab')} className="btn-action primary" style={{ background: '#3b82f6' }}>+ Add Lab</button>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                            <label style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>Count</label>
+                            <input
+                                type="number"
+                                min="1"
+                                max="20"
+                                value={addCount}
+                                onChange={e => setAddCount(e.target.value)}
+                                className="modern-input"
+                                style={{ width: '60px', padding: '6px', color: '#1e293b' }}
+                            />
+                        </div>
+                        <button onClick={() => addRoomsBulk('Classroom')} className="btn-action primary" style={{ background: '#10b981' }}>+ Add Classes</button>
+                        <button onClick={() => addRoomsBulk('Lab')} className="btn-action primary" style={{ background: '#3b82f6' }}>+ Add Labs</button>
                         <button onClick={saveRooms} className="btn-action primary" disabled={isSaving}>
                             {isSaving ? '⏳ Saving...' : '💾 Save Changes'}
                         </button>
@@ -1212,12 +1232,11 @@ function InfrastructureManager() {
                         <thead>
                             <tr>
                                 <th>Name / Identifier</th>
-                                <th>Type</th>
-                                <th>Location/Wing</th>
-                                <th>Capacity</th>
+                                <th style={{ width: '150px' }}>Type</th>
+                                <th style={{ width: '200px' }}>Location / Block</th>
+                                <th style={{ width: '150px' }}>Department</th>
                                 <th>Morning (FN)</th>
                                 <th>Afternoon (AN)</th>
-                                <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -1229,33 +1248,60 @@ function InfrastructureManager() {
                                             value={r.name}
                                             onChange={e => handleRoomChange(i, 'name', e.target.value)}
                                             className="modern-input"
-                                            style={{ fontWeight: '700', width: '150px' }}
+                                            style={{ fontWeight: '700', width: '130px' }}
                                         />
-                                    </td>
-                                    <td>
-                                        <span className={`badge-role ${r.type === 'Lab' ? 'admin' : 'faculty'}`} style={{ padding: '4px 12px' }}>
-                                            {r.type}
-                                        </span>
                                     </td>
                                     <td>
                                         <select
-                                            value={r.wing}
-                                            onChange={e => handleRoomChange(i, 'wing', e.target.value)}
+                                            value={r.type}
+                                            onChange={e => handleRoomChange(i, 'type', e.target.value)}
                                             className="modern-input"
+                                            style={{ padding: '6px' }}
                                         >
-                                            <option value="Wing 1">Wing 1</option>
-                                            <option value="Wing 2">Wing 2</option>
-                                            <option value="Main Building">Main Bldg</option>
+                                            <option value="Classroom">Classroom</option>
+                                            <option value="Lab">Lab</option>
                                         </select>
                                     </td>
                                     <td>
-                                        <input
-                                            type="number"
-                                            value={r.capacity}
-                                            onChange={e => handleRoomChange(i, 'capacity', e.target.value)}
+                                        {r.type === 'Classroom' ? (
+                                            <select
+                                                value={r.wing}
+                                                onChange={e => handleRoomChange(i, 'wing', e.target.value)}
+                                                className="modern-input"
+                                                style={{ padding: '6px' }}
+                                            >
+                                                <option value="AB1">AB1</option>
+                                                <option value="AB2">AB2</option>
+                                                <option value="1ST YEAR">1ST YEAR</option>
+                                                <option value="PHARAMCY BLOCK">PHARAMCY BLOCK</option>
+                                            </select>
+                                        ) : (
+                                            <select
+                                                value={r.wing}
+                                                onChange={e => handleRoomChange(i, 'wing', e.target.value)}
+                                                className="modern-input"
+                                                style={{ padding: '6px' }}
+                                            >
+                                                <option value="LAB 1">LAB 1</option>
+                                                <option value="LAB 2">LAB 2</option>
+                                                <option value="LAB 3">LAB 3</option>
+                                                <option value="LAB 4">LAB 4</option>
+                                            </select>
+                                        )}
+                                    </td>
+                                    <td>
+                                        <select
+                                            value={r.department || 'IT'}
+                                            onChange={e => handleRoomChange(i, 'department', e.target.value)}
                                             className="modern-input"
-                                            style={{ width: '60px', textAlign: 'center' }}
-                                        />
+                                            style={{ padding: '6px' }}
+                                        >
+                                            <option value="IT">IT</option>
+                                            <option value="CSE">CSE</option>
+                                            <option value="ECE">ECE</option>
+                                            <option value="MECH">MECH</option>
+                                            <option value="CIVIL">CIVIL</option>
+                                        </select>
                                     </td>
                                     <td>
                                         <select
@@ -1264,13 +1310,13 @@ function InfrastructureManager() {
                                             className="modern-input"
                                             style={{
                                                 color: r.morningSession === 'Available' ? '#10b981' : '#ef4444',
-                                                fontWeight: 'bold'
+                                                fontWeight: 'bold',
+                                                padding: '6px'
                                             }}
                                         >
                                             <option value="Available">🟢 Available</option>
                                             <option value="Occupied">🔴 Occupied</option>
                                             <option value="Maintenance">🟠 Maintenance</option>
-                                            <option value="Reserved">🔵 Reserved</option>
                                         </select>
                                     </td>
                                     <td>
@@ -1280,19 +1326,14 @@ function InfrastructureManager() {
                                             className="modern-input"
                                             style={{
                                                 color: r.afternoonSession === 'Available' ? '#10b981' : '#ef4444',
-                                                fontWeight: 'bold'
+                                                fontWeight: 'bold',
+                                                padding: '6px'
                                             }}
                                         >
                                             <option value="Available">🟢 Available</option>
                                             <option value="Occupied">🔴 Occupied</option>
                                             <option value="Maintenance">🟠 Maintenance</option>
-                                            <option value="Reserved">🔵 Reserved</option>
                                         </select>
-                                    </td>
-                                    <td>
-                                        <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                                            {r.type === 'Lab' ? 'Flexible Shift' : 'Fixed Row'}
-                                        </span>
                                     </td>
                                     <td>
                                         <button onClick={() => deleteRoom(i)} className="btn-action" style={{ color: '#ef4444' }}>
@@ -1302,8 +1343,8 @@ function InfrastructureManager() {
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
-                                        No infrastructure data found. Add classes or labs to get started.
+                                    <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                                        No infrastructure data found. Add assets to get started.
                                     </td>
                                 </tr>
                             )}
@@ -1313,18 +1354,18 @@ function InfrastructureManager() {
             </div>
 
             <div className="glass-table-container" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)' }}>
-                <h4 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>💡 Infrastructure Strategy</h4>
+                <h4 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>💡 Asset Strategy</h4>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                     <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <h5 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>Lab Flexibility</h5>
+                        <h5 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>Laboratory Usage</h5>
                         <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.5' }}>
-                            Labs are designed for multi-batch usage. You can mark them separately for Morning (FN) and Afternoon (AN) sessions to maximize batch throughput.
+                            Labs can be tracked for separate FN and AN sessions. Use Lab 1 or Lab 2 for specialized equipment tracking.
                         </p>
                     </div>
                     <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <h5 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Wing Allocation</h5>
+                        <h5 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Classroom Blocks</h5>
                         <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.5' }}>
-                            Designate rooms to specific Wings to enable better student flow and clash detection during manual timetable adjustments.
+                            Assign classes to blocks like AB1, AB2 or Pharmacy for better department-wise organization.
                         </p>
                     </div>
                 </div>
@@ -1332,5 +1373,6 @@ function InfrastructureManager() {
         </div>
     );
 }
+
 
 export default HodDashboard;
