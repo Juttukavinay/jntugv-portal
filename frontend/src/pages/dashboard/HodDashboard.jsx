@@ -1062,8 +1062,8 @@ function AllocationManager({ facultyList }) {
                         <tbody>
                             {theory.length > 0 ? theory.map((s, i) => (
                                 <tr key={i}>
-                                    <td>{s.courseCode}</td>
-                                    <td style={{ fontWeight: '700' }}>{s.courseName}</td>
+                                    <td><input value={s.courseCode} onChange={e => handleUpdate(s._id, 'courseCode', e.target.value)} className="modern-input" style={{ width: '80px', padding: '4px' }} /></td>
+                                    <td><input value={s.courseName} onChange={e => handleUpdate(s._id, 'courseName', e.target.value)} className="modern-input" style={{ width: '100%', padding: '4px', fontWeight: '700' }} /></td>
                                     <td>{s.credits} ({s.L}-{s.T}-{s.P})</td>
                                     <td>
                                         <select
@@ -1081,6 +1081,12 @@ function AllocationManager({ facultyList }) {
                             )) : <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No theory subjects found for this semester.</td></tr>}
                         </tbody>
                     </table>
+                    <button
+                        onClick={() => setSubjects([...subjects, { _id: Date.now(), sNo: subjects.length + 1, courseCode: 'NEW', courseName: 'New Subject', L: 1, T: 0, P: 0, credits: 1, semester, assignedFaculty: '', assignedAssistants: [], courseId: filtered[0]?.courseId }])}
+                        style={{ width: '100%', padding: '12px', marginTop: '10px', border: '2px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', cursor: 'pointer', background: '#f8fafc', fontWeight: '600' }}
+                    >
+                        + Add Manual Class/Lab
+                    </button>
                 </div>
             </div>
 
@@ -1094,8 +1100,8 @@ function AllocationManager({ facultyList }) {
                         <tbody>
                             {labs.length > 0 ? labs.map((s, i) => (
                                 <tr key={i}>
-                                    <td>{s.courseCode}</td>
-                                    <td style={{ fontWeight: '700' }}>{s.courseName}</td>
+                                    <td><input value={s.courseCode} onChange={e => handleUpdate(s._id, 'courseCode', e.target.value)} className="modern-input" style={{ width: '80px', padding: '4px' }} /></td>
+                                    <td><input value={s.courseName} onChange={e => handleUpdate(s._id, 'courseName', e.target.value)} className="modern-input" style={{ width: '100%', padding: '4px', fontWeight: '700' }} /></td>
                                     <td>
                                         <select
                                             className="modern-input"
