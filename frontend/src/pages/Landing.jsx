@@ -48,8 +48,7 @@ function Landing() {
                 </div>
 
                 <div className="nav-actions desktop-only">
-                    <Link to="/login" className="btn-glass">Sign In</Link>
-                    <Link to="/login" className="btn-glow">Access Portal</Link>
+                    <Link to="/login" className="btn-glow">Sign In</Link>
                 </div>
 
                 {/* Mobile Toggle */}
@@ -94,7 +93,7 @@ function Landing() {
                     </div>
 
                     <div className="hero-actions">
-                        <Link to="/login" className="btn-primary-lg">Access Portal</Link>
+                        <a href="#about-university" className="btn-primary-lg">Explore Campus</a>
                     </div>
                 </section>
 
@@ -112,8 +111,8 @@ function Landing() {
                         </div>
                         <div className="image-content">
                             <img
-                                src="/college-building.png"
-                                alt="JNTU-GV Campus Representative"
+                                src="/jntugv-building-sign.png"
+                                alt="JNTU-GV Main Building"
                                 className="rounded-image shadow-lg"
                             />
                         </div>
@@ -133,9 +132,39 @@ function Landing() {
                         </div>
                         <div className="image-content">
                             <img
-                                src="/college-landing-small.jpg"
-                                alt="University Mission"
+                                src="/jntugv-entrance.jpg"
+                                alt="JNTU-GV Entrance"
                                 className="rounded-image shadow-lg"
+                            />
+                        </div>
+                    </div>
+                </section>
+
+                {/* Campus Gallery */}
+                <section className="info-section" id="gallery" style={{ paddingTop: 0 }}>
+                    <div className="content-wrapper">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', width: '100%' }}>
+                            <img src="/jntugv-board-english.jpg" alt="JNTU-GV Board English" className="rounded-image shadow-lg" style={{ height: '250px', objectFit: 'cover' }} />
+                            <img src="/jntugv-board-telugu.jpg" alt="JNTU-GV Board Telugu" className="rounded-image shadow-lg" style={{ height: '250px', objectFit: 'cover' }} />
+                        </div>
+                    </div>
+                </section>
+
+                {/* Portal Preview */}
+                <section className="info-section alt-bg">
+                    <div className="content-wrapper">
+                        <div className="text-content">
+                            <h2 className="section-title">Smart <span className="highlight">Digital Portal</span></h2>
+                            <p className="text-gray-600">
+                                Our bespoke Information Technology portal provides a unified interface for students and faculty to manage academics, attendances, and communication with ease and security.
+                            </p>
+                        </div>
+                        <div className="image-content">
+                            <img
+                                src="/portal-preview.png"
+                                alt="JNTU-GV IT Portal Preview"
+                                className="rounded-image shadow-lg"
+                                style={{ border: '4px solid #fff' }}
                             />
                         </div>
                     </div>
