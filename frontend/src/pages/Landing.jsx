@@ -94,8 +94,7 @@ function Landing() {
                     </div>
 
                     <div className="hero-actions">
-                        <Link to="/login" className="btn-primary-lg">Student Login</Link>
-                        <Link to="/login" className="btn-outline-lg">Faculty Login</Link>
+                        <Link to="/login" className="btn-primary-lg">Access Portal</Link>
                     </div>
                 </section>
 

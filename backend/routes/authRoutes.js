@@ -9,7 +9,12 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // 1. Check Principal (No OTP)
+        // 1. Check Admin (Highly Secured)
+        if (email === 'admin@jntugv.edu' && password === 'Admin@JNTUGV#2026!Secured') {
+            return res.json({ role: 'admin', name: 'System Administrator', email });
+        }
+
+        // 1.1 Check Principal (No OTP)
         if (email === 'principal@jntugv.edu' && password === 'Jntugv@2024') {
             return res.json({ role: 'principal', name: 'Principal Dashboard', email });
         }

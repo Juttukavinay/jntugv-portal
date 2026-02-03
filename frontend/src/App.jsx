@@ -6,6 +6,7 @@ import VicePrincipalDashboard from './pages/dashboard/VicePrincipalDashboard'
 import FacultyDashboard from './pages/dashboard/FacultyDashboard'
 import HodDashboard from './pages/dashboard/HodDashboard'
 import StudentDashboard from './pages/dashboard/StudentDashboard'
+import AdminDashboard from './pages/dashboard/AdminDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 
@@ -20,6 +21,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/dashboard/admin" element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
         <Route path="/dashboard/principal" element={
           <ProtectedRoute>
             <PrincipalDashboard />

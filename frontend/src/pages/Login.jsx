@@ -87,6 +87,7 @@ function Login() {
 
         const cleanRole = role ? role.trim().toLowerCase() : '';
         const routes = {
+            'admin': '/dashboard/admin',
             'principal': '/dashboard/principal',
             'vice_principal': '/dashboard/vice-principal',
             'hod': '/dashboard/hod',
@@ -104,6 +105,7 @@ function Login() {
 
     const fillDemo = (role) => {
         const demos = {
+            admin: { email: 'admin@jntugv.edu', password: 'Admin@JNTUGV#2026!Secured' },
             principal: { email: 'principal@jntugv.edu', password: 'Jntugv@2024' },
             vice_principal: { email: 'viceprincipal@jntugv.edu', password: 'Jntugv@2024' },
             hod: { email: 'drch1@jntugv.edu.in', password: '9876543201' },
@@ -231,6 +233,7 @@ function Login() {
                             <div className="divider-line"></div>
                         </div>
                         <div className="demo-grid">
+                            <button onClick={() => fillDemo('admin')} className="demo-btn" style={{ background: 'var(--primary)', color: 'white' }}>Admin</button>
                             <button onClick={() => fillDemo('principal')} className="demo-btn">Principal</button>
                             <button onClick={() => fillDemo('vice_principal')} className="demo-btn">Vice Principal</button>
                             <button onClick={() => fillDemo('hod')} className="demo-btn">HOD (IT)</button>
