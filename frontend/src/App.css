@@ -500,7 +500,7 @@
   display: none;
   flex: 1.4;
   position: relative;
-  background: url("/login-side.jpg") center/cover no-repeat;
+  background: url("/jntugv-main-block.png") center/cover no-repeat;
   flex-direction: column;
   justify-content: flex-end;
   padding: 5rem;
@@ -551,9 +551,20 @@
   flex-direction: column;
   justify-content: center;
   padding: 2rem;
-  background: white;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   position: relative;
   z-index: 10;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.login-container {
+  display: flex;
+  min-height: 100vh;
+  background: url("/jntugv-main-block.png") center/cover no-repeat;
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
 }
 
 .login-form-wrapper {
