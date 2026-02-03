@@ -72,28 +72,27 @@ function Landing() {
             <main>
                 {/* Hero Section */}
                 <section className="hero-section" id="home">
-                    {/* Decorative Blobs */}
                     <div className="blob blob-1"></div>
                     <div className="blob blob-2"></div>
 
-                    <div className="hero-content">
-                        <div className="badge-pill-hero">🚀 Empowering Future Innovators</div>
-                        <h1 className="hero-title">
-                            JNTU-GV UNIVERSITY <br />
-                            <span className="text-gradient-animated">Information Technology Department</span>
-                        </h1>
-                        <p className="hero-subtitle">
-                            Streamlining academic excellence for the Department of Information Technology. Experience the future of university management.
-                        </p>
-                    </div>
-
-                    <div className="status-indicator status-success">
-                        <span className="status-dot pulse"></span>
-                        System Status: <span style={{ color: '#22c55e', fontWeight: 'bold' }}>Active</span>
-                    </div>
-
-                    <div className="hero-actions">
-                        <a href="#about-university" className="btn-primary-lg">Explore Campus</a>
+                    <div className="content-wrapper" style={{ zIndex: 10 }}>
+                        <div className="hero-content" style={{ textAlign: 'left', flex: 1.2 }}>
+                            <div className="badge-pill-hero">📍 VIZIANAGARAM, ANDHRA PRADESH</div>
+                            <h1 className="hero-title">
+                                JNTU-GV <br />
+                                <span className="text-gradient-animated">Technological University</span>
+                            </h1>
+                            <p className="hero-subtitle" style={{ marginLeft: 0 }}>
+                                Empowering minds through engineering excellence and digital innovation. Discover our state-of-the-art campus and facilities.
+                            </p>
+                            <div className="hero-actions" style={{ justifyContent: 'flex-start' }}>
+                                <a href="#gallery" className="btn-primary-lg">View Gallery</a>
+                                <a href="#about-university" className="btn-outline-lg">About Us</a>
+                            </div>
+                        </div>
+                        <div className="hero-image-v2" style={{ flex: 1 }}>
+                            <img src="/jntugv-main-block.png" alt="Main Block" className="rounded-image shadow-2xl pulse-soft" style={{ border: '8px solid white' }} />
+                        </div>
                     </div>
                 </section>
 
@@ -101,51 +100,69 @@ function Landing() {
                 <section className="info-section" id="about-university">
                     <div className="content-wrapper">
                         <div className="text-content">
-                            <h2 className="section-title">About <span className="highlight">JNTU-GV</span></h2>
+                            <h2 className="section-title">Academic <span className="highlight">Foundation</span></h2>
                             <p className="text-gray-600 mb-4 text-justify">
-                                JNTU College of Engineering, Vizianagaram was established in the year 2007 as a constituent College of JNTU Hyderabad. JNTU Hyderabad was trifurcated into three Universities by the Andhra Pradesh Act No. 30 of 2008 and since 24th August 2008, the College has become the constituent college of JNTU Kakinada. Vide University Act No.22 of 2021, JNTU Kakinada is bifurcated and Jawaharlal Nehru Technological University Gurajada, Vizianagaram come into existence as a separate University vide G.O.Ms.No.3, dated: 12-01-2022.
+                                Our <b>First Year Block</b> serves as the gateway for aspiring engineers, providing a nurturing environment where foundational concepts meet practical exploration. We prioritize academic rigor coupled with holistic development.
                             </p>
-                            <p className="text-gray-600 text-justify">
-                                The university is spread across six districts i.e Vizianagaram, Visakhapatnam, Srikakulam, Parvathipuram Manyam, Alluri Sitharama Raju and Anakapalli. There are 2 constituent colleges and 37 affiliated colleges under its jurisdiction and catering education in different Engineering, Pharmacy and Management departments.
-                            </p>
+                            <div className="feature-small">
+                                <strong>Established:</strong> 2007 (Constituent College)
+                            </div>
+                            <div className="feature-small">
+                                <strong>University Status:</strong> Since 2022
+                            </div>
                         </div>
                         <div className="image-content">
                             <img
-                                src="/jntugv-building-sign.png"
-                                alt="JNTU-GV Main Building"
+                                src="/jntugv-first-year-block.jpg"
+                                alt="JNTU-GV First Year Block"
                                 className="rounded-image shadow-lg"
                             />
                         </div>
                     </div>
                 </section>
 
-                {/* Mission Section */}
-                <section className="info-section alt-bg" id="mission">
+                {/* Infrastructure Section */}
+                <section className="info-section alt-bg" id="infrastructure">
                     <div className="content-wrapper reverse">
                         <div className="text-content">
-                            <h2 className="section-title">Our <span className="highlight">Mission</span></h2>
-                            <ul className="mission-list text-justify">
-                                <li className="mb-3">❖ To orchestrate an unparalleled symphony of intellectual rigor and academic distinction, sculpting minds through innovative pedagogies, cutting-edge research, thus forging individuals capable of leading transformative change in their chosen fields.</li>
-                                <li className="mb-3">❖ To foster a mission of community synergy, university engages with and uplifts the rural community through initiatives that transcend educational boundarie enriching environment within our academic sphere.</li>
-                                <li>❖ To foster a global perspective and a culture of scholarly inquiry, the university endeavors to instill in our students a thirst for knowledge that transcends borders, encouraging them to explore diverse perspectives and engage in rigorous scholarly endeavors that contribute not only to their personal growth but also to the global academic discourse.</li>
-                            </ul>
+                            <h2 className="section-title">World-Class <span className="highlight">Facilities</span></h2>
+                            <div className="facility-card mb-4" style={{ background: 'white', padding: '1.5rem', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                                <h4 style={{ margin: '0 0 0.5rem 0', color: '#1e293b' }}>📚 Dr. Y.S.R. Central Library</h4>
+                                <p style={{ fontSize: '0.9rem', color: '#64748b' }}>A vast repository of knowledge featuring digital archives, research journals, and quiet study zones to foster intellectual growth.</p>
+                            </div>
+                            <div className="facility-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+                                <h4 style={{ margin: '0 0 0.5rem 0', color: '#1e293b' }}>🏥 JNTU-GV Dispensary</h4>
+                                <p style={{ fontSize: '0.9rem', color: '#64748b' }}>Ensuring student well-being with on-campus medical facilities, professional care, and emergency response services.</p>
+                            </div>
                         </div>
-                        <div className="image-content">
+                        <div className="image-content" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
                             <img
-                                src="/jntugv-entrance.jpg"
-                                alt="JNTU-GV Entrance"
+                                src="/jntugv-library.jpg"
+                                alt="University Library"
                                 className="rounded-image shadow-lg"
+                                style={{ height: '220px', objectFit: 'cover' }}
+                            />
+                            <img
+                                src="/jntugv-dispensary.png"
+                                alt="Campus Dispensary"
+                                className="rounded-image shadow-lg"
+                                style={{ height: '180px', objectFit: 'cover' }}
                             />
                         </div>
                     </div>
                 </section>
 
-                {/* Campus Gallery */}
-                <section className="info-section" id="gallery" style={{ paddingTop: 0 }}>
-                    <div className="content-wrapper">
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', width: '100%' }}>
-                            <img src="/jntugv-board-english.jpg" alt="JNTU-GV Board English" className="rounded-image shadow-lg" style={{ height: '250px', objectFit: 'cover' }} />
-                            <img src="/jntugv-board-telugu.jpg" alt="JNTU-GV Board Telugu" className="rounded-image shadow-lg" style={{ height: '250px', objectFit: 'cover' }} />
+                {/* Full Gallery Grid */}
+                <section className="info-section" id="gallery">
+                    <h2 className="section-header-center">Visual <span className="highlight">Journey</span></h2>
+                    <div className="content-wrapper" style={{ display: 'block' }}>
+                        <div className="image-grid-premium">
+                            <div className="grid-item tall"><img src="/jntugv-main-block.png" alt="Main Block" /></div>
+                            <div className="grid-item"><img src="/jntugv-entrance.jpg" alt="Entrance" /></div>
+                            <div className="grid-item"><img src="/jntugv-library.jpg" alt="Library" /></div>
+                            <div className="grid-item wide"><img src="/jntugv-board-english.jpg" alt="Board" /></div>
+                            <div className="grid-item"><img src="/jntugv-first-year-block.jpg" alt="AY Block" /></div>
+                            <div className="grid-item"><img src="/jntugv-dispensary.png" alt="Health" /></div>
                         </div>
                     </div>
                 </section>

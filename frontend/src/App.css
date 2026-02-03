@@ -1386,3 +1386,81 @@
     transform: translateY(0);
   }
 }
+
+/* --- IMAGE GRID PREMIUM --- */
+.image-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 200px;
+  gap: 1.5rem;
+}
+
+.grid-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.grid-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.grid-item:hover img {
+  transform: scale(1.1);
+}
+
+.grid-item.tall {
+  grid-row: span 2;
+}
+
+.grid-item.wide {
+  grid-column: span 2;
+}
+
+.feature-small {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pulse-soft {
+  animation: pulseSoft 4s infinite ease-in-out;
+}
+
+@keyframes pulseSoft {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.02);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section .content-wrapper {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-content {
+    text-align: center !important;
+  }
+
+  .image-grid-premium {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.     
