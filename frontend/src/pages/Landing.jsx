@@ -42,8 +42,7 @@ function Landing() {
                 {/* Desktop Links */}
                 <div className="nav-links desktop-only">
                     <a href="#home" className="nav-link">Home</a>
-                    <a href="#about-university" className="nav-link">University</a>
-                    <a href="#it-dept" className="nav-link">IT Dept</a>
+                    <a href="#about" className="nav-link">About</a>
                     <a href="#features" className="nav-link">Features</a>
                 </div>
 
@@ -60,8 +59,7 @@ function Landing() {
                 {isMobileMenuOpen && (
                     <div className="mobile-menu">
                         <a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Home</a>
-                        <a href="#about-university" onClick={() => setIsMobileMenuOpen(false)}>University</a>
-                        <a href="#it-dept" onClick={() => setIsMobileMenuOpen(false)}>IT Dept</a>
+                        <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
                         <a href="#features" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
                         <hr style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
                         <Link to="/login" className="btn-mobile">Login</Link>
@@ -83,11 +81,11 @@ function Landing() {
                                 <span className="text-gradient-animated">Technological University</span>
                             </h1>
                             <p className="hero-subtitle" style={{ marginLeft: 0 }}>
-                                Empowering minds through engineering excellence and digital innovation. Discover our state-of-the-art campus and facilities.
+                                Empowering minds through engineering excellence and digital innovation. A premier institution for technical education in Andhra Pradesh.
                             </p>
                             <div className="hero-actions" style={{ justifyContent: 'flex-start' }}>
-                                <a href="#gallery" className="btn-primary-lg">View Gallery</a>
-                                <a href="#about-university" className="btn-outline-lg">About Us</a>
+                                <Link to="/login" className="btn-primary-lg">Access Portal</Link>
+                                <a href="#about" className="btn-outline-lg">Learn More</a>
                             </div>
                         </div>
                         <div className="hero-image-v2" style={{ flex: 1 }}>
@@ -96,106 +94,41 @@ function Landing() {
                     </div>
                 </section>
 
-                {/* About JNTU-GV Section */}
-                <section className="info-section" id="about-university">
+                {/* Redesigned About Section - Classic Style */}
+                <section className="info-section" id="about">
                     <div className="content-wrapper">
                         <div className="text-content">
-                            <h2 className="section-title">Academic <span className="highlight">Foundation</span></h2>
-                            <p className="text-gray-600 mb-4 text-justify">
-                                Our <b>First Year Block</b> serves as the gateway for aspiring engineers, providing a nurturing environment where foundational concepts meet practical exploration. We prioritize academic rigor coupled with holistic development.
+                            <h2 className="section-title">Academic <span className="highlight">Excellence</span></h2>
+                            <p className="text-gray-600 mb-6 text-lg leading-relaxed">
+                                JNTU-GV stands as a beacon of technical education, fostering innovation and research. Our Department of Information Technology is committed to producing world-class engineers equipped with modern digital skills.
                             </p>
-                            <div className="feature-small">
-                                <strong>Established:</strong> 2007 (Constituent College)
-                            </div>
-                            <div className="feature-small">
-                                <strong>University Status:</strong> Since 2022
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div className="facility-card-simple">
+                                    <h4>🏛️ Established</h4>
+                                    <p>Founded in 2007, elevated to University status in 2022.</p>
+                                </div>
+                                <div className="facility-card-simple">
+                                    <h4>📚 Resources</h4>
+                                    <p>Dr. Y.S.R. Central Library with thousands of digital and print volumes.</p>
+                                </div>
                             </div>
                         </div>
                         <div className="image-content">
                             <img
                                 src="/jntugv-first-year-block.jpg"
-                                alt="JNTU-GV First Year Block"
-                                className="rounded-image shadow-lg"
+                                alt="Academic Block"
+                                className="rounded-image shadow-xl"
                             />
                         </div>
                     </div>
                 </section>
 
-                {/* Campus Life Grid */}
-                <section className="info-section">
-                    <div className="content-wrapper">
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', width: '100%' }}>
-                            <div className="image-stack">
-                                <img src="/jntugv-entrance.jpg" alt="Entrance" className="rounded-image shadow-lg" style={{ marginBottom: '1rem' }} />
-                                <h3 className="section-title" style={{ fontSize: '1.5rem' }}>Campus Entrance</h3>
-                                <p className="text-gray-600">The historical gateway to our university campus, welcoming thousands of students every day.</p>
-                            </div>
-                            <div className="image-stack">
-                                <img src="/jntugv-board-english.jpg" alt="Admin Board" className="rounded-image shadow-lg" style={{ marginBottom: '1rem' }} />
-                                <h3 className="section-title" style={{ fontSize: '1.5rem' }}>Administrative Hub</h3>
-                                <p className="text-gray-600">Providing the core administrative support and guidance to the entire university community.</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Infrastructure Section */}
-                <section className="info-section alt-bg" id="infrastructure">
-                    <div className="content-wrapper reverse">
-                        <div className="text-content">
-                            <h2 className="section-title">World-Class <span className="highlight">Facilities</span></h2>
-                            <div className="facility-card mb-4" style={{ background: 'white', padding: '1.5rem', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                                <h4 style={{ margin: '0 0 0.5rem 0', color: '#1e293b' }}>📚 Dr. Y.S.R. Central Library</h4>
-                                <p style={{ fontSize: '0.9rem', color: '#64748b' }}>A vast repository of knowledge featuring digital archives, research journals, and quiet study zones to foster intellectual growth.</p>
-                            </div>
-                            <div className="facility-card" style={{ background: 'white', padding: '1.5rem', borderRadius: '15px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
-                                <h4 style={{ margin: '0 0 0.5rem 0', color: '#1e293b' }}>🏥 JNTU-GV Dispensary</h4>
-                                <p style={{ fontSize: '0.9rem', color: '#64748b' }}>Ensuring student well-being with on-campus medical facilities, professional care, and emergency response services.</p>
-                            </div>
-                        </div>
-                        <div className="image-content" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                            <img
-                                src="/jntugv-library.jpg"
-                                alt="University Library"
-                                className="rounded-image shadow-lg"
-                                style={{ height: '220px', objectFit: 'cover' }}
-                            />
-                            <img
-                                src="/jntugv-dispensary.png"
-                                alt="Campus Dispensary"
-                                className="rounded-image shadow-lg"
-                                style={{ height: '180px', objectFit: 'cover' }}
-                            />
-                        </div>
-                    </div>
-                </section>
-
-                {/* Full Gallery Grid */}
-                <section className="info-section" id="gallery">
-                    <h2 className="section-header-center">Visual <span className="highlight">Journey</span></h2>
-                    <div className="content-wrapper" style={{ display: 'block' }}>
-                        <div className="image-grid-premium">
-                            <div className="grid-item tall"><img src="/jntugv-main-block.png" alt="Main Block" /></div>
-                            <div className="grid-item"><img src="/jntugv-entrance.jpg" alt="Entrance" /></div>
-                            <div className="grid-item"><img src="/jntugv-library.jpg" alt="Library" /></div>
-                            <div className="grid-item wide"><img src="/jntugv-board-english.jpg" alt="Board English" /></div>
-                            <div className="grid-item"><img src="/jntugv-first-year-block.jpg" alt="AY Block" /></div>
-                            <div className="grid-item"><img src="/jntugv-dispensary.png" alt="Health Center" /></div>
-                            <div className="grid-item"><img src="/jntugv-board-telugu.jpg" alt="Board Telugu" /></div>
-                            <div className="grid-item tall"><img src="/jntugv-building-sign.png" alt="Building Sign" /></div>
-                            <div className="grid-item wide"><img src="/jntugv-entrance.jpg" alt="Campus View" /></div>
-                            <div className="grid-item"><img src="/jntugv-library.jpg" alt="Reading Room" /></div>
-                            <div className="grid-item"><img src="/jntugv-first-year-block.jpg" alt="Block A" /></div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Parallax University View */}
-                <section className="parallax-section" style={{ backgroundImage: 'url("/jntugv-main-block.png")' }}>
+                {/* Classic Parallax - Single Impact Image */}
+                <section className="parallax-section" style={{ backgroundImage: 'url("/jntugv-main-block.png")', height: '400px' }}>
                     <div className="parallax-overlay">
                         <div className="content-wrapper">
-                            <div className="text-content center" style={{ color: 'white' }}>
-                                <h2 className="section-title" style={{ color: 'white' }}>Innovation & Excellence</h2>
+                            <div className="text-content center" style={{ color: 'white', textAlign: 'center' }}>
+                                <h2 className="section-title" style={{ color: 'white' }}>Shaping the Future</h2>
                                 <p style={{ fontSize: '1.2rem', maxWidth: '800px', margin: '0 auto' }}>
                                     Dedicated to providing world-class technological education and fostering an environment of research and development.
                                 </p>
@@ -204,20 +137,31 @@ function Landing() {
                     </div>
                 </section>
 
-                {/* Portal Preview */}
+                {/* Portal Preview Section */}
                 <section className="info-section alt-bg">
-                    <div className="content-wrapper">
+                    <div className="content-wrapper reverse">
                         <div className="text-content">
                             <h2 className="section-title">Digital <span className="highlight">Ecosystem</span></h2>
-                            <p className="text-gray-600">
+                            <p className="text-gray-600 text-lg">
                                 Our bespoke Information Technology portal provides a unified interface for students and faculty to manage academics, attendances, and communication with ease and security.
                             </p>
+                            <ul style={{ listStyle: 'none', padding: 0, marginTop: '1.5rem' }}>
+                                <li style={{ marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓</span> Secure Role-based Access
+                                </li>
+                                <li style={{ marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓</span> Real-time Academic Tracking
+                                </li>
+                                <li style={{ marginBottom: '0.8rem', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓</span> Automated Communication Center
+                                </li>
+                            </ul>
                         </div>
                         <div className="image-content">
                             <img
                                 src="/portal-preview.png"
-                                alt="JNTU-GV IT Portal Preview"
-                                className="rounded-image shadow-lg"
+                                alt="Portal Interface"
+                                className="rounded-image shadow-2xl"
                                 style={{ border: '4px solid #fff' }}
                             />
                         </div>
@@ -226,22 +170,22 @@ function Landing() {
 
                 {/* Features Section */}
                 <section className="features-grid-section" id="features">
-                    <h2 className="section-header-center">University Features</h2>
+                    <h2 className="section-header-center">Core Pillars</h2>
                     <div className="features-grid">
                         <div className="feature-card-glass">
-                            <div className="feature-label">System Performance</div>
-                            <h3>Real-time Updates</h3>
-                            <p>Instant notifications for timetables and circulars delivered through our central hub.</p>
+                            <div className="icon">⚡</div>
+                            <h3>Performance</h3>
+                            <p>Optimized for speed and real-time updates across all devices.</p>
                         </div>
                         <div className="feature-card-glass">
-                            <div className="feature-label">Data Privacy</div>
-                            <h3>Secure Portal</h3>
-                            <p>Advanced role-based access for students, faculty, and administrative staff members.</p>
+                            <div className="icon">🛡️</div>
+                            <h3>Security</h3>
+                            <p>End-to-end encryption and robust data protection for all users.</p>
                         </div>
                         <div className="feature-card-glass">
-                            <div className="feature-label">Analytics Engine</div>
-                            <h3>Academic Analytics</h3>
-                            <p>Comprehensive performance tracking and attendance monitoring with detailed insights.</p>
+                            <div className="icon">📊</div>
+                            <h3>Insights</h3>
+                            <p>Advanced analytics for tracking progress and academic growth.</p>
                         </div>
                     </div>
                 </section>
