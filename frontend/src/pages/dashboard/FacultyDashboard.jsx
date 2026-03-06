@@ -762,14 +762,26 @@ function AttendanceManager() {
                         <label className="input-label">Select Class</label>
                         <select className="modern-input" value={selectedSec} onChange={(e) => setSelectedSec(e.target.value)}>
                             <option value="">-- Choose Class --</option>
-                            <option value="I-B.Tech I Sem">I Year - I Sem</option>
-                            <option value="I-B.Tech II Sem">I Year - II Sem</option>
-                            <option value="II-B.Tech I Sem">II Year - I Sem</option>
-                            <option value="II-B.Tech II Sem">II Year - II Sem</option>
-                            <option value="III-B.Tech I Sem">III Year - I Sem</option>
-                            <option value="III-B.Tech II Sem">III Year - II Sem</option>
-                            <option value="IV-B.Tech I Sem">IV Year - I Sem</option>
-                            <option value="IV-B.Tech II Sem">IV Year - II Sem</option>
+                            <option value="I-B.Tech I Sem">I Year - I Sem (B.Tech)</option>
+                            <option value="I-B.Tech II Sem">I Year - II Sem (B.Tech)</option>
+                            <option value="II-B.Tech I Sem">II Year - I Sem (B.Tech)</option>
+                            <option value="II-B.Tech II Sem">II Year - II Sem (B.Tech)</option>
+                            <option value="III-B.Tech I Sem">III Year - I Sem (B.Tech)</option>
+                            <option value="III-B.Tech II Sem">III Year - II Sem (B.Tech)</option>
+                            <option value="IV-B.Tech I Sem">IV Year - I Sem (B.Tech)</option>
+                            <option value="IV-B.Tech II Sem">IV Year - II Sem (B.Tech)</option>
+                            <optgroup label="M.Tech">
+                                <option value="I-M.Tech I Sem">I Year - I Sem (M.Tech)</option>
+                                <option value="I-M.Tech II Sem">I Year - II Sem (M.Tech)</option>
+                                <option value="II-M.Tech I Sem">II Year - I Sem (M.Tech)</option>
+                                <option value="II-M.Tech II Sem">II Year - II Sem (M.Tech)</option>
+                            </optgroup>
+                            <optgroup label="MCA">
+                                <option value="I-MCA I Sem">I Year - I Sem (MCA)</option>
+                                <option value="I-MCA II Sem">I Year - II Sem (MCA)</option>
+                                <option value="II-MCA I Sem">II Year - I Sem (MCA)</option>
+                                <option value="II-MCA II Sem">II Year - II Sem (MCA)</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div>
