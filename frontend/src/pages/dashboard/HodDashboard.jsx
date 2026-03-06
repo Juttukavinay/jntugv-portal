@@ -12,7 +12,7 @@ const Icons = {
     Building: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2" /><path d="M9 22v-4h6v4" /><path d="M8 6h.01" /><path d="M16 6h.01" /><path d="M8 10h.01" /><path d="M16 10h.01" /><path d="M8 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M16 18h.01" /></svg>,
     Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>,
     Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
-    LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>,
+    LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></svg>,
     Users: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
     Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
     Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
@@ -45,7 +45,6 @@ function HodDashboard() {
             case 'faculty': return <FacultyManager showToast={showToast} />;
             case 'timetable': return <TimetableManager showToast={showToast} />;
             case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} />;
-            case 'allocation': return <AllocationManager facultyList={allFaculty} showToast={showToast} />;
             case 'infrastructure': return <InfrastructureManager showToast={showToast} />;
             case 'attendance': return <AttendanceManager showToast={showToast} />;
             case 'notices': return <CommunicationCenter user={user} showToast={showToast} />;
@@ -77,7 +76,6 @@ function HodDashboard() {
                     <NavItem icon={<Icons.Users />} label="Faculty Mgmt" active={activeTab === 'faculty'} onClick={() => setActiveTab('faculty')} />
                     <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
-                    <NavItem icon={<Icons.Users />} label="Faculty Load" active={activeTab === 'allocation'} onClick={() => setActiveTab('allocation')} />
                     <NavItem icon={<Icons.Building />} label="Campus Infra" active={activeTab === 'infrastructure'} onClick={() => setActiveTab('infrastructure')} />
                     <NavItem icon={<Icons.Check />} label="My Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
                     <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} />
@@ -962,6 +960,14 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
 
 function AttendanceManager() {
     const [selectedSec, setSelectedSec] = useState('');
+    const [selectedSubject, setSelectedSubject] = useState('');
+    const [selectedTime, setSelectedTime] = useState('');
+    const [selectedRoom, setSelectedRoom] = useState('');
+    const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+    const [students, setStudents] = useState([]);
+    const [attendanceData, setAttendanceData] = useState({}); // { studentId: 'Present' | 'Absent' }
+    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
     const [user, setUser] = useState({});
 
     useEffect(() => {
@@ -969,33 +975,150 @@ function AttendanceManager() {
         if (u) setUser(u);
     }, []);
 
+    const loadStudents = async () => {
+        if (!selectedSec) return;
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(selectedSec)}`);
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setStudents(data);
+                // Initialize all as Present by default
+                const initial = {};
+                data.forEach(s => {
+                    initial[s._id] = 'Present';
+                });
+                setAttendanceData(initial);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const toggleStatus = (studentId) => {
+        setAttendanceData(prev => ({
+            ...prev,
+            [studentId]: prev[studentId] === 'Present' ? 'Absent' : 'Present'
+        }));
+    };
+
+    const submitAttendance = async () => {
+        if (!selectedSec || !selectedSubject || !selectedTime) {
+            alert('Please fill all required fields');
+            return;
+        }
+        setSubmitting(true);
+        try {
+            const records = students.map(s => ({
+                studentId: s._id,
+                rollNumber: s.rollNumber,
+                name: s.name,
+                status: attendanceData[s._id] || 'Present'
+            }));
+
+            const payload = {
+                date: attendanceDate,
+                subject: selectedSubject,
+                semester: selectedSec,
+                room: selectedRoom,
+                facultyId: user?.id || user?._id,
+                facultyName: user?.name,
+                periodTime: selectedTime,
+                records
+            };
+
+            const res = await fetch(`${API_BASE_URL}/api/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert('Attendance submitted successfully!');
+                setStudents([]);
+                setSelectedSec('');
+            } else {
+                const error = await res.json();
+                alert('Failed to submit: ' + error.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('An error occurred');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const presentCount = Object.values(attendanceData).filter(v => v === 'Present').length;
+    const absentCount = students.length - presentCount;
+
     return (
         <div>
             <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
                 <h3 style={{ marginTop: 0 }}>Mark Attendance (My Classes)</h3>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
-                    <div style={{ flex: 1 }}>
-                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Select Section / Class</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'flex-end' }}>
+                    <div>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Select Class</label>
                         <select className="search-input-premium" value={selectedSec} onChange={(e) => setSelectedSec(e.target.value)} style={{ width: '100%' }}>
-                            <option value="">-- Choose My Class --</option>
-                            <option value="III-B.Tech I Sem">III Year IT - A</option>
-                            <option value="IV-B.Tech I Sem">IV Year IT - A</option>
+                            <option value="">-- Choose Class --</option>
+                            <option value="I-B.Tech I Sem">I Year - I Sem</option>
+                            <option value="I-B.Tech II Sem">I Year - II Sem</option>
+                            <option value="II-B.Tech I Sem">II Year - I Sem</option>
+                            <option value="II-B.Tech II Sem">II Year - II Sem</option>
+                            <option value="III-B.Tech I Sem">III Year - I Sem</option>
+                            <option value="III-B.Tech II Sem">III Year - II Sem</option>
+                            <option value="IV-B.Tech I Sem">IV Year - I Sem</option>
+                            <option value="IV-B.Tech II Sem">IV Year - II Sem</option>
                         </select>
                     </div>
-                    <div style={{ flex: 1 }}>
-                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Date</label>
-                        <input type="date" className="search-input-premium" style={{ width: '100%' }} defaultValue={new Date().toISOString().split('T')[0]} />
+                    <div>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Subject</label>
+                        <input
+                            placeholder="e.g. Operating Systems"
+                            className="search-input-premium"
+                            value={selectedSubject}
+                            onChange={e => setSelectedSubject(e.target.value)}
+                            style={{ width: '100%' }}
+                        />
                     </div>
-                    <button className="btn-action primary">Load Students</button>
+                    <div>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Period/Time</label>
+                        <input
+                            placeholder="e.g. 09:30-10:30"
+                            className="search-input-premium"
+                            value={selectedTime}
+                            onChange={e => setSelectedTime(e.target.value)}
+                            style={{ width: '100%' }}
+                        />
+                    </div>
+                    <div>
+                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Date</label>
+                        <input
+                            type="date"
+                            className="search-input-premium"
+                            style={{ width: '100%' }}
+                            value={attendanceDate}
+                            onChange={e => setAttendanceDate(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        className="btn-action primary"
+                        onClick={loadStudents}
+                        disabled={loading || !selectedSec}
+                    >
+                        {loading ? 'Processing...' : 'Load Students'}
+                    </button>
                 </div>
             </div>
 
-            {selectedSec && (
+            {students.length > 0 && (
                 <div className="glass-table-container">
                     <div className="table-header-premium">
                         <h3>Attendance Sheet: {selectedSec}</h3>
                         <div style={{ background: '#f8fafc', padding: '8px 16px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: '600' }}>
-                            <span style={{ color: '#16a34a' }}>Present: 0</span> | <span style={{ color: '#ef4444' }}>Absent: 0</span>
+                            <span style={{ color: '#16a34a' }}>Present: {presentCount}</span> | <span style={{ color: '#ef4444' }}>Absent: {absentCount}</span>
                         </div>
                     </div>
                     <table className="premium-table">
@@ -1007,20 +1130,43 @@ function AttendanceManager() {
                             </tr>
                         </thead>
                         <tbody style={{ textAlign: 'center' }}>
-                            <tr key="demo">
-                                <td style={{ fontFamily: 'monospace' }}>2231A0501</td>
-                                <td>Demo Student</td>
-                                <td>
-                                    <div style={{ display: 'inline-flex', gap: '0.5rem', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
-                                        <button style={{ background: '#22c55e', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>P</button>
-                                        <button style={{ background: 'transparent', color: '#64748b', border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer' }}>A</button>
-                                    </div>
-                                </td>
-                            </tr>
+                            {students.map(s => (
+                                <tr key={s._id}>
+                                    <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
+                                    <td>{s.name}</td>
+                                    <td>
+                                        <div style={{ display: 'inline-flex', gap: '0.5rem', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
+                                            <button
+                                                onClick={() => toggleStatus(s._id)}
+                                                style={{
+                                                    background: attendanceData[s._id] === 'Present' ? '#22c55e' : 'transparent',
+                                                    color: attendanceData[s._id] === 'Present' ? 'white' : '#64748b',
+                                                    border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'
+                                                }}
+                                            >P</button>
+                                            <button
+                                                onClick={() => toggleStatus(s._id)}
+                                                style={{
+                                                    background: attendanceData[s._id] === 'Absent' ? '#ef4444' : 'transparent',
+                                                    color: attendanceData[s._id] === 'Absent' ? 'white' : '#64748b',
+                                                    border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'
+                                                }}
+                                            >A</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
                         </tbody>
                     </table>
                     <div style={{ padding: '1.5rem', textAlign: 'right' }}>
-                        <button className="btn-action primary" style={{ width: '200px' }}>Submit Attendance</button>
+                        <button
+                            className="btn-action primary"
+                            style={{ width: '200px' }}
+                            onClick={submitAttendance}
+                            disabled={submitting}
+                        >
+                            {submitting ? 'Submitting...' : 'Submit Attendance'}
+                        </button>
                     </div>
                 </div>
             )}
@@ -1028,157 +1174,7 @@ function AttendanceManager() {
     );
 }
 
-function AllocationManager({ facultyList, showToast }) {
-    const [subjects, setSubjects] = useState([]);
-    const [semester, setSemester] = useState('I-B.Tech I Sem');
-    const [isSaving, setIsSaving] = useState(false);
 
-    const fetchSubjects = useCallback(() => {
-        fetch(`${API_BASE_URL}/api/subjects?t=${Date.now()}`).then(res => res.json()).then(setSubjects).catch(console.error);
-    }, []);
-
-    useEffect(() => { fetchSubjects(); }, [fetchSubjects]);
-
-    const handleUpdate = (id, field, value) => {
-        setSubjects(prev => prev.map(s => s._id === id ? { ...s, [field]: value } : s));
-    };
-
-    const saveChanges = async () => {
-        const currentSemSubjects = subjects.filter(s => s.semester === semester);
-        if (currentSemSubjects.length === 0) return showToast("No subjects to save", 'error');
-
-        setIsSaving(true);
-        try {
-            // Find course metadata if possible, else use defaults
-            const first = currentSemSubjects[0];
-            const response = await fetch(`${API_BASE_URL}/api/courses/save`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    regulation: 'R23',
-                    department: 'IT',
-                    program: (semester.includes('M.Tech')) ? 'PG' : 'UG',
-                    courseName: (semester.includes('M.Tech')) ? 'M.Tech' : (semester.includes('MCA') ? 'MCA' : 'B.Tech'),
-                    subjects: currentSemSubjects
-                })
-            });
-
-            if (response.ok) {
-                showToast('Allocations saved successfully!');
-                fetchSubjects();
-            } else {
-                const err = await response.json();
-                showToast('Save failed: ' + err.message, 'error');
-            }
-        } catch (error) {
-            showToast('Error saving allocations', 'error');
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const filtered = Array.isArray(subjects) ? subjects.filter(s => s && s.semester === semester) : [];
-    const theory = filtered.filter(s => (s.L > 0 || s.T > 0) && !s.courseName.toLowerCase().includes('lab'));
-    const labs = filtered.filter(s => s.P > 0 || s.courseName.toLowerCase().includes('lab'));
-
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-            <div className="glass-table-container fade-in-up">
-                <div className="table-header-premium" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <h3>Classes Allocation (Theory)</h3>
-                        <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Assign faculty to theory subjects here.</p>
-                    </div>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <select value={semester} onChange={e => setSemester(e.target.value)} className="search-input-premium" style={{ width: '220px' }}>
-                            <option value="I-B.Tech I Sem">I Year - I Sem</option><option value="I-B.Tech II Sem">I Year - II Sem</option>
-                            <option value="II-B.Tech I Sem">II Year - I Sem</option><option value="II-B.Tech II Sem">II Year - II Sem</option>
-                            <option value="III-B.Tech I Sem">III Year - I Sem</option><option value="III-B.Tech II Sem">III Year - II Sem</option>
-                            <option value="IV-B.Tech I Sem">IV Year - I Sem</option><option value="IV-B.Tech II Sem">IV Year - II Sem</option>
-                        </select>
-                        <button className="btn-action primary" onClick={saveChanges} disabled={isSaving}>
-                            {isSaving ? '⏳ Saving...' : '💾 Save All'}
-                        </button>
-                    </div>
-                </div>
-                <div style={{ padding: '1rem' }}>
-                    <table className="premium-table">
-                        <thead><tr><th>Code</th><th>Subject Name</th><th>Credits</th><th>Assign Faculty</th><th>Type</th></tr></thead>
-                        <tbody>
-                            {theory.length > 0 ? theory.map((s, i) => (
-                                <tr key={i}>
-                                    <td><input value={s.courseCode} onChange={e => handleUpdate(s._id, 'courseCode', e.target.value)} className="modern-input" style={{ width: '80px', padding: '4px' }} /></td>
-                                    <td><input value={s.courseName} onChange={e => handleUpdate(s._id, 'courseName', e.target.value)} className="modern-input" style={{ width: '100%', padding: '4px', fontWeight: '700' }} /></td>
-                                    <td>{s.credits} ({s.L}-{s.T}-{s.P})</td>
-                                    <td>
-                                        <select
-                                            className="modern-input"
-                                            style={{ width: '100%', padding: '6px' }}
-                                            value={s.assignedFaculty || ''}
-                                            onChange={e => handleUpdate(s._id, 'assignedFaculty', e.target.value)}
-                                        >
-                                            <option value="">-- Select Faculty --</option>
-                                            {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
-                                        </select>
-                                    </td>
-                                    <td><span className="badge-role" style={{ background: '#fffbeb', color: '#b45309' }}>Theory</span></td>
-                                </tr>
-                            )) : <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No theory subjects found for this semester.</td></tr>}
-                        </tbody>
-                    </table>
-                    <button
-                        onClick={() => setSubjects([...subjects, { _id: Date.now(), sNo: subjects.length + 1, courseCode: 'NEW', courseName: 'New Subject', L: 1, T: 0, P: 0, credits: 1, semester, assignedFaculty: '', assignedAssistants: [], courseId: filtered[0]?.courseId }])}
-                        style={{ width: '100%', padding: '12px', marginTop: '10px', border: '2px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', cursor: 'pointer', background: '#f8fafc', fontWeight: '600' }}
-                    >
-                        + Add Manual Class/Lab
-                    </button>
-                </div>
-            </div>
-
-            <div className="glass-table-container fade-in-up" style={{ animationDelay: '0.1s' }}>
-                <div className="table-header-premium">
-                    <h3>Laboratory & Project Allocation</h3>
-                </div>
-                <div style={{ padding: '1rem' }}>
-                    <table className="premium-table">
-                        <thead><tr><th>Code</th><th>Lab/Project Title</th><th>Primary Faculty (M)</th><th>Assistants (Max 2)</th><th>Status</th></tr></thead>
-                        <tbody>
-                            {labs.length > 0 ? labs.map((s, i) => (
-                                <tr key={i}>
-                                    <td><input value={s.courseCode} onChange={e => handleUpdate(s._id, 'courseCode', e.target.value)} className="modern-input" style={{ width: '80px', padding: '4px' }} /></td>
-                                    <td><input value={s.courseName} onChange={e => handleUpdate(s._id, 'courseName', e.target.value)} className="modern-input" style={{ width: '100%', padding: '4px', fontWeight: '700' }} /></td>
-                                    <td>
-                                        <select
-                                            className="modern-input"
-                                            style={{ width: '100%', padding: '6px' }}
-                                            value={s.assignedFaculty || ''}
-                                            onChange={e => handleUpdate(s._id, 'assignedFaculty', e.target.value)}
-                                        >
-                                            <option value="">-- Main Faculty --</option>
-                                            {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select
-                                            multiple
-                                            className="modern-input"
-                                            style={{ width: '100%', padding: '6px', height: '60px' }}
-                                            value={s.assignedAssistants || []}
-                                            onChange={e => handleUpdate(s._id, 'assignedAssistants', Array.from(e.target.selectedOptions, o => o.value))}
-                                        >
-                                            {facultyList.map(f => <option key={f._id} value={f.name}>{f.name}</option>)}
-                                        </select>
-                                    </td>
-                                    <td><span className="badge-role" style={{ background: '#eff6ff', color: '#1d4ed8' }}>Lab/Practical</span></td>
-                                </tr>
-                            )) : <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No lab subjects found.</td></tr>}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function InfrastructureManager({ showToast }) {
     const [rooms, setRooms] = useState([]);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import API_BASE_URL from '../config';
 
 const CommunicationCenter = ({ user, showToast }) => {
@@ -17,21 +17,63 @@ const CommunicationCenter = ({ user, showToast }) => {
     const [targetDept, setTargetDept] = useState('All');
     const [pollOptions, setPollOptions] = useState(['', '']);
 
+    // Reference to track IDs of messages we've already seen - using Ref for consistent access in async functions
+    const lastSeenMsgIdsRef = useRef(new Set());
+
+    // Request Permission on component mount
     useEffect(() => {
-        fetchMessages();
-        const interval = setInterval(fetchMessages, 10000); // Auto-refresh every 10s
-        return () => clearInterval(interval);
+        if ("Notification" in window && Notification.permission !== "granted") {
+            Notification.requestPermission();
+        }
+    }, []);
+
+    const showDesktopNotification = useCallback((msg) => {
+        if ("Notification" in window && Notification.permission === "granted") {
+            const userId = user._id || user.id || user.rollNumber || user.name;
+            const senderId = msg.senderId;
+
+            // Don't notify for our own messages
+            if (senderId === userId) return;
+
+            const n = new Notification(msg.title || msg.senderName || "New Message", {
+                body: msg.content,
+                icon: "/jntugv-logo.png",
+                tag: msg._id,
+                silent: false
+            });
+
+            n.onclick = () => {
+                window.focus();
+                setActiveMsg(msg);
+                n.close();
+            };
+        }
     }, [user]);
 
-    const fetchMessages = async () => {
+    const fetchMessages = useCallback(async () => {
         try {
             const userId = user._id || user.id || user.rollNumber || user.name;
             const res = await fetch(`${API_BASE_URL}/api/notices?role=${user.role}&department=${user.department}&userId=${userId}`);
             const data = await res.json();
+
             if (Array.isArray(data)) {
+                // If it's the first fetch, populate the ref but don't notify
+                if (lastSeenMsgIdsRef.current.size === 0) {
+                    const initialIds = new Set(data.map(m => m._id));
+                    lastSeenMsgIdsRef.current = initialIds;
+                } else {
+                    // Check for new messages to notify
+                    data.forEach(msg => {
+                        if (!lastSeenMsgIdsRef.current.has(msg._id)) {
+                            showDesktopNotification(msg);
+                            lastSeenMsgIdsRef.current.add(msg._id);
+                        }
+                    });
+                }
+
                 setMessages(data);
                 if (!activeMsg && data.length > 0) setActiveMsg(data[0]);
-                // If the active message was a poll and it updated, refresh its state
+
                 if (activeMsg) {
                     const updatedActive = data.find(m => m._id === activeMsg._id);
                     if (updatedActive) setActiveMsg(updatedActive);
@@ -42,7 +84,13 @@ const CommunicationCenter = ({ user, showToast }) => {
             console.error(error);
             setLoading(false);
         }
-    };
+    }, [user, activeMsg, showDesktopNotification]);
+
+    useEffect(() => {
+        fetchMessages();
+        const interval = setInterval(fetchMessages, 10000); // 10s polling
+        return () => clearInterval(interval);
+    }, [fetchMessages]);
 
     const handleSendQuickMessage = async (e) => {
         if (e) e.preventDefault();
