@@ -167,11 +167,15 @@ router.post('/generate', async (req, res) => {
         let unallocated = [];
 
         // --- 3. PLACE LABS ---
+        const existingTimetables = await Timetable.find({});
+
         for (let lab of queue.labs) {
             let placed = false;
             let strategies = labPlacement === 'morning' ? ['morning', 'afternoon'] :
                 labPlacement === 'mixed' ? (Math.random() > 0.5 ? ['morning', 'afternoon'] : ['afternoon', 'morning']) :
                     ['afternoon', 'morning'];
+
+            const isEnglishLab = lab.courseName.toLowerCase().includes('english');
 
             for (let strat of strategies) {
                 if (placed) break;
@@ -179,6 +183,21 @@ router.post('/generate', async (req, res) => {
                     for (let i of dayIndices) {
                         // Check if day already has a lab (either morning or afternoon)
                         if (!days[i].afternoonConfig && !days[i].morningConfig) {
+                            
+                            // Check cross-class English Lab clash
+                            let conflict = false;
+                            if (isEnglishLab) {
+                                for(let t of existingTimetables) {
+                                    // Make sure we are not comparing with the same class's old timetable
+                                    if(t.className === semester) continue; 
+                                    let sameDay = t.schedule.find(d => d.day === days[i].day);
+                                    if(sameDay && sameDay.afternoonConfig && sameDay.assignedLab && sameDay.assignedLab.courseName.toLowerCase().includes('english')) {
+                                        conflict = true; break;
+                                    }
+                                }
+                            }
+                            if (conflict) continue;
+
                             days[i].afternoonConfig = lab.type;
                             days[i].assignedLab = lab;
                             placed = true; break;
@@ -190,6 +209,20 @@ router.post('/generate', async (req, res) => {
                         for (let i of dayIndices) {
                             // Check if day already has a lab (either morning or afternoon)
                             if (!days[i].morningConfig && !days[i].afternoonConfig) {
+                                
+                                // Check cross-class English Lab clash
+                                let conflict = false;
+                                if (isEnglishLab) {
+                                    for(let t of existingTimetables) {
+                                        if(t.className === semester) continue;
+                                        let sameDay = t.schedule.find(d => d.day === days[i].day);
+                                        if(sameDay && sameDay.morningConfig && sameDay.assignedMorningLab && sameDay.assignedMorningLab.courseName.toLowerCase().includes('english')) {
+                                            conflict = true; break;
+                                        }
+                                    }
+                                }
+                                if (conflict) continue;
+
                                 days[i].morningConfig = 'Lab';
                                 days[i].assignedMorningLab = lab;
                                 placed = true; break;

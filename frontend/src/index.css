@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand Colors - University Professional Palette */
-  --primary: #c00000;
-  /* Rich Red */
-  --primary-hover: #990000;
-  --secondary: #475569;
-  --accent-gold: #fbbf24;
-  /* Gold */
-  --univ-red: #c00000;
-  --univ-yellow: #fbbf24;
+  /* Brand Colors - Simple White, Blue, Green Palette */
+  --primary: #2563eb;       /* Primary Blue */
+  --primary-hover: #1d4ed8; /* Darker Blue */
+  --secondary: #10b981;     /* Emerald Green */
+  --accent-gold: #10b981;   /* Replaced gold with green */
+  --univ-red: #2563eb;      /* Map old red vars to blue */
+  --univ-yellow: #10b981;   /* Map old yellow to green */
+  --univ-blue: #2563eb;
+  --univ-green: #10b981;
 
   /* Backgrounds */
   --bg-main: #f8fafc;
@@ -87,7 +87,7 @@ a:hover {
 /* Sidebar */
 .dashboard-sidebar {
   width: var(--sidebar-width);
-  background: #0f172a;
+  background: var(--primary);
   color: white;
   display: flex;
   flex-direction: column;
