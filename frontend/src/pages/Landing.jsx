@@ -3,10 +3,19 @@ import API_BASE_URL from '../config'
 import { Link } from 'react-router-dom'
 import '../App.css'
 
-function Landing() {
+function Landing({ user }) {
     const [serverMsg, setServerMsg] = useState('Connecting...')
     const [isScrolled, setIsScrolled] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+    const getDashboardPath = (role) => {
+        const r = role?.toLowerCase().trim();
+        if (r === 'admin') return '/dashboard/admin';
+        if (r === 'principal') return '/dashboard/principal';
+        if (r === 'hod') return '/dashboard/hod';
+        if (r === 'faculty') return '/dashboard/faculty';
+        return '/dashboard/student';
+    };
 
     useEffect(() => {
         fetch(`${API_BASE_URL}/api`)
@@ -35,7 +44,7 @@ function Landing() {
                     <img src="/jntugv-logo.png" alt="JNTU-GV Logo" className="university-logo" style={{ height: '50px' }} />
                     <div className="logo-text-group">
                         <div className="logo-main">JNTU-GV</div>
-                        <div className="logo-sub">Dept of Information Technology</div>
+                        <div className="logo-sub">Technological University</div>
                     </div>
                 </div>
 
@@ -43,11 +52,32 @@ function Landing() {
                 <div className="nav-links desktop-only">
                     <a href="#home" className="nav-link">Home</a>
                     <a href="#about" className="nav-link">About</a>
+
+                    {/* Departments Dropdown */}
+                    <div className="nav-item-dropdown">
+                        <Link to="/departments" className="nav-link" style={{ color: 'var(--accent-gold)', fontWeight: 'bold' }}>Departments ▾</Link>
+                        <div className="dropdown-menu-premium">
+                            <Link to="/departments">Computer Science & Engineering</Link>
+                            <Link to="/departments">Electronics & Communication Engineering</Link>
+                            <Link to="/departments">Mechanical Engineering</Link>
+                            <Link to="/departments">Electrical & Electronics Engineering</Link>
+                            <Link to="/departments">Information Technology</Link>
+                            <Link to="/departments">Metallurgical Engineering</Link>
+                            <Link to="/departments">Civil Engineering</Link>
+                            <Link to="/departments">BS & HSS</Link>
+                            <Link to="/departments">MBA</Link>
+                        </div>
+                    </div>
+
                     <a href="#features" className="nav-link">Features</a>
                 </div>
 
                 <div className="nav-actions desktop-only">
-                    <Link to="/login" className="btn-glow">Sign In</Link>
+                    {user ? (
+                        <Link to={getDashboardPath(user.role)} className="btn-glow">Dashboard</Link>
+                    ) : (
+                        <Link to="/login" className="btn-glow">Sign In</Link>
+                    )}
                 </div>
 
                 {/* Mobile Toggle */}
@@ -60,6 +90,7 @@ function Landing() {
                     <div className="mobile-menu">
                         <a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Home</a>
                         <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
+                        <Link to="/departments" onClick={() => setIsMobileMenuOpen(false)}>Departments</Link>
                         <a href="#features" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
                         <hr style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
                         <Link to="/login" className="btn-mobile">Login</Link>
@@ -70,10 +101,7 @@ function Landing() {
             <main>
                 {/* Hero Section */}
                 <section className="hero-section" id="home">
-                    <div className="blob blob-1"></div>
-                    <div className="blob blob-2"></div>
-
-                    <div className="content-wrapper" style={{ zIndex: 10 }}>
+                    <div className="content-wrapper">
                         <div className="hero-content" style={{ textAlign: 'left', flex: 1.2 }}>
                             <div className="badge-pill-hero">VIZIANAGARAM, ANDHRA PRADESH</div>
                             <h1 className="hero-title">
@@ -84,7 +112,6 @@ function Landing() {
                                 Empowering minds through engineering excellence and digital innovation. A premier institution for technical education in Andhra Pradesh.
                             </p>
                             <div className="hero-actions" style={{ justifyContent: 'flex-start' }}>
-                                <Link to="/login" className="btn-primary-lg">Access Portal</Link>
                                 <a href="#about" className="btn-outline-lg">Learn More</a>
                             </div>
                         </div>

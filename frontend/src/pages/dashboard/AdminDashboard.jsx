@@ -4,6 +4,7 @@ import API_BASE_URL from '../../config'
 import '../../App.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
 import GlobalLoader from '../../components/GlobalLoader'
+import { exportToCSV } from '../../utils/exportUtils'
 
 // --- ICONS (Consistent with Premium Look) ---
 const Icons = {
@@ -73,7 +74,8 @@ function AdminDashboard() {
                         <button
                             onClick={() => {
                                 localStorage.removeItem('user');
-                                navigate('/login', { replace: true });
+                                window.dispatchEvent(new Event('auth-change'));
+                                window.location.href = '/login';
                             }}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
                             title="Logout"
@@ -128,9 +130,14 @@ function NavItem({ icon, label, active, onClick }) {
 function AdminOverview({ onNavigate }) {
     return (
         <div>
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Super Admin Dashboard 🛡️</h1>
-                <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Total system control and monitoring overview.</p>
+            <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                    <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Super Admin Dashboard 🛡️</h1>
+                    <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Total system control and monitoring overview.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">📕 System PDF</button>
+                </div>
             </div>
 
             <div className="modern-stats-grid">
@@ -182,7 +189,15 @@ function UserManagement({ showToast }) {
         <div className="glass-table-container">
             <div className="table-header-premium">
                 <h3>System User Registry</h3>
-                <button className="btn-action primary" onClick={() => showToast('Audit feature coming soon!')}>Audit All</button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button className="btn-action excel" onClick={() => {
+                        const headers = ['User Type', 'Access Level', 'Permissions'];
+                        const data = [['Admin (Root)', 'Super User', 'Full Write/Delete'], ['Principal', 'Academic Admin', 'Dept Level Manage'], ['Faculty', 'Instructional', 'Course Management'], ['Student', 'Consumer', 'Read Only + Forms']];
+                        exportToCSV(headers, data, 'System_Roles.csv');
+                    }} title="Export CSV">📊 CSV</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                    <button className="btn-action primary" onClick={() => showToast('Audit feature coming soon!')}>Audit All</button>
+                </div>
             </div>
             <p style={{ padding: '0 1.5rem', color: '#64748b' }}>High-level user permissions and role management console.</p>
             <table className="premium-table">

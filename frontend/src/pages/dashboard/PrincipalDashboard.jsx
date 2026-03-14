@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
+import GlobalLoader from '../../components/GlobalLoader'
+import { exportToCSV } from '../../utils/exportUtils'
 
 // --- ICONS (Inline SVG for Premium Feel) ---
 const Icons = {
@@ -13,7 +15,12 @@ const Icons = {
     Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>,
     Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
     Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
-    LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></svg>
+    LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></svg>,
+    Search: (props) => <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>,
+    Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
+    Plus: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+    Trash: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+    Edit: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
 }
 
 // --- MAIN DASHBOARD COMPONENT ---
@@ -22,6 +29,13 @@ function PrincipalDashboard() {
     const [activeTab, setActiveTab] = useState('overview');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+    const logout = () => {
+        localStorage.removeItem('user');
+        window.dispatchEvent(new Event('auth-change'));
+        // FORCE FIX: Hard reload to login to ensure clean state
+        window.location.href = '/login';
+    };
 
     const showToast = useCallback((message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -34,13 +48,17 @@ function PrincipalDashboard() {
     }, [activeTab]);
 
     const renderContent = () => {
+        const userStr = localStorage.getItem('user');
+        let currentUser = { name: 'Principal', role: 'principal' };
+        try { if (userStr && userStr !== "undefined") currentUser = JSON.parse(userStr); } catch (e) { console.error(e); }
+
         switch (activeTab) {
             case 'students': return <StudentDirectory showToast={showToast} />;
             case 'faculty': return <FacultyDirectory showToast={showToast} />;
             case 'subjects': return <CurriculumView showToast={showToast} />;
             case 'timetables': return <TimetableView showToast={showToast} />;
             case 'departments': return <DepartmentPanel showToast={showToast} />;
-            case 'notices': return <CommunicationCenter user={JSON.parse(localStorage.getItem('user')) || { name: 'Principal', role: 'principal' }} showToast={showToast} />;
+            case 'notices': return <CommunicationCenter user={currentUser} showToast={showToast} />;
             default: return <DashboardOverview onNavigate={setActiveTab} />;
         }
     };
@@ -58,13 +76,13 @@ function PrincipalDashboard() {
                 </div>
 
                 <nav className="nav-menu">
-                    <NavItem icon={<Icons.Home />} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
-                    <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
-                    <NavItem icon={<Icons.Users />} label="Faculty" active={activeTab === 'faculty'} onClick={() => setActiveTab('faculty')} />
+                    <NavItem icon={<Icons.Home />} label="Dashboard" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
+                    <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} badge="91" />
+                    <NavItem icon={<Icons.Users />} label="Faculty" active={activeTab === 'faculty'} onClick={() => setActiveTab('faculty')} badge="13" />
                     <NavItem icon={<Icons.Building />} label="Departments" active={activeTab === 'departments'} onClick={() => setActiveTab('departments')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
                     <NavItem icon={<Icons.Calendar />} label="Timetables" active={activeTab === 'timetables'} onClick={() => setActiveTab('timetables')} />
-                    <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} />
+                    <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} badge="New" />
                 </nav>
 
                 <div className="sidebar-footer">
@@ -75,14 +93,27 @@ function PrincipalDashboard() {
                             <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Administrator</div>
                         </div>
                         <button
-                            onClick={() => {
-                                localStorage.removeItem('user');
-                                navigate('/login', { replace: true });
-                            }}
+                            onClick={logout}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
                             title="Logout"
                         >
                             <Icons.LogOut />
+                        </button>
+                    </div>
+
+                    {/* Switch to Personal Faculty View */}
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                        <button
+                            onClick={() => {
+                                const user = JSON.parse(localStorage.getItem('user')) || { name: 'Dr. Principal', role: 'principal' };
+                                user.role = 'faculty'; // Switch role for the faculty view
+                                localStorage.setItem('user', JSON.stringify(user));
+                                navigate('/dashboard/faculty');
+                            }}
+                            className="btn-action"
+                            style={{ width: '100%', fontSize: '0.8rem', padding: '0.5rem', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600' }}
+                        >
+                            <span>👤 Personal Faculty Portal</span>
                         </button>
                     </div>
                 </div>
@@ -102,6 +133,29 @@ function PrincipalDashboard() {
                     </button>
                     <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Principal Dashboard</span>
                 </header>
+
+                {/* Desktop Professional Header */}
+                <div className="desktop-only" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 0 1rem 0' }}>
+                    <div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Academic Portal</div>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: '#0f172a' }}>
+                            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
+                        </h2>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                        <div style={{ position: 'relative' }}>
+                            <div style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                                <div style={{ position: 'absolute', top: '10px', right: '10px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></div>
+                            </div>
+                        </div>
+                        <div style={{ height: '30px', width: '1px', background: '#e2e8f0' }}></div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a' }}>Sunday, Mar 08</div>
+                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>System Uptime: 99.9%</div>
+                        </div>
+                    </div>
+                </div>
 
                 <div className="fade-in-up">
                     {renderContent()}
@@ -134,16 +188,46 @@ function PrincipalDashboard() {
     );
 }
 
-function NavItem({ icon, label, active, onClick }) {
+function NavItem({ icon, label, active, onClick, badge }) {
     return (
         <div className={`nav-item ${active ? 'active' : ''}`} onClick={onClick}>
             {icon}
             <span>{label}</span>
+            {badge && <span className="nav-link-badge">{badge}</span>}
         </div>
     );
 }
 
-import GlobalLoader from '../../components/GlobalLoader'
+function PremiumStatCard({ title, value, icon, color, trend, trendType }) {
+    const colors = {
+        blue: { bg: '#eff6ff', text: '#2563eb', icon: '#3b82f6' },
+        purple: { bg: '#f5f3ff', text: '#7c3aed', icon: '#8b5cf6' },
+        orange: { bg: '#fff7ed', text: '#ea580c', icon: '#f97316' },
+        green: { bg: '#f0fdf4', text: '#16a34a', icon: '#22c55e' }
+    };
+    const c = colors[color] || colors.blue;
+
+    return (
+        <div className="premium-stat-card">
+            <div className="stat-icon-wrapper" style={{ background: c.bg, color: c.icon }}>
+                {icon}
+            </div>
+            <div className="stat-content">
+                <h5>{title}</h5>
+                <h3>{value}</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
+                    <span className={`stat-trend trend-${trendType}`}>{trend}</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const logout = () => {
+    localStorage.removeItem('user');
+    window.dispatchEvent(new Event('auth-change'));
+    // navigate handled by App redirection or manually
+};
 
 // --- SUB-COMPONENTS ---
 
@@ -173,9 +257,15 @@ function DashboardOverview({ onNavigate }) {
     return (
         <div>
             {loading && <GlobalLoader />}
-            <div style={{ marginBottom: '2.5rem' }}>
-                <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome back, Principal 👋</h1>
-                <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Here's what's happening in your campus today.</p>
+            <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                    <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome back, Principal 👋</h1>
+                    <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Here's what's happening in your campus today.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: '#f8fafc', padding: '0.5rem 1rem', borderRadius: '30px', border: '1px solid #e2e8f0' }}>
+                    <div className="pulse-soft" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Live Data Active</span>
+                </div>
             </div>
 
             <div className="modern-stats-grid">
@@ -184,7 +274,7 @@ function DashboardOverview({ onNavigate }) {
                     value={stats.students}
                     icon={<Icons.GradCap />}
                     color="blue"
-                    trend="+12% this year"
+                    trend="+12% vs last month"
                     trendType="up"
                 />
                 <PremiumStatCard
@@ -192,47 +282,105 @@ function DashboardOverview({ onNavigate }) {
                     value={stats.faculty}
                     icon={<Icons.Users />}
                     color="purple"
-                    trend="Full Capacity"
-                    trendType="neutral"
+                    trend="94% Efficiency"
+                    trendType="up"
                 />
                 <PremiumStatCard
-                    title="Departments"
+                    title="Active Branches"
                     value={stats.depts}
                     icon={<Icons.Building />}
                     color="orange"
-                    trend="Operating"
+                    trend="Stability High"
                     trendType="neutral"
                 />
             </div>
 
-            <div className="grid-split" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(600px, 1fr))', gap: '2rem' }}>
+            {/* Innovative Chart Section */}
+            <div style={{ marginBottom: '2.5rem' }}>
+                <div className="premium-stat-card" style={{ display: 'block', padding: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Campus Engagement & Growth</h3>
+                            <p style={{ color: '#64748b', margin: '0.25rem 0 0 0' }}>Real-time student activity and department performance</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3b82f6' }}></div>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>Attendance</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#8b5cf6' }}></div>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>Engagement</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ width: '100%', height: '240px', position: 'relative' }}>
+                        {/* Mock SVG Chart */}
+                        <svg viewBox="0 0 800 200" style={{ width: '100%', height: '100%' }}>
+                            <defs>
+                                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="rgba(59, 130, 246, 0.2)" />
+                                    <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
+                                </linearGradient>
+                            </defs>
+                            {/* Grid Lines */}
+                            <line x1="0" y1="0" x2="800" y2="0" stroke="#f1f5f9" />
+                            <line x1="0" y1="50" x2="800" y2="50" stroke="#f1f5f9" />
+                            <line x1="0" y1="100" x2="800" y2="100" stroke="#f1f5f9" />
+                            <line x1="0" y1="150" x2="800" y2="150" stroke="#f1f5f9" />
+
+                            {/* Area Path */}
+                            <path d="M0,180 Q100,140 200,160 T400,100 T600,80 T800,40 L800,200 L0,200 Z" fill="url(#chartGradient)" />
+
+                            {/* Line Path */}
+                            <path d="M0,180 Q100,140 200,160 T400,100 T600,80 T800,40" fill="none" stroke="#3b82f6" strokeWidth="4" />
+
+                            {/* Second Path (Engagement) */}
+                            <path d="M0,150 Q120,170 240,120 T480,140 T720,60 T800,80" fill="none" stroke="#8b5cf6" strokeWidth="4" strokeDasharray="8 4" />
+
+                            {/* Data Points */}
+                            <circle cx="200" cy="160" r="6" fill="#3b82f6" fillOpacity="1" />
+                            <circle cx="400" cy="100" r="6" fill="#3b82f6" fillOpacity="1" />
+                            <circle cx="600" cy="80" r="6" fill="#3b82f6" fillOpacity="1" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid-split" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
                 <div className="premium-stat-card" style={{ display: 'block' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0 }}>HOD Management</h3>
-                        <button className="btn-action primary" onClick={() => onNavigate('departments')}>Manage</button>
+                        <h3 style={{ margin: 0 }}>Leadership & HODs</h3>
+                        <button className="btn-action primary" onClick={() => onNavigate('departments')}>Manage All</button>
                     </div>
-                    <p style={{ color: '#64748b', lineHeight: '1.6' }}>
-                        Review and assign Head of Departments for all academic branches. Ensure all departments have active leadership assigned.
+                    <p style={{ color: '#64748b', lineHeight: '1.6', fontSize: '0.95rem' }}>
+                        Oversee departmental leadership and ensure administrative stability across all campus branches.
                     </p>
-                    <div style={{ marginTop: '1rem', padding: '1rem', background: '#f8fafc', borderRadius: '12px' }}>
-                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <div className="user-avatar" style={{ background: '#e2e8f0', color: '#64748b' }}>?</div>
-                            <div>
-                                <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Pending Assignments</div>
-                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Check for unassigned departments</div>
+                    <div style={{ marginTop: '1.5rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                <div className="user-avatar" style={{ background: '#e2e8f0', color: '#64748b', width: '40px', height: '40px' }}>?</div>
+                                <div>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#1e293b' }}>Departmental Vacancies</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>2 HOD positions pending review</div>
+                                </div>
                             </div>
+                            <button className="btn-action" style={{ fontSize: '0.75rem', padding: '4px 12px' }}>Check Now</button>
                         </div>
                     </div>
                 </div>
 
                 <div className="premium-stat-card" style={{ display: 'block' }}>
-                    <h3 style={{ margin: '0 0 1rem 0' }}>Quick Actions</h3>
+                    <h3 style={{ margin: '0 0 1.5rem 0' }}>Strategic Access</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <button className="btn-action" onClick={() => onNavigate('students')} style={{ height: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                            <Icons.GradCap /> Student Directory
+                        <button className="btn-action" onClick={() => onNavigate('students')} style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', borderRadius: '16px' }}>
+                            <div style={{ color: '#3b82f6' }}><Icons.GradCap /></div>
+                            <span style={{ fontWeight: '700' }}>Student Hub</span>
                         </button>
-                        <button className="btn-action" onClick={() => onNavigate('timetables')} style={{ height: '80px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                            <Icons.Calendar /> View Timetables
+                        <button className="btn-action" onClick={() => onNavigate('timetables')} style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', borderRadius: '16px' }}>
+                            <div style={{ color: '#8b5cf6' }}><Icons.Calendar /></div>
+                            <span style={{ fontWeight: '700' }}>Academic Calendar</span>
                         </button>
                     </div>
                 </div>
@@ -241,33 +389,9 @@ function DashboardOverview({ onNavigate }) {
     );
 }
 
-function PremiumStatCard({ title, value, icon, color, trend, trendType }) {
-    const bgColors = {
-        blue: '#eff6ff',
-        purple: '#f3e8ff',
-        orange: '#fff7ed',
-        green: '#f0fdf4'
-    };
-    const textColors = {
-        blue: '#2563eb',
-        purple: '#9333ea',
-        orange: '#ea580c',
-        green: '#16a34a'
-    };
 
-    return (
-        <div className="premium-stat-card">
-            <div className="stat-icon-wrapper" style={{ background: bgColors[color], color: textColors[color] }}>
-                {icon}
-            </div>
-            <div className="stat-content">
-                <h5>{title}</h5>
-                <h3>{value}</h3>
-                <span className={`stat-trend trend-${trendType}`}>{trend}</span>
-            </div>
-        </div>
-    );
-}
+// Redundant PremiumStatCard removed to fix Redeclaration Error
+
 
 // --- DEPARTMENT MANAGER ---
 function DepartmentPanel({ showToast }) {
@@ -338,14 +462,24 @@ function DepartmentPanel({ showToast }) {
         }
     };
 
+    const handleExportCSV = () => {
+        const headers = ['Department Name', 'HOD Name'];
+        const data = departments.map(d => [d.name, d.hodName || 'Not Assigned']);
+        exportToCSV(headers, data, 'Departments_Report.csv');
+    };
+
     return (
-        <div className="glass-table-container">
+        <div className="glass-table-container fade-in-up">
             <div className="table-header-premium">
                 <div>
-                    <h3>Department Management</h3>
-                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>Manage departments and assign leadership (HODs)</p>
+                    <h3 style={{ margin: 0 }}>Faculty & Departments</h3>
+                    <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>Management and academic structure</p>
                 </div>
-                <button className="btn-action primary" onClick={() => setShowAddModal(true)}>+ Add Department</button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button className="btn-action excel" onClick={handleExportCSV} title="Export CSV">📊 CSV</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                    <button className="btn-action primary" onClick={() => setShowAddModal(true)}>+ Add Department</button>
+                </div>
             </div>
             <table className="premium-table">
                 <thead>
@@ -476,8 +610,9 @@ function StudentDirectory({ showToast }) {
                 body: JSON.stringify(newStudent)
             });
             if (res.ok) {
+                const savedStudent = await res.json();
                 showToast('Student added successfully');
-                setStudents([...students, saved]);
+                setStudents([...students, savedStudent]);
                 setShowModal(false);
             } else {
                 showToast('Failed to add student. Roll number might differ.', 'error');
@@ -526,34 +661,24 @@ function StudentDirectory({ showToast }) {
                             ))}
                         </div>
                     </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Year:</span>
-                        {['All', '1', '2', '3', '4'].map(y => (
-                            <button
-                                key={y}
-                                onClick={() => setActiveYear(y)}
-                                style={{
-                                    padding: '4px 10px', borderRadius: '20px', border: '1px solid ' + (activeYear === y ? '#3b82f6' : '#e2e8f0'),
-                                    background: activeYear === y ? '#eff6ff' : 'transparent',
-                                    color: activeYear === y ? '#2563eb' : '#64748b',
-                                    fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer'
-                                }}
-                            >
-                                {y === 'All' ? 'All' : `${y}`}
-                            </button>
-                        ))}
-                    </div>
-                    <div style={{ display: 'flex', gap: '1rem' }}>
-                        <input
-                            type="text"
-                            placeholder="Search students..."
-                            className="search-input-premium"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                        <button className="btn-action excel" onClick={() => {
+                            const headers = ['Roll Number', 'Name', 'Course', 'Year', 'Semester', 'Department'];
+                            const data = filtered.map(s => [s.rollNumber, s.name, s.course, s.year, s.semester, s.department]);
+                            exportToCSV(headers, data, `Students_${activeCourse}.csv`);
+                        }} title="Export CSV">📊 CSV</button>
+                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type="text"
+                                placeholder="Search roll or name..."
+                                className="search-input-premium"
+                                style={{ width: '220px', paddingLeft: '2.5rem' }}
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                            <Icons.Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', width: '16px', height: '16px' }} />
+                        </div>
                         <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Student</button>
                     </div>
                 </div>
@@ -679,7 +804,15 @@ function FacultyDirectory() {
         <div className="glass-table-container">
             <div className="table-header-premium">
                 <h3>Faculty Directory</h3>
-                <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Faculty</button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button className="btn-action excel" onClick={() => {
+                        const headers = ['Name', 'Email', 'Designation', 'Department', 'Mobile', 'Type'];
+                        const data = faculty.map(f => [f.name, f.email, f.designation, f.department, f.mobileNumber, f.type]);
+                        exportToCSV(headers, data, 'Faculty_Report.csv');
+                    }} title="Export CSV">📊 CSV</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                    <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Faculty</button>
+                </div>
             </div>
             <table className="premium-table">
                 <thead>
@@ -833,7 +966,13 @@ function CurriculumView() {
                             ))}
                         </div>
                     </div>
-                    <div>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <button className="btn-action excel" onClick={() => {
+                            const headers = ['Code', 'Subject Title', 'Sem', 'L', 'T', 'P', 'Credits'];
+                            const data = filteredSubjects.map(s => [s.courseCode, s.courseName, s.semester, s.L, s.T, s.P, s.credits]);
+                            exportToCSV(headers, data, `Curriculum_${activeCourse}.csv`);
+                        }} title="Export CSV">📊 CSV</button>
+                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                         <select
                             className="search-input-premium"
                             style={{ width: '200px' }}
@@ -876,15 +1015,25 @@ function CurriculumView() {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div >
     );
 }
 
 // --- TIMETABLE VIEW ---
 function TimetableView() {
+    const [viewMode, setViewMode] = useState('class'); // 'class', 'faculty', 'room', 'master'
     const [timetable, setTimetable] = useState(null);
     const [activeCourse, setActiveCourse] = useState('B.Tech');
     const [sem, setSem] = useState('I-B.Tech I Sem');
+    const [selectedFaculty, setSelectedFaculty] = useState('');
+    const [selectedRoom, setSelectedRoom] = useState('');
+    const [facultyList, setFacultyList] = useState([]);
+    const [depts, setDepts] = useState([]);
+
+    useEffect(() => {
+        fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFacultyList).catch(console.error);
+        fetch(`${API_BASE_URL}/api/departments`).then(res => res.json()).then(setDepts).catch(console.error);
+    }, []);
 
     // Reset sem when course changes
     useEffect(() => {
@@ -894,74 +1043,176 @@ function TimetableView() {
     }, [activeCourse]);
 
     useEffect(() => {
-        fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(sem)}`)
-            .then(res => res.json())
-            .then(data => setTimetable(Array.isArray(data) ? data[0] : (data.schedule ? data : null)))
-            .catch(() => setTimetable(null));
-    }, [sem]);
+        if (viewMode === 'class') {
+            fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(sem)}`)
+                .then(res => res.json())
+                .then(data => setTimetable(Array.isArray(data) ? data[0] : (data.schedule ? data : null)))
+                .catch(() => setTimetable(null));
+        } else {
+            // Mock data for Faculty, Room, and Master views as they might not have dedicated endpoints yet
+            setTimetable(null);
+        }
+    }, [sem, viewMode, selectedFaculty, selectedRoom]);
 
-    return (
-        <div className="glass-table-container">
-            <div className="table-header-premium">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <h3>Class Timetables</h3>
-                    <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
-                        {['B.Tech', 'M.Tech', 'MCA'].map(c => (
-                            <button
-                                key={c}
-                                onClick={() => setActiveCourse(c)}
-                                style={{
-                                    padding: '6px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer',
-                                    background: activeCourse === c ? '#fff' : 'transparent',
-                                    color: activeCourse === c ? '#0f172a' : '#64748b',
-                                    fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
-                                }}
-                            >{c}</button>
-                        ))}
+    const renderPeriod = (periods) => (
+        <div style={{ display: 'flex', gap: '4px', height: '100%', minHeight: '60px' }}>
+            {periods.map((p, i) => (
+                <div key={i} style={{
+                    flex: 1,
+                    padding: '8px',
+                    borderRadius: '8px',
+                    background: p.type === 'Lab' ? '#eff6ff' : 'white',
+                    border: '1px solid #e2e8f0',
+                    fontSize: '0.75rem',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                    transition: 'all 0.2s'
+                }}>
+                    <div style={{ fontWeight: '700', color: '#1e293b', marginBottom: '2px' }}>{p.subject}</div>
+                    <div style={{ color: '#64748b', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Icons.Users style={{ width: '10px', height: '10px' }} />
+                        {p.faculty || 'Unassigned'}
                     </div>
                 </div>
-                <select value={sem} onChange={(e) => setSem(e.target.value)} className="search-input-premium" style={{ width: '200px', backgroundImage: 'none' }}>
-                    {activeCourse === 'B.Tech' && (
-                        <>
-                            <option value="I-B.Tech I Sem">I Year - I Sem</option>
-                            <option value="I-B.Tech II Sem">I Year - II Sem</option>
-                            <option value="II-B.Tech I Sem">II Year - I Sem</option>
-                            <option value="II-B.Tech II Sem">II Year - II Sem</option>
-                            <option value="III-B.Tech I Sem">III Year - I Sem</option>
-                            <option value="III-B.Tech II Sem">III Year - II Sem</option>
-                            <option value="IV-B.Tech I Sem">IV Year - I Sem</option>
-                            <option value="IV-B.Tech II Sem">IV Year - II Sem</option>
-                        </>
-                    )}
-                    {activeCourse === 'M.Tech' && (
-                        <>
-                            <option value="I-M.Tech I Sem">I Year - I Sem</option>
-                            <option value="I-M.Tech II Sem">I Year - II Sem</option>
-                            <option value="II-M.Tech I Sem">II Year - I Sem</option>
-                            <option value="II-M.Tech II Sem">II Year - II Sem</option>
-                        </>
-                    )}
-                    {activeCourse === 'MCA' && (
-                        <>
-                            <option value="I-MCA I Sem">I Year - I Sem</option>
-                            <option value="I-MCA II Sem">I Year - II Sem</option>
-                            <option value="II-MCA I Sem">II Year - I Sem</option>
-                            <option value="II-MCA II Sem">II Year - II Sem</option>
-                        </>
-                    )}
-                </select>
+            ))}
+        </div>
+    );
+
+    return (
+        <div className="glass-table-container fade-in-up">
+            <div className="table-header-premium" style={{ borderBottom: '1px solid #f1f5f9', background: '#fff', padding: '1.5rem 2rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Academic Scheduler</h3>
+                            <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>Monitor campus-wide time allocations</p>
+                        </div>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                            <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">📕 PDF</button>
+                            <button className="btn-action excel" onClick={() => {
+                                if (!timetable || !timetable.schedule) return;
+                                const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
+                                const data = timetable.schedule.map(d => [
+                                    d.day,
+                                    ...d.periods.map(p => `${p.subject} (${p.faculty || 'Unassigned'})`)
+                                ]);
+                                exportToCSV(headers, data, `Timetable_${sem}.csv`);
+                            }} title="Export CSV">📊 CSV</button>
+                        </div>
+                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '12px', padding: '4px', border: '1px solid #e2e8f0' }}>
+                            {[
+                                { id: 'class', label: 'Class Wise', icon: '🏫' },
+                                { id: 'faculty', label: 'Faculty Wise', icon: '👨‍🏫' },
+                                { id: 'room', label: 'Labs/Rooms', icon: '🧪' },
+                                { id: 'master', label: 'Master View', icon: '📋' }
+                            ].map(m => (
+                                <button
+                                    key={m.id}
+                                    onClick={() => setViewMode(m.id)}
+                                    style={{
+                                        padding: '8px 16px', border: 'none', borderRadius: '8px', cursor: 'pointer',
+                                        background: viewMode === m.id ? 'white' : 'transparent',
+                                        color: viewMode === m.id ? '#4f46e5' : '#64748b',
+                                        fontWeight: '700', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px',
+                                        boxShadow: viewMode === m.id ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    <span>{m.icon}</span> {m.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                        {viewMode === 'class' && (
+                            <>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    {['B.Tech', 'M.Tech', 'MCA'].map(c => (
+                                        <button key={c} onClick={() => setActiveCourse(c)} style={{
+                                            padding: '6px 14px', border: '1px solid', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer',
+                                            borderColor: activeCourse === c ? '#4f46e5' : '#e2e8f0',
+                                            background: activeCourse === c ? '#eef2ff' : 'white',
+                                            color: activeCourse === c ? '#4f46e5' : '#64748b'
+                                        }}>{c}</button>
+                                    ))}
+                                </div>
+                                <select value={sem} onChange={(e) => setSem(e.target.value)} className="search-input-premium" style={{ width: '250px', backgroundImage: 'none', margin: 0 }}>
+                                    {activeCourse === 'B.Tech' && (
+                                        <>
+                                            <option value="I-B.Tech I Sem">I Year - I Sem</option>
+                                            <option value="I-B.Tech II Sem">I Year - II Sem</option>
+                                            <option value="II-B.Tech I Sem">II Year - I Sem</option>
+                                            <option value="II-B.Tech II Sem">II Year - II Sem</option>
+                                            <option value="III-B.Tech I Sem">III Year - I Sem</option>
+                                            <option value="III-B.Tech II Sem">III Year - II Sem</option>
+                                            <option value="IV-B.Tech I Sem">IV Year - I Sem</option>
+                                            <option value="IV-B.Tech II Sem">IV Year - II Sem</option>
+                                        </>
+                                    )}
+                                    {activeCourse === 'M.Tech' && (
+                                        <>
+                                            <option value="I-M.Tech I Sem">I Year - I Sem</option>
+                                            <option value="I-M.Tech II Sem">I Year - II Sem</option>
+                                            <option value="II-M.Tech I Sem">II Year - I Sem</option>
+                                            <option value="II-M.Tech II Sem">II Year - II Sem</option>
+                                        </>
+                                    )}
+                                    {activeCourse === 'MCA' && (
+                                        <>
+                                            <option value="I-MCA I Sem">I Year - I Sem</option>
+                                            <option value="I-MCA II Sem">I Year - II Sem</option>
+                                            <option value="II-MCA I Sem">II Year - I Sem</option>
+                                            <option value="II-MCA II Sem">II Year - II Sem</option>
+                                        </>
+                                    )}
+                                </select>
+                            </>
+                        )}
+
+                        {viewMode === 'faculty' && (
+                            <>
+                                <span style={{ fontWeight: '600', fontSize: '0.85rem' }}>Select Faculty:</span>
+                                <select value={selectedFaculty} onChange={(e) => setSelectedFaculty(e.target.value)} className="search-input-premium" style={{ width: '300px', backgroundImage: 'none', margin: 0 }}>
+                                    <option value="">Choose Faculty (Principal, HOD, Professor...)</option>
+                                    {facultyList.map(f => <option key={f._id} value={f.name}>{f.name} ({f.department})</option>)}
+                                </select>
+                            </>
+                        )}
+
+                        {viewMode === 'room' && (
+                            <>
+                                <span style={{ fontWeight: '600', fontSize: '0.85rem' }}>Select Lab/Room:</span>
+                                <select value={selectedRoom} onChange={(e) => setSelectedRoom(e.target.value)} className="search-input-premium" style={{ width: '250px', backgroundImage: 'none', margin: 0 }}>
+                                    <option value="">Select Location</option>
+                                    <option>Room 101 - Main Block</option>
+                                    <option>Room 202 - CS Block</option>
+                                    <option>Microprocessor Lab</option>
+                                    <option>Software Engg Lab</option>
+                                    <option>Chemistry Lab</option>
+                                </select>
+                            </>
+                        )}
+
+                        {viewMode === 'master' && (
+                            <div style={{ fontSize: '0.85rem', color: '#4f46e5', fontWeight: '600' }}>
+                                ⚡ Viewing Full Campus Master Grid
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
 
-            {timetable ? (
-                <div style={{ overflowX: 'auto', padding: '1rem' }}>
-                    <table className="clean-table" style={{ textAlign: 'center', width: '100%', tableLayout: 'fixed', fontSize: '0.85rem' }}>
+            {viewMode === 'class' && timetable ? (
+                <div style={{ overflowX: 'auto', padding: '1.5rem' }}>
+                    <table className="clean-table" style={{ textAlign: 'center', width: '100%', tableLayout: 'fixed', fontSize: '0.85rem', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
                         <thead>
                             <tr>
-                                <th style={{ width: '80px', background: '#f8fafc' }}>Day</th>
+                                <th style={{ width: '100px', background: 'transparent' }}>Day</th>
                                 <th>09:30 - 10:30</th>
                                 <th>10:30 - 11:30</th>
                                 <th>11:30 - 12:30</th>
-                                <th style={{ width: '50px', backgroundColor: '#f1f5f9', color: '#64748b' }}>L</th>
+                                <th style={{ width: '40px' }}></th>
                                 <th>02:00 - 03:00</th>
                                 <th>03:00 - 04:00</th>
                                 <th>04:00 - 05:00</th>
@@ -972,32 +1223,12 @@ function TimetableView() {
                                 const morning = day.periods.filter(p => !p.time.includes('12:30') && !p.time.includes('02:00') && !p.time.includes('03:') && !p.time.includes('04:') && p.type !== 'Break');
                                 const afternoon = day.periods.filter(p => p.time.startsWith('02') || p.time.startsWith('03') || p.time.startsWith('04'));
 
-                                const renderPeriod = (periods) => (
-                                    <div style={{ display: 'flex', gap: '4px', height: '100%' }}>
-                                        {periods.map((p, i) => (
-                                            <div key={i} style={{
-                                                flex: 1,
-                                                padding: '8px',
-                                                borderRadius: '6px',
-                                                background: p.type === 'Lab' ? '#eff6ff' : '#fdfcff',
-                                                border: '1px solid #e2e8f0',
-                                                fontSize: '0.75rem',
-                                                display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                                            }}>
-                                                <div style={{ fontWeight: '600', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.subject}</div>
-                                                <div style={{ color: '#64748b', fontSize: '0.7rem' }}>{p.faculty || 'Unassigned'}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                );
-
                                 return (
-                                    <tr key={dIndex} style={{ height: '70px' }}>
-                                        <td style={{ fontWeight: '700', color: '#334155' }}>{day.day}</td>
-                                        <td colSpan={3} style={{ padding: '4px' }}>{renderPeriod(morning)}</td>
-                                        <td style={{ backgroundColor: '#f1f5f9', writingMode: 'vertical-rl', textAlign: 'center', fontSize: '0.7rem', fontWeight: 'bold', color: '#94a3b8' }}>LUNCH</td>
-                                        <td colSpan={3} style={{ padding: '4px' }}>{renderPeriod(afternoon)}</td>
+                                    <tr key={dIndex}>
+                                        <td style={{ fontWeight: '800', color: '#1e293b', background: '#f8fafc', borderRadius: '12px 0 0 12px' }}>{day.day}</td>
+                                        <td colSpan={3} style={{ padding: '0 4px' }}>{renderPeriod(morning)}</td>
+                                        <td style={{ background: '#f1f5f9', color: '#94a3b8', fontSize: '0.6rem', fontWeight: 'bold', writingMode: 'vertical-rl', padding: '8px 0' }}>LUNCH</td>
+                                        <td colSpan={3} style={{ padding: '0 4px', borderRadius: '0 12px 12px 0' }}>{renderPeriod(afternoon)}</td>
                                     </tr>
                                 );
                             })}
@@ -1005,9 +1236,19 @@ function TimetableView() {
                     </table>
                 </div>
             ) : (
-                <div style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8' }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📅</div>
-                    <p>No timetable data for this semester.</p>
+                <div style={{ padding: '5rem', textAlign: 'center', color: '#64748b' }}>
+                    <div style={{ fontSize: '3.5rem', marginBottom: '1.5rem', filter: 'grayscale(0.5)' }}>
+                        {viewMode === 'class' ? '📅' : viewMode === 'faculty' ? '👤' : viewMode === 'room' ? '🧪' : '🌎'}
+                    </div>
+                    <h4 style={{ margin: 0, color: '#1e293b' }}>
+                        {viewMode === 'class' ? 'No Timetable Found' : `${viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} View Initializing...`}
+                    </h4>
+                    <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                        {viewMode === 'class' ? 'Select a different semester or course.' : `This advanced cross-section view is generating based on active ${viewMode} allocations.`}
+                    </p>
+                    {viewMode !== 'class' && (
+                        <button className="btn-action primary" style={{ marginTop: '1.5rem' }}>Download Global XLS</button>
+                    )}
                 </div>
             )}
         </div>

@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
+import GlobalLoader from '../../components/GlobalLoader'
+import { exportToCSV } from '../../utils/exportUtils'
 
 // --- ICONS (Inline SVG for Premium Feel) ---
 const Icons = {
@@ -13,7 +15,8 @@ const Icons = {
     Book: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>,
     Calendar: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>,
     Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>,
-    LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></svg>
+    LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></svg>,
+    Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
 }
 
 // --- MAIN DASHBOARD COMPONENT ---
@@ -36,13 +39,17 @@ function VicePrincipalDashboard() {
     }, [activeTab]);
 
     const renderContent = () => {
+        const userStr = localStorage.getItem('user');
+        let currentUser = { name: 'Vice Principal', role: 'vice-principal' };
+        try { if (userStr && userStr !== "undefined") currentUser = JSON.parse(userStr); } catch (e) { console.error(e); }
+
         switch (activeTab) {
             case 'students': return <StudentDirectory showToast={showToast} />;
             case 'faculty': return <FacultyDirectory showToast={showToast} />;
             case 'subjects': return <CurriculumView showToast={showToast} />;
             case 'timetables': return <TimetableView showToast={showToast} />;
             case 'departments': return <DepartmentPanel showToast={showToast} />;
-            case 'notices': return <CommunicationCenter user={user} showToast={showToast} />;
+            case 'notices': return <CommunicationCenter user={currentUser} showToast={showToast} />;
             default: return <DashboardOverview onNavigate={setActiveTab} />;
         }
     };
@@ -79,7 +86,7 @@ function VicePrincipalDashboard() {
                         <button
                             onClick={() => {
                                 localStorage.removeItem('user');
-                                navigate('/login', { replace: true });
+                                window.location.href = '/login';
                             }}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
                             title="Logout"
@@ -145,7 +152,9 @@ function NavItem({ icon, label, active, onClick }) {
     );
 }
 
-import GlobalLoader from '../../components/GlobalLoader'
+
+// Removed mid-file import to prevent SyntaxError
+
 
 // --- SUB-COMPONENTS ---
 
@@ -272,7 +281,7 @@ function PremiumStatCard({ title, value, icon, color, trend, trendType }) {
 }
 
 // --- DEPARTMENT MANAGER ---
-function DepartmentPanel() {
+function DepartmentPanel({ showToast }) {
     const [departments, setDepartments] = useState([]);
     const [faculty, setFaculty] = useState([]);
     const [editingDept, setEditingDept] = useState(null);
@@ -342,14 +351,24 @@ function DepartmentPanel() {
         }
     };
 
+    const handleExportCSV = () => {
+        const headers = ['Department Name', 'HOD Name'];
+        const data = departments.map(d => [d.name, d.hodName || 'Not Assigned']);
+        exportToCSV(headers, data, 'Departments_Report.csv');
+    };
+
     return (
-        <div className="glass-table-container">
+        <div className="glass-table-container fade-in-up">
             <div className="table-header-premium">
                 <div>
-                    <h3>Department Management</h3>
+                    <h3 style={{ margin: 0 }}>Department Management</h3>
                     <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>Manage departments and assign leadership (HODs)</p>
                 </div>
-                <button className="btn-action primary" onClick={() => setShowAddModal(true)}>+ Add Department</button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button className="btn-action excel" onClick={handleExportCSV} title="Export CSV">📊 CSV</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                    <button className="btn-action primary" onClick={() => setShowAddModal(true)}>+ Add Department</button>
+                </div>
             </div>
             <table className="premium-table">
                 <thead>
@@ -438,7 +457,7 @@ function DepartmentPanel() {
 }
 
 // --- STUDENT DIRECTORY ---
-function StudentDirectory() {
+function StudentDirectory({ showToast }) {
     const [students, setStudents] = useState([]);
     const [search, setSearch] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -536,6 +555,12 @@ function StudentDirectory() {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
+                        <button className="btn-action excel" onClick={() => {
+                            const headers = ['Roll Number', 'Name', 'Course', 'Year', 'Semester', 'Department'];
+                            const data = filtered.map(s => [s.rollNumber, s.name, s.course, s.year, s.semester, s.department]);
+                            exportToCSV(headers, data, `Students_${activeCourse}.csv`);
+                        }} title="Export CSV">📊 CSV</button>
+                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                         <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Student</button>
                     </div>
                 </div>
@@ -661,7 +686,15 @@ function FacultyDirectory() {
         <div className="glass-table-container">
             <div className="table-header-premium">
                 <h3>Faculty Directory</h3>
-                <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Faculty</button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button className="btn-action excel" onClick={() => {
+                        const headers = ['Name', 'Email', 'Designation', 'Department', 'Mobile'];
+                        const data = faculty.map(f => [f.name, f.email, f.designation, f.department, f.mobileNumber]);
+                        exportToCSV(headers, data, 'Faculty_Directory.csv');
+                    }} title="Export CSV">📊 CSV</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                    <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Faculty</button>
+                </div>
             </div>
             <table className="premium-table">
                 <thead>

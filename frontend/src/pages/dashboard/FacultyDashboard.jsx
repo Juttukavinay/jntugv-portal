@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
+import GlobalLoader from '../../components/GlobalLoader'
+import { exportToCSV } from '../../utils/exportUtils'
+import { createPortal } from 'react-dom'
 
 // --- ICONS (Consistent with Principal) ---
 const Icons = {
@@ -62,13 +65,31 @@ function FacultyDashboard() {
                             <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Faculty</div>
                         </div>
                         <button
-                            onClick={() => { localStorage.removeItem('user'); navigate('/login', { replace: true }); }}
+                            onClick={() => { localStorage.removeItem('user'); window.location.href = '/login'; }}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
                             title="Logout"
                         >
                             <Icons.LogOut />
                         </button>
                     </div>
+
+                    {/* Switch back to Principal View if applicable */}
+                    {currentUser?.name === 'Dr. Principal' && (
+                        <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                            <button
+                                onClick={() => {
+                                    const user = JSON.parse(localStorage.getItem('user'));
+                                    user.role = 'principal';
+                                    localStorage.setItem('user', JSON.stringify(user));
+                                    navigate('/dashboard/principal');
+                                }}
+                                className="btn-action primary"
+                                style={{ width: '100%', fontSize: '0.8rem', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600' }}
+                            >
+                                <span>🏛️ Principal Control Panel</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             </aside>
 
@@ -243,7 +264,14 @@ function SectionStudentList() {
         <div className="glass-table-container">
             <div className="table-header-premium">
                 <h3>My Students (CSE - III Year)</h3>
-                <button className="btn-action">Export List</button>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <button className="btn-action excel" onClick={() => {
+                        const headers = ['Roll No', 'Name', 'Year', 'Semester'];
+                        const data = students.map(s => [s.rollNumber, s.name, s.year, s.semester]);
+                        exportToCSV(headers, data, 'Student_List_Section.csv');
+                    }} title="Export CSV">📊 CSV</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                </div>
             </div>
             <table className="premium-table">
                 <thead>
@@ -269,8 +297,9 @@ function SectionStudentList() {
     )
 }
 
-import GlobalLoader from '../../components/GlobalLoader'
-import { createPortal } from 'react-dom'
+
+// Removed mid-file imports to prevent SyntaxError
+
 
 function FacultyTimetable({ currentUser, showToast }) {
     const [timetable, setTimetable] = useState(null)
@@ -372,6 +401,15 @@ function FacultyTimetable({ currentUser, showToast }) {
             <div className="table-header-premium">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <h3>Class Timetable (Book Slots)</h3>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                    <button className="btn-action excel" onClick={() => {
+                        if (!timetable || !timetable.schedule) return;
+                        const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
+                        const data = timetable.schedule.map(d => [d.day, ...d.periods.map(p => `${p.subject} (${p.faculty || 'NA'})`)]);
+                        exportToCSV(headers, data, `Timetable_${selectedSemester}.csv`);
+                    }} title="Export CSV">📊 CSV</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                     <select
                         value={selectedSemester}
                         onChange={(e) => setSelectedSemester(e.target.value)}
@@ -519,17 +557,19 @@ function FacultyTimetable({ currentUser, showToast }) {
             </div>
 
             {/* ALLOCATION MODAL */}
-            {isAllocationModalOpen && bookingSlot && createPortal(
-                <AllocationModal
-                    slot={bookingSlot}
-                    currentUser={currentUser}
-                    showToast={showToast}
-                    onClose={() => setIsAllocationModalOpen(false)}
-                    onSuccess={handleAllocationSuccess}
-                />,
-                document.body
-            )}
-        </div>
+            {
+                isAllocationModalOpen && bookingSlot && createPortal(
+                    <AllocationModal
+                        slot={bookingSlot}
+                        currentUser={currentUser}
+                        showToast={showToast}
+                        onClose={() => setIsAllocationModalOpen(false)}
+                        onSuccess={handleAllocationSuccess}
+                    />,
+                    document.body
+                )
+            }
+        </div >
     )
 }
 
@@ -664,7 +704,7 @@ function AttendanceManager() {
     const [selectedRoom, setSelectedRoom] = useState('');
     const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
     const [students, setStudents] = useState([]);
-    const [attendanceData, setAttendanceData] = useState({}); // { studentId: 'Present' | 'Absent' }
+    const [attendanceData, setAttendanceData] = useState({}); // {studentId: 'Present' | 'Absent' }
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);

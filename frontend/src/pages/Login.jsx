@@ -103,6 +103,9 @@ function Login() {
         const user = { email: userEmail, role, name, semester };
         localStorage.setItem('user', JSON.stringify(user));
 
+        // Notify the app of the auth change immediately
+        window.dispatchEvent(new Event('auth-change'));
+
         const cleanRole = role ? role.trim().toLowerCase() : '';
         const routes = {
             'admin': '/dashboard/admin',
@@ -114,7 +117,8 @@ function Login() {
         }
 
         if (routes[cleanRole]) {
-            navigate(routes[cleanRole])
+            // FORCE FIX: Use window.location.href for a hard reload to prevent "white page" issues
+            window.location.href = routes[cleanRole];
         } else {
             setError(`Unknown Role: ${role}`)
             setLoading(false)
@@ -128,15 +132,16 @@ function Login() {
             vice_principal: { email: 'viceprincipal@jntugv.edu', password: 'Jntugv@2024' },
             hod: { email: 'drch1@jntugv.edu.in', password: '9876543201' },
             faculty: { email: 'mranilwurity5@jntugv.edu.in', password: '9876543205' },
-            student: { email: '23vv5a1201@jntugv.edu', password: 'password' }
+            student: { email: '23vv5a1201@jntugv.edu', password: 'password' },
+            princ_fac: { email: 'principal@jntugv.edu', password: 'Jntugv@2024' }
         }
         if (demos[role]) setCredentials(demos[role])
     }
 
     return (
-        <div className="login-container" style={{ backgroundImage: bgImage ? `url("${bgImage}")` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+        <div className="login-container">
             {/* Left Side - Image (Hidden on Mobile) */}
-            <div className="login-hero-section" style={{ backgroundImage: bgImage ? `url("${bgImage}")` : 'none', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+            <div className="login-hero-section">
                 <div className="login-hero-overlay"></div>
                 <div className="hero-content">
                     <h1 className="hero-title">
@@ -181,7 +186,6 @@ function Login() {
                                 placeholder="Enter your ID"
                                 value={credentials.email}
                                 onChange={handleChange}
-                                style={{ background: 'rgba(255,255,255,0.5)' }}
                             />
                         </div>
 
@@ -196,7 +200,6 @@ function Login() {
                                 placeholder="••••••••"
                                 value={credentials.password}
                                 onChange={handleChange}
-                                style={{ background: 'rgba(255,255,255,0.5)' }}
                             />
                         </div>
 
@@ -204,7 +207,6 @@ function Login() {
                             type="submit"
                             disabled={loading}
                             className="btn-primary"
-                            style={{ padding: '1.2rem', fontSize: '1.1rem', marginTop: '1.5rem' }}
                         >
                             {loading ? 'Verifying...' : 'Authorize Access'}
                         </button>
@@ -219,10 +221,9 @@ function Login() {
                             style={{
                                 width: '100%',
                                 padding: '0.8rem',
-                                border: '1px solid rgba(0,0,0,0.1)',
-                                borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.6)',
-                                backdropFilter: 'blur(10px)',
+                                border: '1px solid var(--border-light)',
+                                borderRadius: 'var(--radius-md)',
+                                background: '#ffffff',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -231,16 +232,7 @@ function Login() {
                                 fontSize: '1rem',
                                 color: '#1e293b',
                                 fontWeight: '600',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
-                            }}
-                            onMouseOver={(e) => {
-                                e.currentTarget.style.background = 'rgba(255,255,255,0.9)';
-                                e.currentTarget.style.transform = 'translateY(-2px)';
-                            }}
-                            onMouseOut={(e) => {
-                                e.currentTarget.style.background = 'rgba(255,255,255,0.6)';
-                                e.currentTarget.style.transform = 'translateY(0)';
+                                transition: 'all 0.2s',
                             }}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" /><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" /><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" /><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" /></svg>
@@ -255,10 +247,11 @@ function Login() {
                             <div className="divider-line" style={{ background: 'rgba(0,0,0,0.1)' }}></div>
                         </div>
                         <div className="demo-grid">
-                            <button onClick={() => fillDemo('admin')} className="demo-btn" style={{ background: '#0f172a', color: 'white', border: 'none' }}>Admin System</button>
+                            <button onClick={() => fillDemo('admin')} className="demo-btn" style={{ background: 'var(--primary)', color: 'white', border: 'none' }}>Admin System</button>
                             <button onClick={() => fillDemo('principal')} className="demo-btn">Principal</button>
                             <button onClick={() => fillDemo('hod')} className="demo-btn">HOD Office</button>
                             <button onClick={() => fillDemo('faculty')} className="demo-btn">Faculty Portal</button>
+                            <button onClick={() => fillDemo('princ_fac')} className="demo-btn" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#1e293b' }}>Principal (Dual Role)</button>
                             <button onClick={() => fillDemo('student')} className="demo-btn">Student Desk</button>
                         </div>
                     </div>

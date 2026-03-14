@@ -4,6 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
+import GlobalLoader from '../../components/GlobalLoader'
+import { exportToCSV } from '../../utils/exportUtils'
 
 // --- ICONS (Inline SVG for Premium Look) ---
 const Icons = {
@@ -91,7 +93,7 @@ function HodDashboard() {
                         <button
                             onClick={() => {
                                 localStorage.removeItem('user');
-                                navigate('/login', { replace: true });
+                                window.location.href = '/login';
                             }}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
                             title="Logout"
@@ -157,7 +159,9 @@ function NavItem({ icon, label, active, onClick }) {
     );
 }
 
-import GlobalLoader from '../../components/GlobalLoader'
+
+// Removed mid-file import to prevent SyntaxError
+
 
 // --- OVERVIEW COMPONENT ---
 function HodOverview({ onNavigate, user }) {
@@ -663,7 +667,28 @@ function TimetableManager({ showToast }) {
                             <option value="I-M.Tech I Sem">M.Tech I-I</option><option value="I-M.Tech II Sem">M.Tech I-II</option>
                             <option value="I-MCA I Sem">MCA I-I</option><option value="I-MCA II Sem">MCA I-II</option>
                         </select>
-                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                            <button className="btn-action excel" onClick={() => {
+                                if (!timetable || !timetable.schedule) return;
+                                const headers = ['Day', '09:30-10:30', '10:30-11:30', '11:30-12:30', '02:00-03:00', '03:00-04:00', '04:00-05:00'];
+                                const data = timetable.schedule.map(d => {
+                                    const row = [d.day];
+                                    // Assuming periods are ordered and correspond to the headers, skipping lunch
+                                    const periodMap = {};
+                                    d.periods.forEach(p => {
+                                        periodMap[p.time] = `${p.subject || '-'} (${p.faculty || 'NA'})`;
+                                    });
+                                    row.push(periodMap['09:30-10:30'] || '-');
+                                    row.push(periodMap['10:30-11:30'] || '-');
+                                    row.push(periodMap['11:30-12:30'] || '-');
+                                    row.push(periodMap['02:00-03:00'] || '-');
+                                    row.push(periodMap['03:00-04:00'] || '-');
+                                    row.push(periodMap['04:00-05:00'] || '-');
+                                    return row;
+                                });
+                                exportToCSV(headers, data, `Timetable_${selectedSemester}.csv`);
+                            }} title="Export CSV">📊 CSV</button>
+                            <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">📕 PDF</button>
                             <button className="btn-action" onClick={() => setShowSettings(true)}>⚙️ Settings</button>
                             <button className="btn-action primary" onClick={generateTimetable} disabled={loading}>{loading ? 'Generating...' : '⚡ Auto-Generate'}</button>
                             {timetable && (
@@ -830,6 +855,12 @@ function SubjectsManager({ facultyList, showToast }) {
                             {isUploading ? '⏳...' : '📄 UP/CSV'}
                             <input type="file" accept=".pdf, .csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isUploading} />
                         </label>
+                        <button className="btn-action excel" onClick={() => {
+                            const headers = ['S.No', 'Category', 'Course Code', 'Course Name', 'L', 'T', 'P', 'Credits', 'Semester'];
+                            const data = editRows.map(r => [r.sNo, r.category, r.courseCode, r.courseName, r.L, r.T, r.P, r.credits, r.semester]);
+                            exportToCSV(headers, data, `Subjects_${semesterName}.csv`);
+                        }} title="Export CSV">📊 CSV</button>
+                        <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">📕 PDF</button>
                         <button className="btn-action primary" onClick={saveSubjects}>💾 Save Changes</button>
                     </div>
                 </div>
