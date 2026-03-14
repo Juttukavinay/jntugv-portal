@@ -62,6 +62,88 @@ const functions = {
             priority: 'normal'
         });
         return { success: true, message: `New notice "${title}" has been posted successfully.` };
+    },
+    // Timetable Functions
+    get_timetable: async ({ semester }) => {
+        const Timetable = require('../models/timetableModel');
+        const tt = await Timetable.findOne({ className: semester });
+        if (!tt) return { error: `No timetable found for ${semester}` };
+        
+        // Summarize to save tokens
+        let summary = [];
+        tt.schedule.forEach(d => {
+            summary.push(`Day: ${d.day}`);
+            d.periods.forEach(p => {
+                if (p.subject !== '-') {
+                    summary.push(`  - ${p.time}: ${p.subject} (${p.faculty || 'Unassigned'}) [${p.type}]`);
+                }
+            });
+        });
+        return { semester: tt.className, schedule: summary.join('\n') };
+    },
+    get_faculty_timetable: async ({ facultyName }) => {
+        const Timetable = require('../models/timetableModel');
+        const timetables = await Timetable.find({});
+        let myPeriods = [];
+        timetables.forEach(tt => {
+            if (!tt.schedule) return;
+            tt.schedule.forEach(day => {
+                day.periods.forEach(p => {
+                    if (p.faculty === facultyName || (p.assistants && p.assistants.includes(facultyName))) {
+                        myPeriods.push(`${tt.className} | ${day.day} | ${p.time} | ${p.subject} | ${p.room || 'No Room'}`);
+                    }
+                });
+            });
+        });
+        if (myPeriods.length === 0) return { message: `No classes found for ${facultyName}` };
+        return { classes: myPeriods.join('\n') };
+    },
+    suggest_timetable_fix: async ({ semester, subject }) => {
+        // AI can just get the timetable and ask to look for free spaces, 
+        // but providing a list of all timetables is too big. 
+        // We can just return the timetable and tell AI to suggest.
+        const Timetable = require('../models/timetableModel');
+        const timetables = await Timetable.find({});
+        const target = timetables.find(t => t.className === semester);
+        if (!target) return { error: "Timetable not found" };
+
+        let freeSlots = [];
+        target.schedule.forEach(d => {
+            d.periods.forEach(p => {
+                if (p.subject === '-' || p.type === 'Free' || p.type === 'Activity') {
+                    freeSlots.push(`${d.day} ${p.time} (Type: ${p.type})`);
+                }
+            });
+        });
+        return { 
+            message: `Here are the currently Free or Activity slots in ${semester} where you might place '${subject}':\n` + freeSlots.join('\n'),
+            instruction: "You can suggest the user to use one of these slots."
+        };
+    },
+    check_faculty_clashes: async ({ facultyName }) => {
+        const Timetable = require('../models/timetableModel');
+        const timetables = await Timetable.find({});
+        let scheduleTracker = {};
+        let clashes = [];
+
+        timetables.forEach(tt => {
+            if(!tt.schedule) return;
+            tt.schedule.forEach(day => {
+                day.periods.forEach(p => {
+                    if (p.faculty === facultyName || (p.assistants && p.assistants.includes(facultyName))) {
+                        const timeKey = `${day.day} ${p.time}`;
+                        if (scheduleTracker[timeKey]) {
+                            clashes.push(`CLASH: ${facultyName} is assigned to both ${scheduleTracker[timeKey]} AND ${tt.className} at ${timeKey}`);
+                        } else {
+                            scheduleTracker[timeKey] = tt.className;
+                        }
+                    }
+                });
+            });
+        });
+        
+        if (clashes.length > 0) return { status: "Clashes Found", details: clashes.join('\n') };
+        return { status: "No Clashes", message: `${facultyName} has a clear schedule with no overlaps.` };
     }
 };
 
@@ -137,6 +219,51 @@ router.post('/', async (req, res) => {
                                     targetDepartment: { type: "STRING", description: "Specific department or 'All'" }
                                 },
                                 required: ["title", "content"]
+                            }
+                        },
+                        {
+                            name: "get_timetable",
+                            description: "Get the timetable for a specific semester/class",
+                            parameters: {
+                                type: "OBJECT",
+                                properties: {
+                                    semester: { type: "STRING", description: "The name of the semester/class, e.g., 'I-B.Tech I Sem', 'I-MCA I Sem', etc." }
+                                },
+                                required: ["semester"]
+                            }
+                        },
+                        {
+                            name: "get_faculty_timetable",
+                            description: "Get all classes and slots assigned to a specific faculty member",
+                            parameters: {
+                                type: "OBJECT",
+                                properties: {
+                                    facultyName: { type: "STRING", description: "The name of the faculty member" }
+                                },
+                                required: ["facultyName"]
+                            }
+                        },
+                        {
+                            name: "suggest_timetable_fix",
+                            description: "Get a list of currently free empty slots to suggest placing a unallocated subject in a semester's timetable",
+                            parameters: {
+                                type: "OBJECT",
+                                properties: {
+                                    semester: { type: "STRING", description: "The semester/class name" },
+                                    subject: { type: "STRING", description: "The unallocated subject code or name" }
+                                },
+                                required: ["semester", "subject"]
+                            }
+                        },
+                        {
+                            name: "check_faculty_clashes",
+                            description: "Analyze the global timetable to find if a faculty member has any scheduling overlaps or double-bookings",
+                            parameters: {
+                                type: "OBJECT",
+                                properties: {
+                                    facultyName: { type: "STRING", description: "The name of the faculty member" }
+                                },
+                                required: ["facultyName"]
                             }
                         }
                     ],

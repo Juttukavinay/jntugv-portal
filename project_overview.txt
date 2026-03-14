@@ -1,0 +1,59 @@
+==================================================
+        JNTU-GV ACADEMIC MANAGEMENT PORTAL
+             (E-OFFICE DASHBOARD)
+==================================================
+
+PROJECT OVERVIEW
+-----------------
+The JNTU-GV Academic Management Portal is a comprehensive, full-stack web application designed to digitalize and streamline the academic and administrative workflows for Jawaharlal Nehru Technological University - Gurjada, Vizianagaram. 
+
+Built with scalability, security, and a premium user experience in mind, this platform serves as a modern E-Office for all university stakeholders.
+
+TECHNOLOGY STACK
+-----------------
+* Frontend: React.js (built with Vite), React Router, Context API, CSS (Custom White/Blue/Green Theme)
+* Backend: Node.js, Express.js
+* Database: MongoDB Atlas (Mongoose ODM)
+* AI Integration: Google Gemini AI API (gemini-flash-latest)
+
+CORE FEATURES & MODULES
+------------------------
+1. Role-Based Access Control (RBAC)
+   Secure login system with designated portals for 6 core roles: 
+   - Admin
+   - Principal
+   - Vice-Principal
+   - Head of Department (HOD)
+   - Faculty
+   - Student
+
+2. Dynamic Timetable Generation Engine
+   - Algorithmic timetable generation supporting dynamic, 1-hour, or 2-hour slot distributions.
+   - Comprehensive Conflict Detection: Validates lab placements, preventing double-bookings and enforcing cross-class restrictions (e.g., English Labs cannot overlap).
+   - Workload Management: Tracks faculty teaching hours and enforces maximum limits based on designation.
+
+3. AI-Powered Assistant (Gemini Bot)
+   - Context-aware chatbot built directly into the UI.
+   - Can answer general queries and assist users by analyzing their role context. It has built-in quota/fallback handlers designed around the GEMINI API limits.
+
+4. Real-time Dashboard Analytics
+   - "Glassmorphism" styled UI delivering real-time stat summaries (faculty counts, student allocations, schedule tracking). 
+   - Complete export capabilities (PDF, CSV generation) for administrative reporting.
+
+5. Attendance & Student Management
+   - Quick attendance markdown interface for faculty.
+   - Student rosters strictly segregated by Department and Semester.
+
+6. Communication & Notice Center
+   - Built-in notification mechanisms allowing hierarchical broadcasting (e.g., Principal to Faculty).
+
+RECENT UPDATES
+---------------
+- Revamped UI to a clean, highly professional White, Blue, and Emerald Green theme.
+- Updated English Lab mapping constraints in the Timetable Engine to ensure no global overlaps.
+- Enhanced Landing Page navigation by adding a direct "Sign Out" option for shared-device security.
+- Hardened Vercel/Render frontend/backend connection paths.
+
+==================================================
+Generated on: March 2026
+==================================================
