@@ -74,7 +74,16 @@ function Landing({ user }) {
 
                 <div className="nav-actions desktop-only">
                     {user ? (
-                        <Link to={getDashboardPath(user.role)} className="btn-glow">Dashboard</Link>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <Link to={getDashboardPath(user.role)} className="btn-glow">Dashboard</Link>
+                            <button 
+                                onClick={() => { localStorage.removeItem('user'); window.dispatchEvent(new Event('auth-change')); window.location.href = '/login'; }} 
+                                className="btn-outline-lg" 
+                                style={{ padding: '0.6rem 1.2rem', fontSize: '0.9rem', color: 'var(--primary)', borderColor: 'var(--primary)' }}
+                            >
+                                Sign Out
+                            </button>
+                        </div>
                     ) : (
                         <Link to="/login" className="btn-glow">Sign In</Link>
                     )}
@@ -92,8 +101,21 @@ function Landing({ user }) {
                         <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
                         <Link to="/departments" onClick={() => setIsMobileMenuOpen(false)}>Departments</Link>
                         <a href="#features" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
-                        <hr style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
-                        <Link to="/login" className="btn-mobile">Login</Link>
+                        <hr style={{ borderColor: 'rgba(0,0,0,0.1)' }} />
+                        {user ? (
+                            <>
+                                <Link to={getDashboardPath(user.role)} className="btn-mobile" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Link>
+                                <button 
+                                    onClick={() => { localStorage.removeItem('user'); window.dispatchEvent(new Event('auth-change')); window.location.href = '/login'; }} 
+                                    className="btn-mobile"
+                                    style={{ background: 'transparent', color: 'var(--primary)', border: '1px solid var(--primary)', marginTop: '0.5rem' }}
+                                >
+                                    Sign Out
+                                </button>
+                            </>
+                        ) : (
+                            <Link to="/login" className="btn-mobile" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+                        )}
                     </div>
                 )}
             </nav>
