@@ -264,12 +264,21 @@ function SectionStudentList() {
         <div className="glass-table-container">
             <div className="table-header-premium">
                 <h3>My Students (CSE - III Year)</h3>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn-action excel" onClick={() => {
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
+                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) alert('CSV Upload triggered for ' + e.target.files[0].name); }} />
+                            📤 Upload CSV
+                        </label>
+                        <button className="btn-action csv-dl" onClick={() => {
                         const headers = ['Roll No', 'Name', 'Year', 'Semester'];
                         const data = students.map(s => [s.rollNumber, s.name, s.year, s.semester]);
                         exportToCSV(headers, data, 'Student_List_Section.csv');
-                    }} title="Export CSV">📊 CSV</button>
+                    }} title="Export CSV">📄 CSV</button>
+                        <button className="btn-action excel" onClick={() => {
+                        const headers = ['Roll No', 'Name', 'Year', 'Semester'];
+                        const data = students.map(s => [s.rollNumber, s.name, s.year, s.semester]);
+                        exportToCSV(headers, data, 'Student_List_Section.csv');
+                    }} title="Export Excel">📊 Excel</button>
                     <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                 </div>
             </div>
@@ -402,13 +411,23 @@ function FacultyTimetable({ currentUser, showToast }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <h3>Class Timetable (Book Slots)</h3>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                    <button className="btn-action excel" onClick={() => {
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
+                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) alert('CSV Upload triggered for ' + e.target.files[0].name); }} />
+                            📤 Upload CSV
+                        </label>
+                        <button className="btn-action csv-dl" onClick={() => {
                         if (!timetable || !timetable.schedule) return;
                         const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
                         const data = timetable.schedule.map(d => [d.day, ...d.periods.map(p => `${p.subject} (${p.faculty || 'NA'})`)]);
                         exportToCSV(headers, data, `Timetable_${selectedSemester}.csv`);
-                    }} title="Export CSV">📊 CSV</button>
+                    }} title="Export CSV">📄 CSV</button>
+                        <button className="btn-action excel" onClick={() => {
+                        if (!timetable || !timetable.schedule) return;
+                        const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
+                        const data = timetable.schedule.map(d => [d.day, ...d.periods.map(p => `${p.subject} (${p.faculty || 'NA'})`)]);
+                        exportToCSV(headers, data, `Timetable_${selectedSemester}.csv`);
+                    }} title="Export Excel">📊 Excel</button>
                     <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                     <select
                         value={selectedSemester}

@@ -135,7 +135,7 @@ function AdminOverview({ onNavigate }) {
                     <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Super Admin Dashboard 🛡️</h1>
                     <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Total system control and monitoring overview.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">📕 System PDF</button>
                 </div>
             </div>
@@ -189,12 +189,21 @@ function UserManagement({ showToast }) {
         <div className="glass-table-container">
             <div className="table-header-premium">
                 <h3>System User Registry</h3>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn-action excel" onClick={() => {
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
+                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) alert('CSV Upload triggered for ' + e.target.files[0].name); }} />
+                            📤 Upload CSV
+                        </label>
+                        <button className="btn-action csv-dl" onClick={() => {
                         const headers = ['User Type', 'Access Level', 'Permissions'];
                         const data = [['Admin (Root)', 'Super User', 'Full Write/Delete'], ['Principal', 'Academic Admin', 'Dept Level Manage'], ['Faculty', 'Instructional', 'Course Management'], ['Student', 'Consumer', 'Read Only + Forms']];
                         exportToCSV(headers, data, 'System_Roles.csv');
-                    }} title="Export CSV">📊 CSV</button>
+                    }} title="Export CSV">📄 CSV</button>
+                        <button className="btn-action excel" onClick={() => {
+                        const headers = ['User Type', 'Access Level', 'Permissions'];
+                        const data = [['Admin (Root)', 'Super User', 'Full Write/Delete'], ['Principal', 'Academic Admin', 'Dept Level Manage'], ['Faculty', 'Instructional', 'Course Management'], ['Student', 'Consumer', 'Read Only + Forms']];
+                        exportToCSV(headers, data, 'System_Roles.csv');
+                    }} title="Export Excel">📊 Excel</button>
                     <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                     <button className="btn-action primary" onClick={() => showToast('Audit feature coming soon!')}>Audit All</button>
                 </div>

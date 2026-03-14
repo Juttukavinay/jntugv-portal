@@ -1824,6 +1824,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap; /* Added for mobile responsivenes */
+  gap: 1rem;
 }
 
 .premium-table {
@@ -1874,6 +1876,18 @@
   background: #f0fdf4;
   color: #166534;
   border-color: #bbf7d0;
+}
+
+.btn-action.csv-dl {
+  background: #fdf4ff;
+  color: #86198f;
+  border-color: #f5d0fe;
+}
+
+.btn-action.upload {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
 }
 
 .btn-action.pdf {

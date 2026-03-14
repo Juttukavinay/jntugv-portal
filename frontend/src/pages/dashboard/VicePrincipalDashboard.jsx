@@ -364,8 +364,13 @@ function DepartmentPanel({ showToast }) {
                     <h3 style={{ margin: 0 }}>Department Management</h3>
                     <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>Manage departments and assign leadership (HODs)</p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn-action excel" onClick={handleExportCSV} title="Export CSV">📊 CSV</button>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
+                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) alert('CSV Upload triggered for ' + e.target.files[0].name); }} />
+                            📤 Upload CSV
+                        </label>
+                        <button className="btn-action csv-dl" onClick={handleExportCSV} title="Export CSV">📄 CSV</button>
+                        <button className="btn-action excel" onClick={handleExportCSV} title="Export Excel">📊 Excel</button>
                     <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                     <button className="btn-action primary" onClick={() => setShowAddModal(true)}>+ Add Department</button>
                 </div>
@@ -555,11 +560,20 @@ function StudentDirectory({ showToast }) {
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                         />
+                        <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
+                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) alert('CSV Upload triggered for ' + e.target.files[0].name); }} />
+                            📤 Upload CSV
+                        </label>
+                        <button className="btn-action csv-dl" onClick={() => {
+                            const headers = ['Roll Number', 'Name', 'Course', 'Year', 'Semester', 'Department'];
+                            const data = filtered.map(s => [s.rollNumber, s.name, s.course, s.year, s.semester, s.department]);
+                            exportToCSV(headers, data, `Students_${activeCourse}.csv`);
+                        }} title="Export CSV">📄 CSV</button>
                         <button className="btn-action excel" onClick={() => {
                             const headers = ['Roll Number', 'Name', 'Course', 'Year', 'Semester', 'Department'];
                             const data = filtered.map(s => [s.rollNumber, s.name, s.course, s.year, s.semester, s.department]);
                             exportToCSV(headers, data, `Students_${activeCourse}.csv`);
-                        }} title="Export CSV">📊 CSV</button>
+                        }} title="Export Excel">📊 Excel</button>
                         <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                         <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Student</button>
                     </div>
@@ -686,12 +700,21 @@ function FacultyDirectory() {
         <div className="glass-table-container">
             <div className="table-header-premium">
                 <h3>Faculty Directory</h3>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn-action excel" onClick={() => {
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
+                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) alert('CSV Upload triggered for ' + e.target.files[0].name); }} />
+                            📤 Upload CSV
+                        </label>
+                        <button className="btn-action csv-dl" onClick={() => {
                         const headers = ['Name', 'Email', 'Designation', 'Department', 'Mobile'];
                         const data = faculty.map(f => [f.name, f.email, f.designation, f.department, f.mobileNumber]);
                         exportToCSV(headers, data, 'Faculty_Directory.csv');
-                    }} title="Export CSV">📊 CSV</button>
+                    }} title="Export CSV">📄 CSV</button>
+                        <button className="btn-action excel" onClick={() => {
+                        const headers = ['Name', 'Email', 'Designation', 'Department', 'Mobile'];
+                        const data = faculty.map(f => [f.name, f.email, f.designation, f.department, f.mobileNumber]);
+                        exportToCSV(headers, data, 'Faculty_Directory.csv');
+                    }} title="Export Excel">📊 Excel</button>
                     <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                     <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Faculty</button>
                 </div>

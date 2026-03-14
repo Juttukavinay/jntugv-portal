@@ -133,12 +133,21 @@ function StudentDashboard() {
             <div className="glass-table-container">
                 <div className="table-header-premium">
                     <h3>My Subjects (Current Sem)</h3>
-                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
+                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) alert('CSV Upload triggered for ' + e.target.files[0].name); }} />
+                            📤 Upload CSV
+                        </label>
+                        <button className="btn-action csv-dl" onClick={() => {
+                            const headers = ['Subject Name', 'Credits'];
+                            const data = [['Data Structures', '3'], ['Cloud Computing', '3'], ['Machine Learning', '3'], ['English', '3']];
+                            exportToCSV(headers, data, 'My_Subjects.csv');
+                        }} title="Export CSV">📄 CSV</button>
                         <button className="btn-action excel" onClick={() => {
                             const headers = ['Subject Name', 'Credits'];
                             const data = [['Data Structures', '3'], ['Cloud Computing', '3'], ['Machine Learning', '3'], ['English', '3']];
                             exportToCSV(headers, data, 'My_Subjects.csv');
-                        }} title="Export CSV">📊 CSV</button>
+                        }} title="Export Excel">📊 Excel</button>
                         <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                     </div>
                 </div>
@@ -166,13 +175,23 @@ function StudentDashboard() {
                     <h3>Weekly Class Schedule</h3>
                     <span className="badge-role" style={{ background: '#eff6ff', color: '#3b82f6' }}>{currentUser?.semester}</span>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn-action excel" onClick={() => {
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
+                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) alert('CSV Upload triggered for ' + e.target.files[0].name); }} />
+                            📤 Upload CSV
+                        </label>
+                        <button className="btn-action csv-dl" onClick={() => {
                         if (!myTimetable.length) return;
                         const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
                         const data = myTimetable.map(d => [d.day, ...d.periods.map(p => p.subject)]);
                         exportToCSV(headers, data, 'My_Timetable.csv');
-                    }} title="Export CSV">📊 CSV</button>
+                    }} title="Export CSV">📄 CSV</button>
+                        <button className="btn-action excel" onClick={() => {
+                        if (!myTimetable.length) return;
+                        const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
+                        const data = myTimetable.map(d => [d.day, ...d.periods.map(p => p.subject)]);
+                        exportToCSV(headers, data, 'My_Timetable.csv');
+                    }} title="Export Excel">📊 Excel</button>
                     <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                 </div>
             </div>
@@ -229,12 +248,21 @@ function StudentDashboard() {
         <div className="glass-table-container fade-in-up">
             <div className="table-header-premium">
                 <h3>Library Books</h3>
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    <button className="btn-action excel" onClick={() => {
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
+                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) alert('CSV Upload triggered for ' + e.target.files[0].name); }} />
+                            📤 Upload CSV
+                        </label>
+                        <button className="btn-action csv-dl" onClick={() => {
                         const headers = ['Book Title', 'Author', 'Due Date', 'Status'];
                         const data = [['Intro to Algorithms', 'Cormen', '25 Jan 2026', 'Due Soon'], ['Clean Code', 'Uncle Bob', '02 Feb 2026', 'Borrowed']];
                         exportToCSV(headers, data, 'Library_Records.csv');
-                    }} title="Export CSV">📊 CSV</button>
+                    }} title="Export CSV">📄 CSV</button>
+                        <button className="btn-action excel" onClick={() => {
+                        const headers = ['Book Title', 'Author', 'Due Date', 'Status'];
+                        const data = [['Intro to Algorithms', 'Cormen', '25 Jan 2026', 'Due Soon'], ['Clean Code', 'Uncle Bob', '02 Feb 2026', 'Borrowed']];
+                        exportToCSV(headers, data, 'Library_Records.csv');
+                    }} title="Export Excel">📊 Excel</button>
                     <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                     <button className="btn-action primary">+ Request Book</button>
                 </div>
