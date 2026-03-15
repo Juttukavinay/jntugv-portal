@@ -1,15 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  /* Brand Colors - Simple White, Blue, Green Palette */
+  /* Brand Colors - Simple White, Blue combination */
   --primary: #2563eb;       /* Primary Blue */
   --primary-hover: #1d4ed8; /* Darker Blue */
-  --secondary: #10b981;     /* Emerald Green */
-  --accent-gold: #10b981;   /* Replaced gold with green */
+  --secondary: #3b82f6;     /* Lighter Blue */
+  --accent-gold: #60a5fa;   /* Lighter Blue */
   --univ-red: #2563eb;      /* Map old red vars to blue */
-  --univ-yellow: #10b981;   /* Map old yellow to green */
+  --univ-yellow: #3b82f6;   /* Map old yellow to blue */
   --univ-blue: #2563eb;
-  --univ-green: #10b981;
+  --univ-green: #3b82f6;    /* Map old green to blue */
 
   /* Backgrounds */
   --bg-main: #f8fafc;

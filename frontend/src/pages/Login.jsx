@@ -251,7 +251,6 @@ function Login() {
                             <button onClick={() => fillDemo('principal')} className="demo-btn">Principal</button>
                             <button onClick={() => fillDemo('hod')} className="demo-btn">HOD Office</button>
                             <button onClick={() => fillDemo('faculty')} className="demo-btn">Faculty Portal</button>
-                            <button onClick={() => fillDemo('princ_fac')} className="demo-btn" style={{ background: '#f8fafc', border: '1px solid #e2e8f0', color: '#1e293b' }}>Principal (Dual Role)</button>
                             <button onClick={() => fillDemo('student')} className="demo-btn">Student Desk</button>
                         </div>
                     </div>

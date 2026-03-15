@@ -100,22 +100,6 @@ function PrincipalDashboard() {
                             <Icons.LogOut />
                         </button>
                     </div>
-
-                    {/* Switch to Personal Faculty View */}
-                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                        <button
-                            onClick={() => {
-                                const user = JSON.parse(localStorage.getItem('user')) || { name: 'Dr. Principal', role: 'principal' };
-                                user.role = 'faculty'; // Switch role for the faculty view
-                                localStorage.setItem('user', JSON.stringify(user));
-                                navigate('/dashboard/faculty');
-                            }}
-                            className="btn-action"
-                            style={{ width: '100%', fontSize: '0.8rem', padding: '0.5rem', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600' }}
-                        >
-                            <span>👤 Personal Faculty Portal</span>
-                        </button>
-                    </div>
                 </div>
             </aside>
 
