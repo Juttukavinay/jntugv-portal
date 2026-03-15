@@ -812,6 +812,12 @@ function AttendanceManager() {
     const presentCount = Object.values(attendanceData).filter(v => v === 'Present').length;
     const absentCount = students.length - presentCount;
 
+    const markAll = (status) => {
+        const updated = {};
+        students.forEach(s => updated[s._id] = status);
+        setAttendanceData(updated);
+    };
+
     return (
         <div>
             <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
@@ -894,9 +900,13 @@ function AttendanceManager() {
                 <div className="glass-table-container">
                     <div className="table-header-premium">
                         <h3>Attendance Sheet: {selectedSec}</h3>
-                        <div>
-                            <span style={{ marginRight: '1rem', fontSize: '0.9rem', fontWeight: 'bold', color: '#16a34a' }}>Present: {presentCount}</span>
-                            <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#ef4444' }}>Absent: {absentCount}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ Mark All Present</button>
+                            <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ Mark All Absent</button>
+                            <div style={{ background: '#f8fafc', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                <span style={{ marginRight: '1rem', fontSize: '0.9rem', fontWeight: 'bold', color: '#16a34a' }}>Present: {presentCount}</span>
+                                <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#ef4444' }}>Absent: {absentCount}</span>
+                            </div>
                         </div>
                     </div>
                     <table className="premium-table">
@@ -913,23 +923,12 @@ function AttendanceManager() {
                                     <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
                                     <td>{s.name}</td>
                                     <td style={{ textAlign: 'center' }}>
-                                        <div style={{ display: 'inline-flex', gap: '0.5rem', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
-                                            <button
-                                                onClick={() => toggleStatus(s._id)}
-                                                style={{
-                                                    background: attendanceData[s._id] === 'Present' ? '#22c55e' : 'transparent',
-                                                    color: attendanceData[s._id] === 'Present' ? 'white' : '#cbd5e1',
-                                                    border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'
-                                                }}
-                                            >P</button>
-                                            <button
-                                                onClick={() => toggleStatus(s._id)}
-                                                style={{
-                                                    background: attendanceData[s._id] === 'Absent' ? '#ef4444' : 'transparent',
-                                                    color: attendanceData[s._id] === 'Absent' ? 'white' : '#cbd5e1',
-                                                    border: 'none', padding: '4px 12px', borderRadius: '6px', fontWeight: '600', cursor: 'pointer'
-                                                }}
-                                            >A</button>
+                                        <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', borderRadius: '20px', padding: '4px', cursor: 'pointer', transition: 'all 0.3s ease', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
+                                            <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? '#22c55e' : '#ef4444', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+                                            <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', alignItems: 'center', height: '26px', fontSize: '0.85rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
+                                                <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>A</span>
+                                                <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>P</span>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

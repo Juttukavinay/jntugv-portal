@@ -8,10 +8,26 @@ const Student = require('../models/studentModel');
 router.get('/students', async (req, res) => {
     const { semester, department } = req.query;
     try {
-        // Build query based on available fields. 
-        // Note: Real world might need section filtering too.
         let query = {};
-        if (semester) query.semester = semester;
+        if (semester) {
+            const match = semester.match(/^(I{1,3}|IV|V)\-([A-Za-z\.]+)\s+(I{1,3}|IV|V)\s+Sem/i);
+            if (match) {
+                const romanToNum = (roman) => {
+                    const map = { 'I': '1', 'II': '2', 'III': '3', 'IV': '4', 'V': '5' };
+                    return map[roman.toUpperCase()] || roman;
+                };
+                query.$or = [
+                    { semester: semester },
+                    { 
+                        year: romanToNum(match[1]), 
+                        course: match[2], 
+                        semester: romanToNum(match[3])
+                    }
+                ];
+            } else {
+                query.semester = semester;
+            }
+        }
         if (department) query.department = department; // Optional
 
         const students = await Student.find(query).sort({ rollNumber: 1 });
