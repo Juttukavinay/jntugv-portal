@@ -65,7 +65,16 @@ function Landing({ user }) {
                 </div>
 
                 <div className="nav-actions desktop-only">
-                    <Link to="/login" className="btn-glow">Sign In</Link>
+                    {user ? (
+                        <Link to={user.role === 'admin' ? '/dashboard/admin' : 
+                                 user.role === 'principal' ? '/dashboard/principal' :
+                                 user.role?.includes('vice') ? '/dashboard/vice-principal' :
+                                 user.role === 'hod' ? '/dashboard/hod' :
+                                 user.role === 'faculty' ? '/dashboard/faculty' : '/dashboard/student'} 
+                              className="btn-glow">Dashboard</Link>
+                    ) : (
+                        <Link to="/login" className="btn-glow">Sign In</Link>
+                    )}
                 </div>
 
                 {/* Mobile Toggle */}
@@ -79,7 +88,7 @@ function Landing({ user }) {
                         <a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Home</a>
                         <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
                         <hr style={{ borderColor: 'rgba(0,0,0,0.1)' }} />
-                        <Link to="/login" className="btn-mobile" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
+                        <Link to="/login" className="btn-mobile" onClick={() => setIsMobileMenuOpen(false)}>{user ? 'Dashboard' : 'Sign In'}</Link>
                     </div>
                 )}
             </nav>
