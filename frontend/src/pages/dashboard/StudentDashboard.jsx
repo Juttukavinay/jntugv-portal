@@ -14,6 +14,7 @@ const Icons = {
     Award: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></svg>,
     LogOut: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></svg>,
     Clock: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
+    Check: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>,
     Mail: () => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 }
 
@@ -289,6 +290,110 @@ function StudentDashboard() {
         </div>
     )
 
+    const AttendanceTab = () => {
+        const [attendanceData, setAttendanceData] = useState([]);
+        const [attLoading, setAttLoading] = useState(true);
+
+        useEffect(() => {
+            if (!currentUser?.email) return;
+            // Roll number is stored in email field for students sometimes, or use rollNumber if available
+            const roll = currentUser.email; 
+            fetch(`${API_BASE_URL}/api/attendance/student/${roll}`)
+                .then(res => res.json())
+                .then(data => {
+                    setAttendanceData(data);
+                    setAttLoading(false);
+                })
+                .catch(err => {
+                    console.error(err);
+                    setAttLoading(false);
+                });
+        }, []);
+
+        const total = attendanceData.length;
+        const present = attendanceData.filter(a => a.status === 'Present').length;
+        const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+
+        return (
+            <div className="fade-in-up">
+                <div className="modern-stats-grid" style={{ marginBottom: '2rem' }}>
+                    <div className="premium-stat-card" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                            <div>
+                                <div style={{ opacity: 0.8, fontSize: '0.9rem' }}>Current Attendance</div>
+                                <div style={{ fontSize: '2.5rem', fontWeight: '800' }}>{percentage}%</div>
+                            </div>
+                            <div style={{ background: 'rgba(255,255,255,0.2)', padding: '12px', borderRadius: '12px' }}>
+                                <Icons.Check />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="premium-stat-card">
+                        <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Total Sessions</div>
+                        <h3>{total}</h3>
+                        <div style={{ color: '#10b981', fontSize: '0.85rem' }}>{present} Attended</div>
+                    </div>
+                    <div className="premium-stat-card">
+                        <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Absences</div>
+                        <h3>{total - present}</h3>
+                        <div style={{ color: '#ef4444', fontSize: '0.85rem' }}>Missed Classes</div>
+                    </div>
+                </div>
+
+                <div className="glass-table-container">
+                    <div className="table-header-premium">
+                        <h3>Detailed Attendance Record</h3>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <button className="btn-action csv-dl" onClick={() => {
+                                const headers = ['Date', 'Subject', 'Faculty', 'Time', 'Status'];
+                                const data = attendanceData.map(a => [a.date, a.subject, a.facultyName, a.periodTime, a.status]);
+                                exportToCSV(headers, data, 'My_Attendance.csv');
+                            }}>📄 CSV</button>
+                            <button className="btn-action pdf" onClick={() => window.print()}>📕 PDF</button>
+                        </div>
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Subject</th>
+                                    <th>Faculty</th>
+                                    <th>Period</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {attLoading ? (
+                                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>Loading records...</td></tr>
+                                ) : attendanceData.length > 0 ? (
+                                    attendanceData.map((record, i) => (
+                                        <tr key={i}>
+                                            <td style={{ fontWeight: '600' }}>{record.date}</td>
+                                            <td>{record.subject}</td>
+                                            <td>{record.facultyName}</td>
+                                            <td style={{ color: '#64748b', fontSize: '0.85rem' }}>{record.periodTime}</td>
+                                            <td>
+                                                <span className="badge-role" style={{ 
+                                                    background: record.status === 'Present' ? '#dcfce7' : '#fef2f2', 
+                                                    color: record.status === 'Present' ? '#166534' : '#991b1b' 
+                                                }}>
+                                                    {record.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr><td colSpan="5" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>No attendance records found yet.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
     const showToast = (message, type = 'success') => {
@@ -299,6 +404,7 @@ function StudentDashboard() {
     const renderContent = () => {
         switch (activeTab) {
             case 'timetable': return <TimetableTab />;
+            case 'attendance': return <AttendanceTab />;
             case 'results': return <ResultsTab />;
             case 'library': return <LibraryTab />;
             case 'notices': return <CommunicationCenter user={currentUser} showToast={showToast} />;
@@ -321,6 +427,7 @@ function StudentDashboard() {
                 <nav className="nav-menu">
                     <NavItem icon={<Icons.Home />} label="Overview" active={activeTab === 'overview'} onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Calendar />} label="My Timetable" active={activeTab === 'timetable'} onClick={() => { setActiveTab('timetable'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Check />} label="Attendance" active={activeTab === 'attendance'} onClick={() => { setActiveTab('attendance'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Award />} label="Exam Results" active={activeTab === 'results'} onClick={() => { setActiveTab('results'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Book />} label="Library Books" active={activeTab === 'library'} onClick={() => { setActiveTab('library'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Mail />} label="Notices" active={activeTab === 'notices'} onClick={() => { setActiveTab('notices'); setMobileMenuOpen(false); }} />
@@ -358,7 +465,8 @@ function StudentDashboard() {
                             <h1 className="title-gradient" style={{ fontSize: '1.8rem', margin: '0 0 0.5rem 0' }}>
                                 {activeTab === 'overview' ? 'Hello, Student 👋' :
                                     activeTab === 'timetable' ? 'Your Schedule' :
-                                        activeTab === 'results' ? 'Your Results' : 'Library'}
+                                        activeTab === 'attendance' ? 'Attendance Overview' :
+                                            activeTab === 'results' ? 'Your Results' : 'Library'}
                             </h1>
                             <p style={{ color: '#64748b', margin: 0 }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                         </div>

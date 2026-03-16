@@ -83,4 +83,32 @@ router.post('/', async (req, res) => {
     }
 });
 
+// GET /api/attendance/student/:rollNumber
+// Fetch all attendance records for a specific student
+router.get('/student/:rollNumber', async (req, res) => {
+    try {
+        const { rollNumber } = req.params;
+        // Find all attendance session records where this student's roll number is in the records array
+        const sessions = await Attendance.find({
+            "records.rollNumber": rollNumber
+        }).sort({ date: -1 });
+
+        // Filter and map to return only the relevant part for the student
+        const result = sessions.map(session => {
+            const studentRecord = session.records.find(r => r.rollNumber === rollNumber);
+            return {
+                date: session.date,
+                subject: session.subject,
+                facultyName: session.facultyName,
+                periodTime: session.periodTime,
+                status: studentRecord ? studentRecord.status : 'N/A'
+            };
+        });
+
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 module.exports = router;
