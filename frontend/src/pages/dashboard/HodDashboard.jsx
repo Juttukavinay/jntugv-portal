@@ -119,9 +119,31 @@ function HodDashboard() {
                     <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>HOD Dashboard</span>
                 </header>
 
-                <div className="fade-in-up">
-                    {renderContent()}
-                </div>
+                <section>
+                    <h2>Existing Classes</h2>
+                    {existingClasses.length > 0 ? (
+                        <ul>
+                            {existingClasses.map(cls => (
+                                <li key={cls.id}>{cls.subject} - {cls.students.length} students</li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>No existing classes.</p>
+                    )}
+                </section>
+
+                <section>
+                    <h2>Upcoming Classes</h2>
+                    {upcomingClasses.length > 0 ? (
+                        <ul>
+                            {upcomingClasses.map(cls => (
+                                <li key={cls.id}>{cls.subject} - {cls.students.length} students</li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p>No upcoming classes.</p>
+                    )}
+                </section>
             </main>
 
             {/* Premium Notification Toast */}
