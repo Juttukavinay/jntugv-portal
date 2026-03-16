@@ -76,6 +76,7 @@ function Departments() {
                 <div className="nav-links desktop-only">
                     <Link to="/" className="nav-link">Home</Link>
                     <Link to="/login" className="btn-glow">Sign In</Link>
+                    <Link to="/faculty" className="nav-link">Faculty</Link>
                 </div>
             </nav>
 

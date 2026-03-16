@@ -63,6 +63,7 @@ function Landing({ user }) {
                     </div>
 
                     <a href="#features" className="nav-link">Features</a>
+                    <a href="#departments" className="nav-link">Departments</a>
                 </div>
 
                 <div className="nav-actions desktop-only">
