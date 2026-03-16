@@ -29,6 +29,7 @@ function HodDashboard() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [user, setUser] = useState({});
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const [error, setError] = useState(null);
 
     const showToast = useCallback((message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -40,6 +41,28 @@ function HodDashboard() {
         if (u) setUser(u);
         setMobileMenuOpen(false); // Close menu on tab change
     }, [activeTab]);
+
+    const fetchClasses = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/classes?hod=${encodeURIComponent(user.name || '')}`);
+            if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                const now = new Date();
+                setExistingClasses(data.filter(cls => new Date(cls.endTime) < now));
+                setUpcomingClasses(data.filter(cls => new Date(cls.startTime) > now));
+            } else {
+                throw new Error('Unexpected API response format');
+            }
+        } catch (err) {
+            console.error('Failed to fetch classes:', err);
+            setError(err.message);
+        }
+    };
+
+    useEffect(() => {
+        if (user.name) fetchClasses();
+    }, [user.name]);
 
     const renderContent = () => {
         switch (activeTab) {
