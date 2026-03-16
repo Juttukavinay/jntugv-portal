@@ -289,12 +289,19 @@ function StudentDashboard() {
         </div>
     )
 
+    const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+
+    const showToast = (message, type = 'success') => {
+        setToast({ show: true, message, type });
+        setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 4000);
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case 'timetable': return <TimetableTab />;
             case 'results': return <ResultsTab />;
             case 'library': return <LibraryTab />;
-            case 'notices': return <CommunicationCenter user={currentUser} />;
+            case 'notices': return <CommunicationCenter user={currentUser} showToast={showToast} />;
             default: return <OverviewTab />;
         }
     }
@@ -360,6 +367,21 @@ function StudentDashboard() {
                     {renderContent()}
                 </div>
             </main>
+
+            {/* Toast Notification */}
+            {toast.show && (
+                <div className="toast-notification fade-in-up" style={{
+                    position: 'fixed', bottom: '2rem', right: '2rem', background: '#fff',
+                    padding: '1rem 1.5rem', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    display: 'flex', alignItems: 'center', gap: '1rem', zIndex: 9999,
+                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`
+                }}>
+                    <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
+                        {toast.type === 'success' ? '✅' : '❌'}
+                    </div>
+                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{toast.message}</div>
+                </div>
+            )}
         </div>
     )
 }
