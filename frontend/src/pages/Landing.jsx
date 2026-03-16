@@ -62,8 +62,6 @@ function Landing({ user }) {
                         </div>
                     </div>
 
-                    <a href="#features" className="nav-link">Features</a>
-                    <a href="#departments" className="nav-link">Departments</a>
                 </div>
 
                 <div className="nav-actions desktop-only">
@@ -80,8 +78,6 @@ function Landing({ user }) {
                     <div className="mobile-menu">
                         <a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Home</a>
                         <a href="#about" onClick={() => setIsMobileMenuOpen(false)}>About</a>
-                        <Link to="/departments" onClick={() => setIsMobileMenuOpen(false)}>Departments</Link>
-                        <a href="#features" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
                         <hr style={{ borderColor: 'rgba(0,0,0,0.1)' }} />
                         <Link to="/login" className="btn-mobile" onClick={() => setIsMobileMenuOpen(false)}>Sign In</Link>
                     </div>

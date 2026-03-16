@@ -30,6 +30,8 @@ function HodDashboard() {
     const [user, setUser] = useState({});
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
     const [error, setError] = useState(null);
+    const [existingClasses, setExistingClasses] = useState([]);
+    const [upcomingClasses, setUpcomingClasses] = useState([]);
 
     const showToast = useCallback((message, type = 'success') => {
         setToast({ show: true, message, type });

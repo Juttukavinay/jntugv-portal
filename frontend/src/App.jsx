@@ -63,7 +63,7 @@ function App() {
         <Routes key={user ? 'auth-true' : 'auth-false'}>
           <Route path="/" element={<Landing user={user} />} />
           <Route path="/departments" element={<Departments />} />
-          <Route path="/login" element={user ? <Navigate to={getDashboardRoute(user.role)} replace /> : <Login />} />
+          <Route path="/login" element={<Login />} />
 
           <Route path="/dashboard/admin" element={
             <ProtectedRoute>
