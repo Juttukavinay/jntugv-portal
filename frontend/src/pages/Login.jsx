@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useGoogleLogin } from '@react-oauth/google'
 import API_BASE_URL from '../config'
 import '../App.css'
 
@@ -32,37 +31,6 @@ function Login() {
         setCredentials(prev => ({ ...prev, [e.target.name]: e.target.value }))
         setError('')
     }
-
-    const googleLogin = useGoogleLogin({
-        onSuccess: async (tokenResponse) => {
-            try {
-                setLoading(true);
-                setError('');
-                const res = await fetch(`${API_BASE_URL}/api/auth/google-login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token: tokenResponse.access_token }),
-                });
-                const data = await res.json();
-
-                if (!res.ok) {
-                    setError(data.message || 'Google Login Failed');
-                    setLoading(false);
-                    return;
-                }
-
-                finalizeLogin(data);
-            } catch (err) {
-                console.error(err);
-                setError('Google Login Error');
-                setLoading(false);
-            }
-        },
-        onError: () => {
-            setError('Google Login Failed');
-            setLoading(false);
-        },
-    });
 
     const handleLogin = async (e) => {
         e.preventDefault()

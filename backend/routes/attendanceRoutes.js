@@ -37,21 +37,48 @@ router.get('/students', async (req, res) => {
     }
 });
 
+// GET /api/attendance?date=YYYY-MM-DD&semester=...&subject=...
+// Check if attendance already taken for a slot
+router.get('/', async (req, res) => {
+    const { date, semester, subject, facultyName } = req.query;
+    try {
+        const query = {};
+        if (date) query.date = date;
+        if (semester) query.semester = semester;
+        if (subject) query.subject = subject;
+        if (facultyName) query.facultyName = facultyName;
+
+        const records = await Attendance.find(query).sort({ createdAt: -1 });
+        res.json(records);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
 // POST /api/attendance
 // Save attendance record
 router.post('/', async (req, res) => {
     try {
         const { date, subject, semester, room, facultyId, facultyName, periodTime, records } = req.body;
 
-        // Check if attendance already taken for this slot? (Optional logic)
-        // For now, allow multiple updates or overwrites
+        // Safely handle facultyId - only use it if it looks like a valid ObjectId
+        const mongoose = require('mongoose');
+        const safeFacultyId = facultyId && mongoose.Types.ObjectId.isValid(facultyId) ? facultyId : undefined;
 
         const attendance = await Attendance.create({
-            date, subject, semester, room, facultyId, facultyName, periodTime, records
+            date,
+            subject,
+            semester,
+            room,
+            facultyId: safeFacultyId,
+            facultyName,
+            periodTime,
+            records
         });
 
         res.status(201).json(attendance);
     } catch (error) {
+        console.error('Attendance save error:', error.message);
         res.status(400).json({ message: error.message });
     }
 });
