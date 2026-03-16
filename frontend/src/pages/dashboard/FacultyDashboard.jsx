@@ -45,11 +45,7 @@ function FacultyDashboard() {
     }, [])
 
     return (
-        <div className="dashboard-container" style={{ filter: 'none', fontSize: '1rem', color: '#333' }}>
-            <header className="dashboard-header">
-                <h1>Welcome, {currentUser?.name || 'Faculty Member'}</h1>
-                <p>Current Time: {currentTime}</p>
-            </header>
+        <div className="dashboard-container">
             {/* Sidebar with consistent class */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ backdropFilter: 'blur(0px)', WebkitBackdropFilter: 'blur(0px)' }}>
                 <div className="sidebar-header">
