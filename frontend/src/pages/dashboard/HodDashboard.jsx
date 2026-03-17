@@ -1046,57 +1046,100 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
 }
 
 function AttendanceManager() {
-    const [selectedSec, setSelectedSec] = useState('');
-    const [selectedSubject, setSelectedSubject] = useState('');
-    const [selectedTime, setSelectedTime] = useState('');
-    const [selectedRoom, setSelectedRoom] = useState('');
-    const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+    const [user, setUser] = useState({});
+    const [todayClasses, setTodayClasses] = useState([]);
+    const [loadingClasses, setLoadingClasses] = useState(true);
+    const [selectedClass, setSelectedClass] = useState(null);
     const [students, setStudents] = useState([]);
-    const [attendanceData, setAttendanceData] = useState({}); // { studentId: 'Present' | 'Absent' }
+    const [attendanceData, setAttendanceData] = useState({});
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [user, setUser] = useState({});
+    const [attendanceDate] = useState(new Date().toISOString().split('T')[0]);
+    const [takenRecords, setTakenRecords] = useState([]);
     const [viewMode, setViewMode] = useState('mark'); // 'mark' | 'history'
     const [history, setHistory] = useState([]);
     const [viewingRecord, setViewingRecord] = useState(null);
 
-    useEffect(() => {
-        const u = JSON.parse(localStorage.getItem('user'));
-        if (u) setUser(u);
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const todayName = days[new Date().getDay()];
+
+    const fetchTodayAttendance = useCallback((u) => {
+        if (!u?.name) return;
+        fetch(`${API_BASE_URL}/api/attendance?date=${new Date().toISOString().split('T')[0]}&facultyName=${encodeURIComponent(u.name)}`)
+            .then(res => res.json())
+            .then(data => { if (Array.isArray(data)) setTakenRecords(data); })
+            .catch(console.error);
     }, []);
 
-    const fetchHistory = async () => {
+    const fetchHistory = useCallback(() => {
         setLoading(true);
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/attendance`);
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                setHistory(data);
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
+        fetch(`${API_BASE_URL}/api/attendance`)
+            .then(res => res.json())
+            .then(data => { if (Array.isArray(data)) setHistory(data); })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
+        const u = JSON.parse(localStorage.getItem('user'));
+        if (u) {
+            setUser(u);
+            fetchTodayAttendance(u);
+            
+            // Fetch all timetables and extract today's classes for this HOD
+            fetch(`${API_BASE_URL}/api/timetables`)
+                .then(res => res.json())
+                .then(data => {
+                    const allArray = Array.isArray(data) ? data : [data];
+                    const classes = [];
+                    allArray.forEach(tt => {
+                        if (!tt?.schedule) return;
+                        const todayDay = tt.schedule.find(d => d.day === todayName);
+                        if (!todayDay) return;
+                        todayDay.periods.forEach(p => {
+                            if (p.faculty === u.name || (!p.faculty && p.subject && p.subject !== '-')) {
+                                classes.push({
+                                    subject: p.subject,
+                                    semester: tt.className || tt.semester,
+                                    time: p.time,
+                                    room: p.room || '',
+                                    type: p.type || 'Theory',
+                                    faculty: p.faculty,
+                                    isLab: p.type === 'Lab'
+                                });
+                            }
+                        });
+                    });
+                    setTodayClasses(classes);
+                })
+                .catch(console.error)
+                .finally(() => setLoadingClasses(false));
         }
-    };
+    }, [todayName, fetchTodayAttendance]);
 
     useEffect(() => {
         if (viewMode === 'history') fetchHistory();
-    }, [viewMode]);
+    }, [viewMode, fetchHistory]);
 
-    const loadStudents = async () => {
-        if (!selectedSec) return;
+    const isAlreadyTaken = (cls) => takenRecords.some(
+        r => r.subject === cls.subject && r.semester === cls.semester && r.periodTime === cls.time
+    );
+
+    const loadStudents = async (cls) => {
+        if (isAlreadyTaken(cls)) {
+            alert('Attendance already submitted for this class today!');
+            return;
+        }
+        setSelectedClass(cls);
         setLoading(true);
+        setStudents([]);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(selectedSec)}`);
+            const res = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(cls.semester)}`);
             const data = await res.json();
             if (Array.isArray(data)) {
                 setStudents(data);
-                // Initialize all as Present by default
                 const initial = {};
-                data.forEach(s => {
-                    initial[s._id] = 'Present';
-                });
+                data.forEach(s => { initial[s._id] = 'Present'; });
                 setAttendanceData(initial);
             }
         } catch (err) {
@@ -1114,10 +1157,7 @@ function AttendanceManager() {
     };
 
     const submitAttendance = async () => {
-        if (!selectedSec || !selectedSubject || !selectedTime) {
-            alert('Please fill all required fields');
-            return;
-        }
+        if (!selectedClass) return;
         setSubmitting(true);
         try {
             const records = students.map(s => ({
@@ -1129,12 +1169,12 @@ function AttendanceManager() {
 
             const payload = {
                 date: attendanceDate,
-                subject: selectedSubject,
-                semester: selectedSec,
-                room: selectedRoom,
+                subject: selectedClass.subject,
+                semester: selectedClass.semester,
+                room: selectedClass.room,
                 facultyId: user?.id || user?._id,
                 facultyName: user?.name,
-                periodTime: selectedTime,
+                periodTime: selectedClass.time,
                 records
             };
 
@@ -1147,7 +1187,8 @@ function AttendanceManager() {
             if (res.ok) {
                 alert('Attendance submitted successfully!');
                 setStudents([]);
-                setSelectedSec('');
+                setSelectedClass(null);
+                fetchTodayAttendance(user);
             } else {
                 const error = await res.json();
                 alert('Failed to submit: ' + error.message);
@@ -1189,78 +1230,75 @@ function AttendanceManager() {
             {viewMode === 'mark' ? (
                 <>
                 <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
-                    <h3 style={{ marginTop: 0 }}>Mark Attendance (Direct Entry)</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'flex-end' }}>
-                    <div>
-                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Select Class</label>
-                        <select className="search-input-premium" value={selectedSec} onChange={(e) => setSelectedSec(e.target.value)} style={{ width: '100%' }}>
-                            <option value="">-- Choose Class --</option>
-                            <option value="I-B.Tech I Sem">I Year - I Sem (B.Tech)</option>
-                            <option value="I-B.Tech II Sem">I Year - II Sem (B.Tech)</option>
-                            <option value="II-B.Tech I Sem">II Year - I Sem (B.Tech)</option>
-                            <option value="II-B.Tech II Sem">II Year - II Sem (B.Tech)</option>
-                            <option value="III-B.Tech I Sem">III Year - I Sem (B.Tech)</option>
-                            <option value="III-B.Tech II Sem">III Year - II Sem (B.Tech)</option>
-                            <option value="IV-B.Tech I Sem">IV Year - I Sem (B.Tech)</option>
-                            <option value="IV-B.Tech II Sem">IV Year - II Sem (B.Tech)</option>
-                            <optgroup label="M.Tech">
-                                <option value="I-M.Tech I Sem">I Year - I Sem (M.Tech)</option>
-                                <option value="I-M.Tech II Sem">I Year - II Sem (M.Tech)</option>
-                                <option value="II-M.Tech I Sem">II Year - I Sem (M.Tech)</option>
-                                <option value="II-M.Tech II Sem">II Year - II Sem (M.Tech)</option>
-                            </optgroup>
-                            <optgroup label="MCA">
-                                <option value="I-MCA I Sem">I Year - I Sem (MCA)</option>
-                                <option value="I-MCA II Sem">I Year - II Sem (MCA)</option>
-                                <option value="II-MCA I Sem">II Year - I Sem (MCA)</option>
-                                <option value="II-MCA II Sem">II Year - II Sem (MCA)</option>
-                            </optgroup>
-                        </select>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                        <div>
+                            <h3 style={{ margin: '0 0 0.25rem 0' }}>📋 Mark Attendance</h3>
+                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Today: <strong>{todayName}</strong> — {attendanceDate}</p>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: '#64748b', background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>
+                            {takenRecords.length} class{takenRecords.length !== 1 ? 'es' : ''} submitted today
+                        </div>
                     </div>
-                    <div>
-                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Subject</label>
-                        <input
-                            placeholder="e.g. Operating Systems"
-                            className="search-input-premium"
-                            value={selectedSubject}
-                            onChange={e => setSelectedSubject(e.target.value)}
-                            style={{ width: '100%' }}
-                        />
-                    </div>
-                    <div>
-                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Period/Time</label>
-                        <input
-                            placeholder="e.g. 09:30-10:30"
-                            className="search-input-premium"
-                            value={selectedTime}
-                            onChange={e => setSelectedTime(e.target.value)}
-                            style={{ width: '100%' }}
-                        />
-                    </div>
-                    <div>
-                        <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Date</label>
-                        <input
-                            type="date"
-                            className="search-input-premium"
-                            style={{ width: '100%' }}
-                            value={attendanceDate}
-                            onChange={e => setAttendanceDate(e.target.value)}
-                        />
-                    </div>
-                    <button
-                        className="btn-action primary"
-                        onClick={loadStudents}
-                        disabled={loading || !selectedSec}
-                    >
-                        {loading ? 'Processing...' : 'Load Students'}
-                    </button>
+
+                    {loadingClasses ? (
+                        <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading today's classes...</div>
+                    ) : todayClasses.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '2.5rem', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
+                            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎉</div>
+                            <h4 style={{ margin: '0 0 0.5rem 0', color: '#334155' }}>No classes today!</h4>
+                            <p style={{ margin: 0, color: '#94a3b8' }}>No timetable entries found for {todayName} assigned to you.</p>
+                        </div>
+                    ) : (
+                        <div>
+                            <p style={{ fontWeight: '600', color: '#334155', marginBottom: '1rem' }}>Select a class to mark attendance:</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+                                {todayClasses.map((cls, idx) => {
+                                    const taken = isAlreadyTaken(cls);
+                                    const isActive = selectedClass?.time === cls.time && selectedClass?.subject === cls.subject;
+                                    return (
+                                        <div key={idx}
+                                            onClick={() => loadStudents(cls)}
+                                            style={{
+                                                cursor: taken ? 'default' : 'pointer',
+                                                padding: '1.25rem',
+                                                borderRadius: '12px',
+                                                border: `2px solid ${taken ? '#bbf7d0' : isActive ? '#2563eb' : '#e2e8f0'}`,
+                                                background: taken ? '#f0fdf4' : isActive ? '#eff6ff' : 'white',
+                                                transition: 'all 0.2s',
+                                                borderLeft: `5px solid ${taken ? '#22c55e' : cls.isLab ? '#3b82f6' : '#10b981'}`,
+                                                opacity: taken ? 0.88 : 1
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                                <div style={{ fontWeight: '700', fontSize: '1rem', color: '#0f172a' }}>{cls.subject || 'Unknown'}</div>
+                                                {taken && (
+                                                    <span style={{ background: '#dcfce7', color: '#166534', fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
+                                                        ✅ Taken
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '4px' }}>{cls.semester}</div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ background: cls.isLab ? '#dbeafe' : '#d1fae5', color: cls.isLab ? '#1e40af' : '#065f46', fontSize: '0.75rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px' }}>{cls.type}</span>
+                                                <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#334155' }}>{cls.time}</span>
+                                            </div>
+                                            {cls.room && <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>📍 {cls.room}</div>}
+                                            {cls.isLab && <div style={{ fontSize: '0.72rem', color: '#7c3aed', marginTop: '4px', fontWeight: '600' }}>⚗️ Lab — Main Faculty marks attendance</div>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            </div>
 
             {students.length > 0 && (
                 <div className="glass-table-container">
                     <div className="table-header-premium">
-                        <h3>Attendance Sheet: {selectedSec}</h3>
+                        <div>
+                            <h3 style={{ margin: '0 0 2px 0' }}>Attendance Sheet: {selectedClass?.subject}</h3>
+                            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedClass?.semester} • {selectedClass?.time}</div>
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ Mark All Present</button>
                             <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ Mark All Absent</button>
