@@ -1056,11 +1056,33 @@ function AttendanceManager() {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [user, setUser] = useState({});
+    const [viewMode, setViewMode] = useState('mark'); // 'mark' | 'history'
+    const [history, setHistory] = useState([]);
+    const [viewingRecord, setViewingRecord] = useState(null);
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user'));
         if (u) setUser(u);
     }, []);
+
+    const fetchHistory = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/attendance`);
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setHistory(data);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (viewMode === 'history') fetchHistory();
+    }, [viewMode]);
 
     const loadStudents = async () => {
         if (!selectedSec) return;
@@ -1149,8 +1171,25 @@ function AttendanceManager() {
 
     return (
         <div>
-            <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
-                <h3 style={{ marginTop: 0 }}>Mark Attendance (My Classes)</h3>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                <button 
+                    className={`btn-action ${viewMode === 'mark' ? 'primary' : ''}`} 
+                    onClick={() => setViewMode('mark')}
+                >
+                    Mark Attendance
+                </button>
+                <button 
+                    className={`btn-action ${viewMode === 'history' ? 'primary' : ''}`} 
+                    onClick={() => setViewMode('history')}
+                >
+                    View Reports
+                </button>
+            </div>
+
+            {viewMode === 'mark' ? (
+                <>
+                <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
+                    <h3 style={{ marginTop: 0 }}>Mark Attendance (Direct Entry)</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'flex-end' }}>
                     <div>
                         <label className="input-label" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: '#64748b' }}>Select Class</label>
@@ -1268,6 +1307,114 @@ function AttendanceManager() {
                         </button>
                     </div>
                 </div>
+            )}
+            </>
+            ) : (
+                <div className="glass-table-container">
+                    <div className="table-header-premium">
+                        <h3>Attendance Reports (All Records)</h3>
+                        <button className="btn-action" onClick={fetchHistory}>🔄 Refresh</button>
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Subject</th>
+                                    <th>Class</th>
+                                    <th>Faculty</th>
+                                    <th>Time</th>
+                                    <th style={{ textAlign: 'center' }}>Present/Total</th>
+                                    <th style={{ textAlign: 'center' }}>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {history.length === 0 ? (
+                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No records found</td></tr>
+                                ) : history.map((rec, idx) => {
+                                    const p = rec.records?.filter(r => r.status === 'Present').length || 0;
+                                    const total = rec.records?.length || 0;
+                                    return (
+                                        <tr key={idx}>
+                                            <td style={{ fontWeight: '600' }}>{rec.date}</td>
+                                            <td style={{ fontWeight: '700' }}>{rec.subject}</td>
+                                            <td>{rec.semester}</td>
+                                            <td style={{ fontSize: '0.85rem' }}>{rec.facultyName}</td>
+                                            <td>{rec.periodTime}</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <span style={{ color: p === total ? '#16a34a' : '#2563eb', fontWeight: 'bold' }}>{p}</span> / {total}
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <button 
+                                                    className="btn-action" 
+                                                    style={{ padding: '4px 12px', fontSize: '0.75rem', background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe' }}
+                                                    onClick={() => setViewingRecord(rec)}
+                                                >
+                                                    View Detailed
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {viewingRecord && createPortal(
+                <div className="modal-overlay">
+                    <div className="modal-content glass-panel" style={{ maxWidth: '700px', width: '90%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
+                            <div>
+                                <h3 style={{ margin: 0 }}>{viewingRecord.subject} Attendance</h3>
+                                <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                                    {viewingRecord.semester} • {viewingRecord.date} • {viewingRecord.periodTime}
+                                </p>
+                                <p style={{ margin: '4px 0 0 0', color: '#3b82f6', fontSize: '0.85rem', fontWeight: '600' }}>
+                                    Faculty: {viewingRecord.facultyName}
+                                </p>
+                            </div>
+                            <button onClick={() => setViewingRecord(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                        </div>
+                        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                            <table className="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Roll No</th>
+                                        <th>Name</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {viewingRecord.records.map((r, i) => (
+                                        <tr key={i}>
+                                            <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{r.rollNumber}</td>
+                                            <td>{r.name}</td>
+                                            <td>
+                                                <span className="badge-role" style={{ 
+                                                    background: r.status === 'Present' ? '#dcfce7' : '#fee2e2',
+                                                    color: r.status === 'Present' ? '#166534' : '#991b1b'
+                                                }}>
+                                                    {r.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style={{ marginTop: '1.5rem', textAlign: 'right', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                            <button className="btn-action csv-dl" onClick={() => {
+                                const headers = ['Roll Number', 'Name', 'Status'];
+                                const data = viewingRecord.records.map(r => [r.rollNumber, r.name, r.status]);
+                                exportToCSV(headers, data, `Attendance_${viewingRecord.subject}_${viewingRecord.date}.csv`);
+                            }}>📄 Export CSV</button>
+                            <button className="btn-action primary" onClick={() => setViewingRecord(null)}>Close</button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );

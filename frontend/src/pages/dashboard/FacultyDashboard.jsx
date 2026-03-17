@@ -780,6 +780,9 @@ function AttendanceManager() {
     const [submitting, setSubmitting] = useState(false);
     const [attendanceDate] = useState(new Date().toISOString().split('T')[0]);
     const [takenRecords, setTakenRecords] = useState([]);
+    const [viewMode, setViewMode] = useState('mark'); // 'mark' | 'history'
+    const [history, setHistory] = useState([]);
+    const [viewingRecord, setViewingRecord] = useState(null);
 
     const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const todayName = days[new Date().getDay()];
@@ -789,6 +792,14 @@ function AttendanceManager() {
         fetch(`${API_BASE_URL}/api/attendance?date=${new Date().toISOString().split('T')[0]}&facultyName=${encodeURIComponent(user.name)}`)
             .then(res => res.json())
             .then(data => { if (Array.isArray(data)) setTakenRecords(data); })
+            .catch(console.error);
+    }, []);
+
+    const fetchHistory = useCallback((user) => {
+        if (!user?.name) return;
+        fetch(`${API_BASE_URL}/api/attendance?facultyName=${encodeURIComponent(user.name)}`)
+            .then(res => res.json())
+            .then(data => { if (Array.isArray(data)) setHistory(data); })
             .catch(console.error);
     }, []);
 
@@ -828,7 +839,8 @@ function AttendanceManager() {
             })
             .catch(console.error)
             .finally(() => setLoadingClasses(false));
-    }, [todayName, fetchTodayAttendance]);
+        if (viewMode === 'history') fetchHistory(user);
+    }, [todayName, fetchTodayAttendance, fetchHistory, viewMode]);
 
     const isAlreadyTaken = (cls) => takenRecords.some(
         r => r.subject === cls.subject && r.semester === cls.semester && r.periodTime === cls.time
@@ -917,164 +929,236 @@ function AttendanceManager() {
 
     return (
         <div>
-            <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                    <div>
-                        <h3 style={{ margin: '0 0 0.25rem 0' }}>📋 Mark Attendance</h3>
-                        <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Today: <strong>{todayName}</strong> — {attendanceDate}</p>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                <button 
+                    className={`btn-action ${viewMode === 'mark' ? 'primary' : ''}`} 
+                    onClick={() => setViewMode('mark')}
+                >
+                    Mark Attendance
+                </button>
+                <button 
+                    className={`btn-action ${viewMode === 'history' ? 'primary' : ''}`} 
+                    onClick={() => setViewMode('history')}
+                >
+                    Attendance History
+                </button>
+            </div>
+
+            {viewMode === 'mark' ? (
+                <>
+                <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                        <div>
+                            <h3 style={{ margin: '0 0 0.25rem 0' }}>📋 Mark Attendance</h3>
+                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Today: <strong>{todayName}</strong> — {attendanceDate}</p>
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: '#64748b', background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>
+                            {takenRecords.length} class{takenRecords.length !== 1 ? 'es' : ''} submitted today
+                        </div>
                     </div>
-                    <div style={{ fontSize: '0.82rem', color: '#64748b', background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>
-                        {takenRecords.length} class{takenRecords.length !== 1 ? 'es' : ''} submitted today
-                    </div>
+
+                    {loadingClasses ? (
+                        <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading today's classes...</div>
+                    ) : todayClasses.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '2.5rem', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
+                            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎉</div>
+                            <h4 style={{ margin: '0 0 0.5rem 0', color: '#334155' }}>No classes today!</h4>
+                            <p style={{ margin: 0, color: '#94a3b8' }}>No timetable entries found for {todayName} assigned to you.</p>
+                        </div>
+                    ) : (
+                        <div>
+                            <p style={{ fontWeight: '600', color: '#334155', marginBottom: '1rem' }}>Select a class to mark attendance:</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
+                                {todayClasses.map((cls, idx) => {
+                                    const taken = isAlreadyTaken(cls);
+                                    const isActive = selectedClass?.time === cls.time && selectedClass?.subject === cls.subject;
+                                    return (
+                                        <div key={idx}
+                                            onClick={() => loadStudents(cls)}
+                                            style={{
+                                                cursor: taken ? 'default' : 'pointer',
+                                                padding: '1.25rem',
+                                                borderRadius: '12px',
+                                                border: `2px solid ${taken ? '#bbf7d0' : isActive ? '#2563eb' : '#e2e8f0'}`,
+                                                background: taken ? '#f0fdf4' : isActive ? '#eff6ff' : 'white',
+                                                transition: 'all 0.2s',
+                                                borderLeft: `5px solid ${taken ? '#22c55e' : cls.isLab ? '#3b82f6' : '#10b981'}`,
+                                                opacity: taken ? 0.88 : 1
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                                <div style={{ fontWeight: '700', fontSize: '1rem', color: '#0f172a' }}>{cls.subject || 'Unknown'}</div>
+                                                {taken && (
+                                                    <span style={{ background: '#dcfce7', color: '#166534', fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
+                                                        ✅ Taken
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '4px' }}>{cls.semester}</div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ background: cls.isLab ? '#dbeafe' : '#d1fae5', color: cls.isLab ? '#1e40af' : '#065f46', fontSize: '0.75rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px' }}>{cls.type}</span>
+                                                <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#334155' }}>{cls.time}</span>
+                                            </div>
+                                            {cls.room && <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>📍 {cls.room}</div>}
+                                            {cls.isLab && <div style={{ fontSize: '0.72rem', color: '#7c3aed', marginTop: '4px', fontWeight: '600' }}>⚗️ Lab — Main Faculty marks attendance</div>}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                {loadingClasses ? (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading today's classes...</div>
-                ) : todayClasses.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '2.5rem', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
-                        <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎉</div>
-                        <h4 style={{ margin: '0 0 0.5rem 0', color: '#334155' }}>No classes today!</h4>
-                        <p style={{ margin: 0, color: '#94a3b8' }}>No timetable entries found for {todayName} assigned to you.</p>
-                    </div>
-                ) : (
-                    <div>
-                        <p style={{ fontWeight: '600', color: '#334155', marginBottom: '1rem' }}>Select a class to mark attendance:</p>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-                            {todayClasses.map((cls, idx) => {
-                                const taken = isAlreadyTaken(cls);
-                                const isActive = selectedClass?.time === cls.time && selectedClass?.subject === cls.subject;
-                                return (
-                                    <div key={idx}
-                                        onClick={() => loadStudents(cls)}
-                                        style={{
-                                            cursor: taken ? 'default' : 'pointer',
-                                            padding: '1.25rem',
-                                            borderRadius: '12px',
-                                            border: `2px solid ${taken ? '#bbf7d0' : isActive ? '#2563eb' : '#e2e8f0'}`,
-                                            background: taken ? '#f0fdf4' : isActive ? '#eff6ff' : 'white',
-                                            transition: 'all 0.2s',
-                                            borderLeft: `5px solid ${taken ? '#22c55e' : cls.isLab ? '#3b82f6' : '#10b981'}`,
-                                            opacity: taken ? 0.88 : 1
-                                        }}
-                                    >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                                            <div style={{ fontWeight: '700', fontSize: '1rem', color: '#0f172a' }}>{cls.subject || 'Unknown'}</div>
-                                            {taken && (
-                                                <span style={{ background: '#dcfce7', color: '#166534', fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
-                                                    ✅ Taken
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '4px' }}>{cls.semester}</div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ background: cls.isLab ? '#dbeafe' : '#d1fae5', color: cls.isLab ? '#1e40af' : '#065f46', fontSize: '0.75rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px' }}>{cls.type}</span>
-                                            <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#334155' }}>{cls.time}</span>
-                                        </div>
-                                        {cls.room && <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>📍 {cls.room}</div>}
-                                        {cls.isLab && <div style={{ fontSize: '0.72rem', color: '#7c3aed', marginTop: '4px', fontWeight: '600' }}>⚗️ Lab — Main Faculty marks attendance</div>}
-                                    </div>
-                                );
-                            })}
+                {loading && <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading students...</div>}
+
+                {!loading && selectedClass && students.length > 0 && (
+                    <div className="glass-table-container">
+                        <div className="table-header-premium">
+                            <div>
+                                <h3 style={{ margin: '0 0 2px 0' }}>Attendance: {selectedClass.subject}</h3>
+                                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedClass.semester} • {selectedClass.time} • {selectedClass.room || 'N/A'}</div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                                <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ All Present</button>
+                                <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ All Absent</button>
+                                <div style={{ background: '#f8fafc', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                    <span style={{ marginRight: '1rem', fontSize: '0.9rem', fontWeight: 'bold', color: '#16a34a' }}>Present: {presentCount}</span>
+                                    <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#ef4444' }}>Absent: {absentCount}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <table className="premium-table">
+                            <thead><tr><th>Roll No</th><th>Name</th><th style={{ textAlign: 'center' }}>Status</th></tr></thead>
+                            <tbody>
+                                {students.map(s => (
+                                    <tr key={s._id}>
+                                        <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
+                                        <td>{s.name}</td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', borderRadius: '20px', padding: '4px', cursor: 'pointer', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
+                                                <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? '#22c55e' : '#ef4444', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)' }}></div>
+                                                <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', alignItems: 'center', height: '26px', fontSize: '0.85rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>A</span>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>P</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <div style={{ padding: '1rem', textAlign: 'right' }}>
+                            <button className="btn-primary" style={{ width: '200px' }} onClick={submitAttendance} disabled={submitting}>
+                                {submitting ? 'Submitting...' : 'Submit Attendance'}
+                            </button>
                         </div>
                     </div>
                 )}
-            </div>
-
-            {loading && <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading students...</div>}
-
-            {!loading && selectedClass && students.length > 0 && (
+                </>
+            ) : (
                 <div className="glass-table-container">
                     <div className="table-header-premium">
-                        <div>
-                            <h3 style={{ margin: '0 0 2px 0' }}>Attendance: {selectedClass.subject}</h3>
-                            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedClass.semester} • {selectedClass.time} • {selectedClass.room || 'N/A'}</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                            <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ All Present</button>
-                            <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ All Absent</button>
-                            <div style={{ background: '#f8fafc', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                <span style={{ marginRight: '1rem', fontSize: '0.9rem', fontWeight: 'bold', color: '#16a34a' }}>Present: {presentCount}</span>
-                                <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#ef4444' }}>Absent: {absentCount}</span>
-                            </div>
-                        </div>
+                        <h3>Attendance History (My Records)</h3>
+                        <button className="btn-action" onClick={() => fetchHistory(currentUser)}>🔄 Refresh</button>
                     </div>
-                    <table className="premium-table">
-                        <thead><tr><th>Roll No</th><th>Name</th><th style={{ textAlign: 'center' }}>Status</th></tr></thead>
-                        <tbody>
-                            {students.map(s => (
-                                <tr key={s._id}>
-                                    <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
-                                    <td>{s.name}</td>
-                                    <td style={{ textAlign: 'center' }}>
-                                        <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', borderRadius: '20px', padding: '4px', cursor: 'pointer', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
-                                            <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? '#22c55e' : '#ef4444', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)' }}></div>
-                                            <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', alignItems: 'center', height: '26px', fontSize: '0.85rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
-                                                <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>A</span>
-                                                <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>P</span>
-                                            </div>
-                                        </div>
-                                    </td>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Subject</th>
+                                    <th>Class</th>
+                                    <th>Time</th>
+                                    <th style={{ textAlign: 'center' }}>Present/Total</th>
+                                    <th style={{ textAlign: 'center' }}>Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <div style={{ padding: '1rem', textAlign: 'right' }}>
-                        <button className="btn-primary" style={{ width: '200px' }} onClick={submitAttendance} disabled={submitting}>
-                            {submitting ? 'Submitting...' : 'Submit Attendance'}
-                        </button>
+                            </thead>
+                            <tbody>
+                                {history.length === 0 ? (
+                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No records found</td></tr>
+                                ) : history.map((rec, idx) => {
+                                    const p = rec.records?.filter(r => r.status === 'Present').length || 0;
+                                    const total = rec.records?.length || 0;
+                                    return (
+                                        <tr key={idx}>
+                                            <td style={{ fontWeight: '600' }}>{rec.date}</td>
+                                            <td style={{ fontWeight: '700' }}>{rec.subject}</td>
+                                            <td>{rec.semester}</td>
+                                            <td>{rec.periodTime}</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <span style={{ color: p === total ? '#16a34a' : '#2563eb', fontWeight: 'bold' }}>{p}</span> / {total}
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <button 
+                                                    className="btn-action" 
+                                                    style={{ padding: '4px 12px', fontSize: '0.75rem', background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe' }}
+                                                    onClick={() => setViewingRecord(rec)}
+                                                >
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}
 
-            {!loading && selectedClass && students.length === 0 && (
-                <div style={{ textAlign: 'center', padding: '2rem', background: '#f8fafc', borderRadius: '12px', color: '#64748b' }}>
-                    No students found for <strong>{selectedClass.semester}</strong>. Check if students are seeded in the database.
-                </div>
-            )}
-
-            {takenRecords.length > 0 && (
-                <div className="glass-table-container" style={{ marginTop: '2rem' }}>
-                    <div className="table-header-premium">
-                        <h3 style={{ margin: 0 }}>✅ Today's Submitted Attendance</h3>
-                        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{attendanceDate}</span>
-                    </div>
-                    <table className="premium-table">
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>Class</th>
-                                <th>Time</th>
-                                <th style={{ textAlign: 'center' }}>Present</th>
-                                <th style={{ textAlign: 'center' }}>Absent</th>
-                                <th style={{ textAlign: 'center' }}>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {takenRecords.map((rec, idx) => {
-                                const p = rec.records?.filter(r => r.status === 'Present').length || 0;
-                                const a = rec.records?.filter(r => r.status === 'Absent').length || 0;
-                                return (
-                                    <tr key={idx}>
-                                        <td style={{ fontWeight: '700' }}>{rec.subject}</td>
-                                        <td>{rec.semester}</td>
-                                        <td>{rec.periodTime}</td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <span style={{ background: '#dcfce7', color: '#166534', padding: '2px 10px', borderRadius: '12px', fontWeight: '700' }}>{p}</span>
-                                        </td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <span style={{ background: '#fee2e2', color: '#991b1b', padding: '2px 10px', borderRadius: '12px', fontWeight: '700' }}>{a}</span>
-                                        </td>
-                                        <td style={{ textAlign: 'center', fontWeight: '600', color: '#334155' }}>{p + a}</td>
+            {viewingRecord && createPortal(
+                <div className="modal-overlay">
+                    <div className="modal-content glass-panel" style={{ maxWidth: '700px', width: '90%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
+                            <div>
+                                <h3 style={{ margin: 0 }}>{viewingRecord.subject} Attendance</h3>
+                                <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                                    {viewingRecord.semester} • {viewingRecord.date} • {viewingRecord.periodTime}
+                                </p>
+                            </div>
+                            <button onClick={() => setViewingRecord(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                        </div>
+                        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                            <table className="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Roll No</th>
+                                        <th>Name</th>
+                                        <th>Status</th>
                                     </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                                </thead>
+                                <tbody>
+                                    {viewingRecord.records.map((r, i) => (
+                                        <tr key={i}>
+                                            <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{r.rollNumber}</td>
+                                            <td>{r.name}</td>
+                                            <td>
+                                                <span className="badge-role" style={{ 
+                                                    background: r.status === 'Present' ? '#dcfce7' : '#fee2e2',
+                                                    color: r.status === 'Present' ? '#166534' : '#991b1b'
+                                                }}>
+                                                    {r.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style={{ marginTop: '1.5rem', textAlign: 'right', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                            <button className="btn-action csv-dl" onClick={() => {
+                                const headers = ['Roll Number', 'Name', 'Status'];
+                                const data = viewingRecord.records.map(r => [r.rollNumber, r.name, r.status]);
+                                exportToCSV(headers, data, `Attendance_${viewingRecord.subject}_${viewingRecord.date}.csv`);
+                            }}>📄 Export CSV</button>
+                            <button className="btn-action primary" onClick={() => setViewingRecord(null)}>Close</button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
-    )
+    );
 }
-
 
 export default FacultyDashboard;
