@@ -1047,29 +1047,31 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
 
 function AttendanceManager() {
     const [user, setUser] = useState({});
-    const [todayClasses, setTodayClasses] = useState([]);
-    const [loadingClasses, setLoadingClasses] = useState(true);
-    const [selectedClass, setSelectedClass] = useState(null);
+    const [selectedSemester, setSelectedSemester] = useState('');
+    const [semesterSubjects, setSemesterSubjects] = useState([]);
+    const [selectedSubject, setSelectedSubject] = useState('');
+    const [selectedTime, setSelectedTime] = useState('');
     const [students, setStudents] = useState([]);
     const [attendanceData, setAttendanceData] = useState({});
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [attendanceDate] = useState(new Date().toISOString().split('T')[0]);
-    const [takenRecords, setTakenRecords] = useState([]);
+    const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
     const [viewMode, setViewMode] = useState('mark'); // 'mark' | 'history'
     const [history, setHistory] = useState([]);
     const [viewingRecord, setViewingRecord] = useState(null);
+    const [timetableToday, setTimetableToday] = useState([]);
 
     const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const todayName = days[new Date().getDay()];
 
-    const fetchTodayAttendance = useCallback((u) => {
-        if (!u?.name) return;
-        fetch(`${API_BASE_URL}/api/attendance?date=${new Date().toISOString().split('T')[0]}&facultyName=${encodeURIComponent(u.name)}`)
-            .then(res => res.json())
-            .then(data => { if (Array.isArray(data)) setTakenRecords(data); })
-            .catch(console.error);
-    }, []);
+    const semesters = [
+        "I-B.Tech I Sem", "I-B.Tech II Sem",
+        "II-B.Tech I Sem", "II-B.Tech II Sem",
+        "III-B.Tech I Sem", "III-B.Tech II Sem",
+        "IV-B.Tech I Sem", "IV-B.Tech II Sem",
+        "I-M.Tech I Sem", "I-M.Tech II Sem",
+        "I-MCA I Sem", "I-MCA II Sem"
+    ];
 
     const fetchHistory = useCallback(() => {
         setLoading(true);
@@ -1082,59 +1084,63 @@ function AttendanceManager() {
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user'));
-        if (u) {
-            setUser(u);
-            fetchTodayAttendance(u);
-            
-            // Fetch all timetables and extract today's classes for this HOD
-            fetch(`${API_BASE_URL}/api/timetables`)
-                .then(res => res.json())
-                .then(data => {
-                    const allArray = Array.isArray(data) ? data : [data];
-                    const classes = [];
-                    allArray.forEach(tt => {
-                        if (!tt?.schedule) return;
-                        const todayDay = tt.schedule.find(d => d.day === todayName);
-                        if (!todayDay) return;
-                        todayDay.periods.forEach(p => {
-                            if (p.faculty === u.name || (!p.faculty && p.subject && p.subject !== '-')) {
-                                classes.push({
-                                    subject: p.subject,
-                                    semester: tt.className || tt.semester,
-                                    time: p.time,
-                                    room: p.room || '',
-                                    type: p.type || 'Theory',
-                                    faculty: p.faculty,
-                                    isLab: p.type === 'Lab'
-                                });
-                            }
-                        });
-                    });
-                    setTodayClasses(classes);
-                })
-                .catch(console.error)
-                .finally(() => setLoadingClasses(false));
-        }
-    }, [todayName, fetchTodayAttendance]);
+        if (u) setUser(u);
+    }, []);
 
     useEffect(() => {
         if (viewMode === 'history') fetchHistory();
     }, [viewMode, fetchHistory]);
 
-    const isAlreadyTaken = (cls) => takenRecords.some(
-        r => r.subject === cls.subject && r.semester === cls.semester && r.periodTime === cls.time
-    );
+    // When semester changes, fetch its subjects and today's timetable
+    useEffect(() => {
+        if (!selectedSemester) return;
 
-    const loadStudents = async (cls) => {
-        if (isAlreadyTaken(cls)) {
-            alert('Attendance already submitted for this class today!');
+        // Fetch subjects
+        fetch(`${API_BASE_URL}/api/subjects?semester=${encodeURIComponent(selectedSemester)}`)
+            .then(res => res.json())
+            .then(data => setSemesterSubjects(Array.isArray(data) ? data : []))
+            .catch(console.error);
+
+        // Fetch today's timetable for this semester
+        fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`)
+            .then(res => res.json())
+            .then(data => {
+                const tt = Array.isArray(data) ? data[0] : (data && data.schedule ? data : null);
+                if (tt && tt.schedule) {
+                    const todayDay = tt.schedule.find(d => d.day === todayName);
+                    setTimetableToday(todayDay ? todayDay.periods : []);
+                } else {
+                    setTimetableToday([]);
+                }
+            })
+            .catch(console.error);
+    }, [selectedSemester, todayName]);
+
+    // Autofill time when subject is selected
+    useEffect(() => {
+        if (!selectedSubject || timetableToday.length === 0) return;
+        
+        const period = timetableToday.find(p => p.subject === selectedSubject && p.subject !== '-');
+        if (period) {
+            setSelectedTime(period.time);
+        } else {
+            // Find first available slot if not found by subject name (maybe user selected lab)
+            const labPeriod = timetableToday.find(p => p.type === 'Lab');
+            if (selectedSubject.toLowerCase().includes('lab') && labPeriod) {
+                setSelectedTime(labPeriod.time);
+            }
+        }
+    }, [selectedSubject, timetableToday]);
+
+    const loadStudents = async () => {
+        if (!selectedSemester || !selectedSubject) {
+            alert('Please select Semester and Subject');
             return;
         }
-        setSelectedClass(cls);
         setLoading(true);
         setStudents([]);
         try {
-            const res = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(cls.semester)}`);
+            const res = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(selectedSemester)}`);
             const data = await res.json();
             if (Array.isArray(data)) {
                 setStudents(data);
@@ -1157,7 +1163,8 @@ function AttendanceManager() {
     };
 
     const submitAttendance = async () => {
-        if (!selectedClass) return;
+        if (!selectedSemester || !selectedSubject || !selectedTime) return;
+        
         setSubmitting(true);
         try {
             const records = students.map(s => ({
@@ -1169,12 +1176,11 @@ function AttendanceManager() {
 
             const payload = {
                 date: attendanceDate,
-                subject: selectedClass.subject,
-                semester: selectedClass.semester,
-                room: selectedClass.room,
+                subject: selectedSubject,
+                semester: selectedSemester,
                 facultyId: user?.id || user?._id,
                 facultyName: user?.name,
-                periodTime: selectedClass.time,
+                periodTime: selectedTime,
                 records
             };
 
@@ -1187,8 +1193,7 @@ function AttendanceManager() {
             if (res.ok) {
                 alert('Attendance submitted successfully!');
                 setStudents([]);
-                setSelectedClass(null);
-                fetchTodayAttendance(user);
+                fetchHistory(); // Sync
             } else {
                 const error = await res.json();
                 alert('Failed to submit: ' + error.message);
@@ -1230,123 +1235,127 @@ function AttendanceManager() {
             {viewMode === 'mark' ? (
                 <>
                 <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                    <h3 style={{ margin: '0 0 1.5rem 0' }}>📋 Strategic Attendance Loading</h3>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
                         <div>
-                            <h3 style={{ margin: '0 0 0.25rem 0' }}>📋 Mark Attendance</h3>
-                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Today: <strong>{todayName}</strong> — {attendanceDate}</p>
+                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Semester</label>
+                            <select 
+                                className="search-input-premium" 
+                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                value={selectedSemester}
+                                onChange={e => { setSelectedSemester(e.target.value); setSelectedSubject(''); }}
+                            >
+                                <option value="">-- Select Semester --</option>
+                                {semesters.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
                         </div>
-                        <div style={{ fontSize: '0.82rem', color: '#64748b', background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>
-                            {takenRecords.length} class{takenRecords.length !== 1 ? 'es' : ''} submitted today
+                        
+                        <div>
+                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Subject / Lab</label>
+                            <select 
+                                className="search-input-premium" 
+                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                value={selectedSubject}
+                                onChange={e => setSelectedSubject(e.target.value)}
+                                disabled={!selectedSemester}
+                            >
+                                <option value="">-- Select Subject --</option>
+                                {semesterSubjects.map(s => <option key={s._id} value={s.courseName}>{s.courseName}</option>)}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Date</label>
+                            <input 
+                                type="date"
+                                className="search-input-premium" 
+                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                value={attendanceDate}
+                                onChange={e => setAttendanceDate(e.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Time Slot</label>
+                            <input 
+                                type="text"
+                                className="search-input-premium" 
+                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                value={selectedTime}
+                                placeholder="09:30-10:30"
+                                onChange={e => setSelectedTime(e.target.value)}
+                            />
                         </div>
                     </div>
 
-                    {loadingClasses ? (
-                        <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>Loading today's classes...</div>
-                    ) : todayClasses.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '2.5rem', background: '#f8fafc', borderRadius: '12px', border: '2px dashed #e2e8f0' }}>
-                            <div style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>🎉</div>
-                            <h4 style={{ margin: '0 0 0.5rem 0', color: '#334155' }}>No classes today!</h4>
-                            <p style={{ margin: 0, color: '#94a3b8' }}>No timetable entries found for {todayName} assigned to you.</p>
-                        </div>
-                    ) : (
-                        <div>
-                            <p style={{ fontWeight: '600', color: '#334155', marginBottom: '1rem' }}>Select a class to mark attendance:</p>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
-                                {todayClasses.map((cls, idx) => {
-                                    const taken = isAlreadyTaken(cls);
-                                    const isActive = selectedClass?.time === cls.time && selectedClass?.subject === cls.subject;
-                                    return (
-                                        <div key={idx}
-                                            onClick={() => loadStudents(cls)}
-                                            style={{
-                                                cursor: taken ? 'default' : 'pointer',
-                                                padding: '1.25rem',
-                                                borderRadius: '12px',
-                                                border: `2px solid ${taken ? '#bbf7d0' : isActive ? '#2563eb' : '#e2e8f0'}`,
-                                                background: taken ? '#f0fdf4' : isActive ? '#eff6ff' : 'white',
-                                                transition: 'all 0.2s',
-                                                borderLeft: `5px solid ${taken ? '#22c55e' : cls.isLab ? '#3b82f6' : '#10b981'}`,
-                                                opacity: taken ? 0.88 : 1
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                                                <div style={{ fontWeight: '700', fontSize: '1rem', color: '#0f172a' }}>{cls.subject || 'Unknown'}</div>
-                                                {taken && (
-                                                    <span style={{ background: '#dcfce7', color: '#166534', fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
-                                                        ✅ Taken
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '4px' }}>{cls.semester}</div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ background: cls.isLab ? '#dbeafe' : '#d1fae5', color: cls.isLab ? '#1e40af' : '#065f46', fontSize: '0.75rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px' }}>{cls.type}</span>
-                                                <span style={{ fontSize: '0.82rem', fontWeight: '600', color: '#334155' }}>{cls.time}</span>
-                                            </div>
-                                            {cls.room && <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>📍 {cls.room}</div>}
-                                            {cls.isLab && <div style={{ fontSize: '0.72rem', color: '#7c3aed', marginTop: '4px', fontWeight: '600' }}>⚗️ Lab — Main Faculty marks attendance</div>}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-            {students.length > 0 && (
-                <div className="glass-table-container">
-                    <div className="table-header-premium">
-                        <div>
-                            <h3 style={{ margin: '0 0 2px 0' }}>Attendance Sheet: {selectedClass?.subject}</h3>
-                            <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedClass?.semester} • {selectedClass?.time}</div>
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ Mark All Present</button>
-                            <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ Mark All Absent</button>
-                            <div style={{ background: '#f8fafc', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: '600' }}>
-                                <span style={{ marginRight: '1rem', color: '#16a34a' }}>Present: {presentCount}</span>
-                                <span style={{ color: '#ef4444' }}>Absent: {absentCount}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <table className="premium-table">
-                        <thead>
-                            <tr>
-                                <th>Roll No</th>
-                                <th>Name</th>
-                                <th style={{ textAlign: 'center' }}>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody style={{ textAlign: 'center' }}>
-                            {students.map(s => (
-                                <tr key={s._id}>
-                                    <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
-                                    <td>{s.name}</td>
-                                    <td style={{ textAlign: 'center' }}>
-                                        <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', borderRadius: '20px', padding: '4px', cursor: 'pointer', transition: 'all 0.3s ease', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
-                                            <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? '#22c55e' : '#ef4444', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
-                                            <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', alignItems: 'center', height: '26px', fontSize: '0.85rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
-                                                <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>A</span>
-                                                <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>P</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    <div style={{ padding: '1.5rem', textAlign: 'right' }}>
-                        <button
-                            className="btn-action primary"
-                            style={{ width: '200px' }}
-                            onClick={submitAttendance}
-                            disabled={submitting}
+                    <div style={{ textAlign: 'right' }}>
+                        <button 
+                            className="btn-action primary" 
+                            style={{ padding: '0.75rem 2rem' }}
+                            onClick={loadStudents}
+                            disabled={loading}
                         >
-                            {submitting ? 'Submitting...' : 'Submit Attendance'}
+                            {loading ? 'Loading...' : 'Load Students'}
                         </button>
                     </div>
                 </div>
-            )}
-            </>
+
+                {students.length > 0 && (
+                    <div className="glass-table-container">
+                        <div className="table-header-premium">
+                            <div>
+                                <h3 style={{ margin: '0 0 2px 0' }}>Attendance Sheet: {selectedSubject}</h3>
+                                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedSemester} • {selectedTime}</div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ Mark All Present</button>
+                                <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ Mark All Absent</button>
+                                <div style={{ background: '#f8fafc', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: '600' }}>
+                                    <span style={{ marginRight: '1rem', color: '#16a34a' }}>Present: {presentCount}</span>
+                                    <span style={{ color: '#ef4444' }}>Absent: {absentCount}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <table className="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Roll No</th>
+                                    <th>Name</th>
+                                    <th style={{ textAlign: 'center' }}>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {students.map(s => (
+                                    <tr key={s._id}>
+                                        <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
+                                        <td>{s.name}</td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', borderRadius: '20px', padding: '4px', cursor: 'pointer', transition: 'all 0.3s ease', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
+                                                <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? '#22c55e' : '#ef4444', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+                                                <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', alignItems: 'center', height: '26px', fontSize: '0.85rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>A</span>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>P</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <div style={{ padding: '1.5rem', textAlign: 'right' }}>
+                            <button
+                                className="btn-action primary"
+                                style={{ width: '200px' }}
+                                onClick={submitAttendance}
+                                disabled={submitting}
+                            >
+                                {submitting ? 'Submitting...' : 'Submit Attendance'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+                </>
             ) : (
                 <div className="glass-table-container">
                     <div className="table-header-premium">
@@ -1457,8 +1466,6 @@ function AttendanceManager() {
         </div>
     );
 }
-
-
 
 function InfrastructureManager({ showToast }) {
     const [rooms, setRooms] = useState([]);

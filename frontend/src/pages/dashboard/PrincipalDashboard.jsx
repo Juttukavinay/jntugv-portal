@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
@@ -58,6 +59,7 @@ function PrincipalDashboard() {
             case 'subjects': return <CurriculumView showToast={showToast} />;
             case 'timetables': return <TimetableView showToast={showToast} />;
             case 'departments': return <DepartmentPanel showToast={showToast} />;
+            case 'attendance': return <AttendanceManager showToast={showToast} />;
             case 'notices': return <CommunicationCenter user={currentUser} showToast={showToast} />;
             default: return <DashboardOverview onNavigate={setActiveTab} />;
         }
@@ -82,6 +84,7 @@ function PrincipalDashboard() {
                     <NavItem icon={<Icons.Building />} label="Departments" active={activeTab === 'departments'} onClick={() => setActiveTab('departments')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
                     <NavItem icon={<Icons.Calendar />} label="Timetables" active={activeTab === 'timetables'} onClick={() => setActiveTab('timetables')} />
+                    <NavItem icon={<Icons.Check />} label="Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
                     <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} badge="New" />
                 </nav>
 
@@ -1279,6 +1282,428 @@ function TimetableView() {
                         <button className="btn-action primary" style={{ marginTop: '1.5rem' }}>Download Global XLS</button>
                     )}
                 </div>
+            )}
+        </div>
+    );
+}
+
+function AttendanceManager() {
+    const [user, setUser] = useState({});
+    const [selectedSemester, setSelectedSemester] = useState('');
+    const [semesterSubjects, setSemesterSubjects] = useState([]);
+    const [selectedSubject, setSelectedSubject] = useState('');
+    const [selectedTime, setSelectedTime] = useState('');
+    const [students, setStudents] = useState([]);
+    const [attendanceData, setAttendanceData] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+    const [viewMode, setViewMode] = useState('mark'); // 'mark' | 'history'
+    const [history, setHistory] = useState([]);
+    const [viewingRecord, setViewingRecord] = useState(null);
+    const [timetableToday, setTimetableToday] = useState([]);
+
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const todayName = days[new Date().getDay()];
+
+    const semesters = [
+        "I-B.Tech I Sem", "I-B.Tech II Sem",
+        "II-B.Tech I Sem", "II-B.Tech II Sem",
+        "III-B.Tech I Sem", "III-B.Tech II Sem",
+        "IV-B.Tech I Sem", "IV-B.Tech II Sem",
+        "I-M.Tech I Sem", "I-M.Tech II Sem",
+        "I-MCA I Sem", "I-MCA II Sem"
+    ];
+
+    const fetchHistory = useCallback(() => {
+        setLoading(true);
+        fetch(`${API_BASE_URL}/api/attendance`)
+            .then(res => res.json())
+            .then(data => { if (Array.isArray(data)) setHistory(data); })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, []);
+
+    useEffect(() => {
+        const u = JSON.parse(localStorage.getItem('user'));
+        if (u) setUser(u);
+    }, []);
+
+    useEffect(() => {
+        if (viewMode === 'history') fetchHistory();
+    }, [viewMode, fetchHistory]);
+
+    // When semester changes, fetch its subjects and today's timetable
+    useEffect(() => {
+        if (!selectedSemester) return;
+
+        // Fetch subjects
+        fetch(`${API_BASE_URL}/api/subjects?semester=${encodeURIComponent(selectedSemester)}`)
+            .then(res => res.json())
+            .then(data => setSemesterSubjects(Array.isArray(data) ? data : []))
+            .catch(console.error);
+
+        // Fetch today's timetable for this semester
+        fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`)
+            .then(res => res.json())
+            .then(data => {
+                const tt = Array.isArray(data) ? data[0] : (data && data.schedule ? data : null);
+                if (tt && tt.schedule) {
+                    const todayDay = tt.schedule.find(d => d.day === todayName);
+                    setTimetableToday(todayDay ? todayDay.periods : []);
+                } else {
+                    setTimetableToday([]);
+                }
+            })
+            .catch(console.error);
+    }, [selectedSemester, todayName]);
+
+    // Autofill time when subject is selected
+    useEffect(() => {
+        if (!selectedSubject || timetableToday.length === 0) return;
+        
+        const period = timetableToday.find(p => p.subject === selectedSubject && p.subject !== '-');
+        if (period) {
+            setSelectedTime(period.time);
+        } else {
+            // Find first available slot if not found by subject name (maybe user selected lab)
+            const labPeriod = timetableToday.find(p => p.type === 'Lab');
+            if (selectedSubject.toLowerCase().includes('lab') && labPeriod) {
+                setSelectedTime(labPeriod.time);
+            }
+        }
+    }, [selectedSubject, timetableToday]);
+
+    const loadStudents = async () => {
+        if (!selectedSemester || !selectedSubject) {
+            alert('Please select Semester and Subject');
+            return;
+        }
+        setLoading(true);
+        setStudents([]);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(selectedSemester)}`);
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                setStudents(data);
+                const initial = {};
+                data.forEach(s => { initial[s._id] = 'Present'; });
+                setAttendanceData(initial);
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const toggleStatus = (studentId) => {
+        setAttendanceData(prev => ({
+            ...prev,
+            [studentId]: prev[studentId] === 'Present' ? 'Absent' : 'Present'
+        }));
+    };
+
+    const submitAttendance = async () => {
+        if (!selectedSemester || !selectedSubject || !selectedTime) return;
+        
+        setSubmitting(true);
+        try {
+            const records = students.map(s => ({
+                studentId: s._id,
+                rollNumber: s.rollNumber,
+                name: s.name,
+                status: attendanceData[s._id] || 'Present'
+            }));
+
+            const payload = {
+                date: attendanceDate,
+                subject: selectedSubject,
+                semester: selectedSemester,
+                facultyId: user?.id || user?._id,
+                facultyName: user?.name,
+                periodTime: selectedTime,
+                records
+            };
+
+            const res = await fetch(`${API_BASE_URL}/api/attendance`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                alert('Attendance submitted successfully!');
+                setStudents([]);
+                fetchHistory(); // Sync
+            } else {
+                const error = await res.json();
+                alert('Failed to submit: ' + error.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('An error occurred');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const presentCount = Object.values(attendanceData).filter(v => v === 'Present').length;
+    const absentCount = students.length - presentCount;
+
+    const markAll = (status) => {
+        const updated = {};
+        students.forEach(s => updated[s._id] = status);
+        setAttendanceData(updated);
+    };
+
+    return (
+        <div>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+                <button 
+                    className={`btn-action ${viewMode === 'mark' ? 'primary' : ''}`} 
+                    onClick={() => setViewMode('mark')}
+                >
+                    Mark Attendance
+                </button>
+                <button 
+                    className={`btn-action ${viewMode === 'history' ? 'primary' : ''}`} 
+                    onClick={() => setViewMode('history')}
+                >
+                    View Reports
+                </button>
+            </div>
+
+            {viewMode === 'mark' ? (
+                <>
+                <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
+                    <h3 style={{ margin: '0 0 1.5rem 0' }}>📋 Strategic Attendance Loading</h3>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                        <div>
+                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Semester</label>
+                            <select 
+                                className="search-input-premium" 
+                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                value={selectedSemester}
+                                onChange={e => { setSelectedSemester(e.target.value); setSelectedSubject(''); }}
+                            >
+                                <option value="">-- Select Semester --</option>
+                                {semesters.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Subject / Lab</label>
+                            <select 
+                                className="search-input-premium" 
+                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                value={selectedSubject}
+                                onChange={e => setSelectedSubject(e.target.value)}
+                                disabled={!selectedSemester}
+                            >
+                                <option value="">-- Select Subject --</option>
+                                {semesterSubjects.map(s => <option key={s._id} value={s.courseName}>{s.courseName}</option>)}
+                            </select>
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Date</label>
+                            <input 
+                                type="date"
+                                className="search-input-premium" 
+                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                value={attendanceDate}
+                                onChange={e => setAttendanceDate(e.target.value)}
+                            />
+                        </div>
+
+                        <div>
+                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Time Slot</label>
+                            <input 
+                                type="text"
+                                className="search-input-premium" 
+                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                value={selectedTime}
+                                placeholder="09:30-10:30"
+                                onChange={e => setSelectedTime(e.target.value)}
+                            />
+                        </div>
+                    </div>
+
+                    <div style={{ textAlign: 'right' }}>
+                        <button 
+                            className="btn-action primary" 
+                            style={{ padding: '0.75rem 2rem' }}
+                            onClick={loadStudents}
+                            disabled={loading}
+                        >
+                            {loading ? 'Loading...' : 'Load Students'}
+                        </button>
+                    </div>
+                </div>
+
+                {students.length > 0 && (
+                    <div className="glass-table-container">
+                        <div className="table-header-premium">
+                            <div>
+                                <h3 style={{ margin: '0 0 2px 0' }}>Attendance Sheet: {selectedSubject}</h3>
+                                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedSemester} • {selectedTime}</div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ Mark All Present</button>
+                                <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ Mark All Absent</button>
+                                <div style={{ background: '#f8fafc', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: '600' }}>
+                                    <span style={{ marginRight: '1rem', color: '#16a34a' }}>Present: {presentCount}</span>
+                                    <span style={{ color: '#ef4444' }}>Absent: {absentCount}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <table className="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Roll No</th>
+                                    <th>Name</th>
+                                    <th style={{ textAlign: 'center' }}>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {students.map(s => (
+                                    <tr key={s._id}>
+                                        <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
+                                        <td>{s.name}</td>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', borderRadius: '20px', padding: '4px', cursor: 'pointer', transition: 'all 0.3s ease', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
+                                                <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? '#22c55e' : '#ef4444', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+                                                <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', alignItems: 'center', height: '26px', fontSize: '0.85rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>A</span>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>P</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <div style={{ padding: '1.5rem', textAlign: 'right' }}>
+                            <button
+                                className="btn-action primary"
+                                style={{ width: '200px' }}
+                                onClick={submitAttendance}
+                                disabled={submitting}
+                            >
+                                {submitting ? 'Submitting...' : 'Submit Attendance'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+                </>
+            ) : (
+                <div className="glass-table-container">
+                    <div className="table-header-premium">
+                        <h3>Attendance Reports (All Records)</h3>
+                        <button className="btn-action" onClick={fetchHistory}>🔄 Refresh</button>
+                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className="premium-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Subject</th>
+                                    <th>Class</th>
+                                    <th>Faculty</th>
+                                    <th>Time</th>
+                                    <th style={{ textAlign: 'center' }}>Present/Total</th>
+                                    <th style={{ textAlign: 'center' }}>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {history.length === 0 ? (
+                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No records found</td></tr>
+                                ) : history.map((rec, idx) => {
+                                    const p = rec.records?.filter(r => r.status === 'Present').length || 0;
+                                    const total = rec.records?.length || 0;
+                                    return (
+                                        <tr key={idx}>
+                                            <td style={{ fontWeight: '600' }}>{rec.date}</td>
+                                            <td style={{ fontWeight: '700' }}>{rec.subject}</td>
+                                            <td>{rec.semester}</td>
+                                            <td style={{ fontSize: '0.85rem' }}>{rec.facultyName}</td>
+                                            <td>{rec.periodTime}</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <span style={{ color: p === total ? '#16a34a' : '#2563eb', fontWeight: 'bold' }}>{p}</span> / {total}
+                                            </td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <button 
+                                                    className="btn-action" 
+                                                    style={{ padding: '4px 12px', fontSize: '0.75rem', background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe' }}
+                                                    onClick={() => setViewingRecord(rec)}
+                                                >
+                                                    View Detailed
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {viewingRecord && createPortal(
+                <div className="modal-overlay">
+                    <div className="modal-content glass-panel" style={{ maxWidth: '700px', width: '90%' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
+                            <div>
+                                <h3 style={{ margin: 0 }}>{viewingRecord.subject} Attendance</h3>
+                                <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                                    {viewingRecord.semester} • {viewingRecord.date} • {viewingRecord.periodTime}
+                                </p>
+                                <p style={{ margin: '4px 0 0 0', color: '#3b82f6', fontSize: '0.85rem', fontWeight: '600' }}>
+                                    Faculty: {viewingRecord.facultyName}
+                                </p>
+                            </div>
+                            <button onClick={() => setViewingRecord(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                        </div>
+                        <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                            <table className="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Roll No</th>
+                                        <th>Name</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {viewingRecord.records.map((r, i) => (
+                                        <tr key={i}>
+                                            <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{r.rollNumber}</td>
+                                            <td>{r.name}</td>
+                                            <td>
+                                                <span className="badge-role" style={{ 
+                                                    background: r.status === 'Present' ? '#dcfce7' : '#fee2e2',
+                                                    color: r.status === 'Present' ? '#166534' : '#991b1b'
+                                                }}>
+                                                    {r.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style={{ marginTop: '1.5rem', textAlign: 'right', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                            <button className="btn-action csv-dl" onClick={() => {
+                                const headers = ['Roll Number', 'Name', 'Status'];
+                                const data = viewingRecord.records.map(r => [r.rollNumber, r.name, r.status]);
+                                exportToCSV(headers, data, `Attendance_${viewingRecord.subject}_${viewingRecord.date}.csv`);
+                            }}>📄 Export CSV</button>
+                            <button className="btn-action primary" onClick={() => setViewingRecord(null)}>Close</button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
             )}
         </div>
     );
