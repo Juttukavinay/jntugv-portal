@@ -216,6 +216,7 @@ function UserManagement({ showToast }) {
                 <tbody>
                     <tr><td>Admin (Root)</td><td>Super User</td><td>Full Write/Delete</td><td><button disabled>Protected</button></td></tr>
                     <tr><td>Principal</td><td>Academic Admin</td><td>Dept Level Manage</td><td><button className="btn-action">Edit</button></td></tr>
+                    <tr><td>Vice Principal</td><td>Academic Admin</td><td>Sub-Dept Level Manage</td><td><button className="btn-action">Edit</button></td></tr>
                     <tr><td>Faculty</td><td>Instructional</td><td>Course Management</td><td><button className="btn-action">Edit</button></td></tr>
                     <tr><td>Student</td><td>Consumer</td><td>Read Only + Forms</td><td><button className="btn-action">Edit</button></td></tr>
                 </tbody>
