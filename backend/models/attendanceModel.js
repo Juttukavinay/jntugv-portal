@@ -7,6 +7,7 @@ const attendanceSchema = mongoose.Schema({
     room: { type: String },
     facultyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Faculty' },
     facultyName: { type: String },
+    department: { type: String }, // To allow department-wise reports
     periodTime: { type: String },
     records: [{
         studentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Student' },

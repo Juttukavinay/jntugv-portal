@@ -38,15 +38,16 @@ router.get('/students', async (req, res) => {
 });
 
 // GET /api/attendance?date=YYYY-MM-DD&semester=...&subject=...
-// Check if attendance already taken for a slot
 router.get('/', async (req, res) => {
-    const { date, semester, subject, facultyName } = req.query;
+    const { date, semester, subject, facultyName, department, periodTime } = req.query;
     try {
         const query = {};
         if (date) query.date = date;
         if (semester) query.semester = semester;
         if (subject) query.subject = subject;
         if (facultyName) query.facultyName = facultyName;
+        if (department) query.department = department;
+        if (periodTime) query.periodTime = periodTime;
 
         const records = await Attendance.find(query).sort({ createdAt: -1 });
         res.json(records);
@@ -56,12 +57,10 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/attendance
-// Save attendance record
 router.post('/', async (req, res) => {
     try {
-        const { date, subject, semester, room, facultyId, facultyName, periodTime, records } = req.body;
+        const { date, subject, semester, room, facultyId, facultyName, department, periodTime, records } = req.body;
 
-        // Safely handle facultyId - only use it if it looks like a valid ObjectId
         const mongoose = require('mongoose');
         const safeFacultyId = facultyId && mongoose.Types.ObjectId.isValid(facultyId) ? facultyId : undefined;
 
@@ -72,6 +71,7 @@ router.post('/', async (req, res) => {
             room,
             facultyId: safeFacultyId,
             facultyName,
+            department,
             periodTime,
             records
         });
@@ -84,16 +84,13 @@ router.post('/', async (req, res) => {
 });
 
 // GET /api/attendance/student/:rollNumber
-// Fetch all attendance records for a specific student
 router.get('/student/:rollNumber', async (req, res) => {
     try {
         const { rollNumber } = req.params;
-        // Find all attendance session records where this student's roll number is in the records array
         const sessions = await Attendance.find({
             "records.rollNumber": rollNumber
         }).sort({ date: -1 });
 
-        // Filter and map to return only the relevant part for the student
         const result = sessions.map(session => {
             const studentRecord = session.records.find(r => r.rollNumber === rollNumber);
             return {

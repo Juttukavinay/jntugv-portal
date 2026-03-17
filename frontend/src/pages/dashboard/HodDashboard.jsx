@@ -1060,6 +1060,8 @@ function AttendanceManager() {
     const [history, setHistory] = useState([]);
     const [viewingRecord, setViewingRecord] = useState(null);
     const [timetableToday, setTimetableToday] = useState([]);
+    const [attendanceExists, setAttendanceExists] = useState(false);
+    const [existingId, setExistingId] = useState(null);
 
     const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const todayName = days[new Date().getDay()];
@@ -1074,13 +1076,14 @@ function AttendanceManager() {
     ];
 
     const fetchHistory = useCallback(() => {
+        if (!user?.department) return;
         setLoading(true);
-        fetch(`${API_BASE_URL}/api/attendance`)
+        fetch(`${API_BASE_URL}/api/attendance?department=${encodeURIComponent(user.department)}`)
             .then(res => res.json())
             .then(data => { if (Array.isArray(data)) setHistory(data); })
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, []);
+    }, [user?.department]);
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user'));
@@ -1132,28 +1135,53 @@ function AttendanceManager() {
         }
     }, [selectedSubject, timetableToday]);
 
-    const loadStudents = async () => {
-        if (!selectedSemester || !selectedSubject) {
-            alert('Please select Semester and Subject');
-            return;
-        }
-        setLoading(true);
-        setStudents([]);
-        try {
-            const res = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(selectedSemester)}`);
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                setStudents(data);
-                const initial = {};
-                data.forEach(s => { initial[s._id] = 'Present'; });
-                setAttendanceData(initial);
+    // AUTO-LOAD LOGIC: Effect to fetch students and check attendance whenever criteria change
+    useEffect(() => {
+        const fetchStudentsAndRecords = async () => {
+            if (!selectedSemester || !selectedSubject || !selectedTime || !attendanceDate || !user?.department) return;
+            
+            setLoading(true);
+            setAttendanceExists(false);
+            setExistingId(null);
+            
+            try {
+                // 1. Check if attendance already exists
+                const checkRes = await fetch(`${API_BASE_URL}/api/attendance?date=${attendanceDate}&semester=${encodeURIComponent(selectedSemester)}&subject=${encodeURIComponent(selectedSubject)}&periodTime=${encodeURIComponent(selectedTime)}`);
+                const existingRecords = await checkRes.json();
+                
+                if (existingRecords && existingRecords.length > 0) {
+                    const record = existingRecords[0];
+                    setAttendanceExists(true);
+                    setExistingId(record._id);
+                    // Map existing records to status object
+                    const existingData = {};
+                    record.records.forEach(r => { existingData[r.studentId] = r.status; });
+                    setAttendanceData(existingData);
+                    
+                    // We still need the student list to display names/roll numbers correctly if the record structure is flat
+                    // but usually record.records has it. Let's use it directly.
+                    setStudents(record.records.map(r => ({ ...r, _id: r.studentId })));
+                } else {
+                    // 2. Fetch student list for marking
+                    const studentRes = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(selectedSemester)}&department=${encodeURIComponent(user.department)}`);
+                    const studentList = await studentRes.json();
+                    
+                    if (Array.isArray(studentList)) {
+                        setStudents(studentList);
+                        const initial = {};
+                        studentList.forEach(s => { initial[s._id] = 'Present'; });
+                        setAttendanceData(initial);
+                    }
+                }
+            } catch (err) {
+                console.error("Auto-load error:", err);
+            } finally {
+                setLoading(false);
             }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+
+        fetchStudentsAndRecords();
+    }, [selectedSemester, selectedSubject, selectedTime, attendanceDate, user?.department]);
 
     const toggleStatus = (studentId) => {
         setAttendanceData(prev => ({
@@ -1180,6 +1208,7 @@ function AttendanceManager() {
                 semester: selectedSemester,
                 facultyId: user?.id || user?._id,
                 facultyName: user?.name,
+                department: user?.department,
                 periodTime: selectedTime,
                 records
             };
@@ -1289,24 +1318,25 @@ function AttendanceManager() {
                         </div>
                     </div>
 
-                    <div style={{ textAlign: 'right' }}>
-                        <button 
-                            className="btn-action primary" 
-                            style={{ padding: '0.75rem 2rem' }}
-                            onClick={loadStudents}
-                            disabled={loading}
-                        >
-                            {loading ? 'Loading...' : 'Load Students'}
-                        </button>
-                    </div>
+                    {!loading && selectedSemester && selectedSubject && !selectedTime && (
+                        <div style={{ textAlign: 'center', padding: '1rem', background: '#fffbeb', color: '#92400e', borderRadius: '8px', fontSize: '0.9rem' }}>
+                            ⚠️ Subject not found in today's timetable. Please enter the time slot manually to load students.
+                        </div>
+                    )}
+                    
+                    {loading && (
+                        <div style={{ textAlign: 'center', padding: '1rem' }}>
+                            <div className="pulse-soft">🔍 Synchronizing records...</div>
+                        </div>
+                    )}
                 </div>
 
                 {students.length > 0 && (
                     <div className="glass-table-container">
                         <div className="table-header-premium">
                             <div>
-                                <h3 style={{ margin: '0 0 2px 0' }}>Attendance Sheet: {selectedSubject}</h3>
-                                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedSemester} • {selectedTime}</div>
+                                <h3 style={{ margin: '0 0 2px 0' }}>{attendanceExists ? '✅ View Record' : '✍️ Mark Attendance'}: {selectedSubject}</h3>
+                                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedSemester} • {selectedTime} {attendanceExists && <span style={{ color: '#16a34a', fontWeight: 'bold', marginLeft: '10px' }}>[RECORDED]</span>}</div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                 <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ Mark All Present</button>
@@ -1350,7 +1380,7 @@ function AttendanceManager() {
                                 onClick={submitAttendance}
                                 disabled={submitting}
                             >
-                                {submitting ? 'Submitting...' : 'Submit Attendance'}
+                                {submitting ? 'Processing...' : (attendanceExists ? 'Update Record' : 'Submit Attendance')}
                             </button>
                         </div>
                     </div>

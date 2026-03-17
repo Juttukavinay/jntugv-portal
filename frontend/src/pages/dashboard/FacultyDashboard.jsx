@@ -779,10 +779,9 @@ function AttendanceManager() {
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [attendanceDate] = useState(new Date().toISOString().split('T')[0]);
-    const [takenRecords, setTakenRecords] = useState([]);
-    const [viewMode, setViewMode] = useState('mark'); // 'mark' | 'history'
-    const [history, setHistory] = useState([]);
     const [viewingRecord, setViewingRecord] = useState(null);
+    const [attendanceExists, setAttendanceExists] = useState(false);
+    const [existingId, setExistingId] = useState(null);
 
     const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const todayName = days[new Date().getDay()];
@@ -791,7 +790,7 @@ function AttendanceManager() {
         if (!user?.name) return;
         fetch(`${API_BASE_URL}/api/attendance?date=${new Date().toISOString().split('T')[0]}&facultyName=${encodeURIComponent(user.name)}`)
             .then(res => res.json())
-            .then(data => { if (Array.isArray(data)) setTakenRecords(data); })
+            .then(data => { if (Array.isArray(data)) setHistory(data); }) // History for faculty is their taken records
             .catch(console.error);
     }, []);
 
@@ -842,26 +841,39 @@ function AttendanceManager() {
         if (viewMode === 'history') fetchHistory(user);
     }, [todayName, fetchTodayAttendance, fetchHistory, viewMode]);
 
-    const isAlreadyTaken = (cls) => takenRecords.some(
-        r => r.subject === cls.subject && r.semester === cls.semester && r.periodTime === cls.time
+    const isAlreadyTaken = (cls) => history.some(
+        r => r.subject === cls.subject && r.semester === cls.semester && r.periodTime === cls.time && r.date === attendanceDate
     );
 
     const loadStudents = async (cls) => {
-        if (isAlreadyTaken(cls)) {
-            alert('Attendance already submitted for this class today!');
-            return;
-        }
         setSelectedClass(cls);
         setLoading(true);
         setStudents([]);
+        setAttendanceExists(false);
+        setExistingId(null);
+        
         try {
-            const res = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(cls.semester)}`);
-            const data = await res.json();
-            if (Array.isArray(data)) {
-                setStudents(data);
+            // Check if already taken
+            const checkRes = await fetch(`${API_BASE_URL}/api/attendance?date=${attendanceDate}&semester=${encodeURIComponent(cls.semester)}&subject=${encodeURIComponent(cls.subject)}&periodTime=${encodeURIComponent(cls.time)}`);
+            const existingRecords = await checkRes.json();
+
+            if (existingRecords && existingRecords.length > 0) {
+                const record = existingRecords[0];
+                setAttendanceExists(true);
+                setExistingId(record._id);
+                setStudents(record.records.map(r => ({ ...r, _id: r.studentId })));
                 const initial = {};
-                data.forEach(s => { initial[s._id] = 'Present'; });
+                record.records.forEach(r => { initial[r.studentId] = r.status; });
                 setAttendanceData(initial);
+            } else {
+                const res = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(cls.semester)}`);
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    setStudents(data);
+                    const initial = {};
+                    data.forEach(s => { initial[s._id] = 'Present'; });
+                    setAttendanceData(initial);
+                }
             }
         } catch (err) {
             console.error(err);
@@ -900,6 +912,7 @@ function AttendanceManager() {
                 room: selectedClass.room,
                 facultyName: currentUser?.name,
                 periodTime: selectedClass.time,
+                department: currentUser?.department || '',
                 records
             };
             const res = await fetch(`${API_BASE_URL}/api/attendance`, {
@@ -908,7 +921,7 @@ function AttendanceManager() {
                 body: JSON.stringify(payload)
             });
             if (res.ok) {
-                alert('\u2705 Attendance submitted successfully!');
+                alert('\u2705 Attendance processed successfully!');
                 setStudents([]);
                 setSelectedClass(null);
                 fetchTodayAttendance(currentUser);
@@ -953,7 +966,7 @@ function AttendanceManager() {
                             <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem' }}>Today: <strong>{todayName}</strong> — {attendanceDate}</p>
                         </div>
                         <div style={{ fontSize: '0.82rem', color: '#64748b', background: '#f1f5f9', padding: '4px 12px', borderRadius: '20px' }}>
-                            {takenRecords.length} class{takenRecords.length !== 1 ? 'es' : ''} submitted today
+                            {history.filter(r => r.date === attendanceDate).length} class{(history.filter(r => r.date === attendanceDate).length) !== 1 ? 'es' : ''} submitted today
                         </div>
                     </div>
 
@@ -1049,7 +1062,7 @@ function AttendanceManager() {
                         </table>
                         <div style={{ padding: '1rem', textAlign: 'right' }}>
                             <button className="btn-primary" style={{ width: '200px' }} onClick={submitAttendance} disabled={submitting}>
-                                {submitting ? 'Submitting...' : 'Submit Attendance'}
+                                {submitting ? 'Processing...' : (attendanceExists ? 'Update Record' : 'Submit Attendance')}
                             </button>
                         </div>
                     </div>
