@@ -1,39 +1,47 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Brand Colors - Simple White, Blue combination */
-  --primary: #2563eb;       /* Primary Blue */
-  --primary-hover: #1d4ed8; /* Darker Blue */
-  --secondary: #3b82f6;     /* Lighter Blue */
-  --accent-gold: #60a5fa;   /* Lighter Blue */
-  --univ-red: #2563eb;      /* Map old red vars to blue */
-  --univ-yellow: #3b82f6;   /* Map old yellow to blue */
-  --univ-blue: #2563eb;
-  --univ-green: #3b82f6;    /* Map old green to blue */
+  /* Brand Colors - Modern Coral + Teal Palette (Shubakar Inspired) */
+  --primary: #FF6B6B;       /* Coral / Salmon */
+  --primary-hover: #E85555; /* Darker Coral */
+  --primary-light: #FFE8E8; /* Very light coral */
+  --secondary: #00C9A7;     /* Teal / Mint */
+  --secondary-hover: #00B396;
+  --secondary-light: #E0FFF7;
+  --accent-dark: #1A1D2E;   /* Deep Navy */
+  --accent-gold: #FFB74D;   /* Warm Gold accent */
+
+  /* Legacy variable mappings */
+  --univ-red: #FF6B6B;
+  --univ-yellow: #FFB74D;
+  --univ-blue: #4A90D9;
+  --univ-green: #00C9A7;
 
   /* Backgrounds */
-  --bg-main: #f8fafc;
+  --bg-main: #F8FAFB;
   --bg-card: #ffffff;
-  --bg-subtle: #f1f5f9;
+  --bg-subtle: #F1F5F9;
   --bg-input: #ffffff;
+  --bg-dark: #1A1D2E;
 
   /* Text */
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
+  --text-primary: #1A1D2E;
+  --text-secondary: #64748B;
   --text-on-primary: #ffffff;
+  --text-muted: #94A3B8;
 
-  /* Borders & Shadows - Flatter approach */
-  --border-light: #e2e8f0;
-  --radius-lg: 4px;
-  /* Flatter corners */
-  --radius-md: 2px;
-  --radius-sm: 0px;
+  /* Borders & Shadows */
+  --border-light: #E8ECF1;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.1);
 
-  --sidebar-width: 260px;
+  --sidebar-width: 280px;
 }
 
 * {
@@ -42,7 +50,7 @@
 
 body {
   margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Outfit', 'Inter', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-main);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -81,13 +89,13 @@ a:hover {
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background-color: #f8fafc;
+  background-color: var(--bg-main);
 }
 
 /* Sidebar */
 .dashboard-sidebar {
   width: var(--sidebar-width);
-  background: var(--primary);
+  background: var(--accent-dark);
   color: white;
   display: flex;
   flex-direction: column;
@@ -110,7 +118,6 @@ a:hover {
   flex-direction: column;
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
-  /* Ensure full width */
 }
 
 /* Header */
@@ -129,7 +136,6 @@ a:hover {
 
 .mobile-menu-btn {
   display: none;
-  /* Hidden on desktop */
   background: transparent;
   border: none;
   font-size: 1.5rem;
@@ -148,7 +154,7 @@ a:hover {
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   z-index: 45;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(4px);
 }
 
 /* --- MOBILE RESPONSIVE STYLES --- */
@@ -179,7 +185,6 @@ a:hover {
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: 1fr;
-    /* Stack stats on mobile */
   }
 
   .dashboard-header {
@@ -188,14 +193,11 @@ a:hover {
 
   .full-table-wrapper {
     overflow-x: auto;
-    /* Ensure tables scroll horizontally */
   }
 
-  /* Make tables scroll on small screens */
   .clean-table th,
   .clean-table td {
     min-width: 120px;
-    /* Force minimum width to trigger scroll */
   }
 
   .clean-table th:first-child,
@@ -204,23 +206,21 @@ a:hover {
     left: 0;
     z-index: 10;
     background: #fff;
-    /* or match row bg */
   }
 }
 
-/* ... (Keep existing login styles below) ... */
 /* --- LOGIN PAGE STYLES --- */
 .login-container {
   display: flex;
   min-height: 100vh;
   background-color: var(--bg-main);
   overflow: hidden;
+  font-family: 'Outfit', sans-serif;
 }
 
 /* Left components (Image/Brand) */
 .login-hero-section {
   display: none;
-  /* Hidden on mobile by default */
   flex: 1.2;
   position: relative;
   background: url("/login-bg.png") center/cover no-repeat;
@@ -236,8 +236,7 @@ a:hover {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(30, 41, 59, 0.85);
-  /* Solid dark overlay */
+  background: linear-gradient(135deg, rgba(26, 29, 46, 0.92) 0%, rgba(255, 107, 107, 0.3) 100%);
   z-index: -1;
 }
 
@@ -264,8 +263,10 @@ a:hover {
 }
 
 .gradient-text {
-  color: var(--primary);
-  /* Solid primary color instead of gradient */
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Right components (Form) */
@@ -344,7 +345,6 @@ a:hover {
   border: 1px solid var(--border-light);
   box-shadow: var(--shadow-sm);
   overflow: auto;
-  /* Allow scrolling */
 }
 
 .mobile-hide {
@@ -360,12 +360,12 @@ a:hover {
 .modern-input {
   width: 100%;
   padding: 0.875rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--border-light);
   font-size: 1rem;
   outline: none;
-  transition: all 0.2s ease;
-  background: var(--bg-subtle);
+  transition: all 0.3s ease;
+  background: var(--bg-card);
   color: var(--text-primary);
   font-family: inherit;
 }
@@ -373,25 +373,28 @@ a:hover {
 .modern-input:focus {
   border-color: var(--primary);
   background: white;
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+  box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.12);
 }
 
 .btn-primary {
   width: 100%;
   padding: 1rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: none;
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, #FF8E8E 100%);
   color: white;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   margin-top: 1rem;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
 }
 
 .btn-primary:hover {
-  background: var(--primary-hover);
+  background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
 }
 
 .btn-primary:disabled {
@@ -436,27 +439,29 @@ a:hover {
 .demo-btn {
   padding: 0.75rem;
   background: white;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
   color: var(--text-secondary);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
 }
 
 .demo-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
-  background: #fcfcfc;
+  background: var(--primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.15);
 }
 
 .error-banner {
-  background: #fef2f2;
-  border: 1px solid #fee2e2;
-  color: #991b1b;
+  background: #FEF2F2;
+  border: 1px solid #FEE2E2;
+  color: #991B1B;
   padding: 1rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
