@@ -1135,31 +1135,30 @@ function AttendanceManager() {
         }
     }, [selectedSubject, timetableToday]);
 
-    // AUTO-LOAD LOGIC: Effect to fetch students and check attendance whenever criteria change
+    // AUTO-LOAD LOGIC: Effect to fetch students when semester + subject are selected
     useEffect(() => {
         const fetchStudentsAndRecords = async () => {
-            if (!selectedSemester || !selectedSubject || !selectedTime || !attendanceDate || !user?.department) return;
+            if (!selectedSemester || !selectedSubject || !user?.department) return;
+            
+            // Auto-set time from timetable if available
+            const autoTime = selectedTime || 'N/A';
             
             setLoading(true);
             setAttendanceExists(false);
             setExistingId(null);
             
             try {
-                // 1. Check if attendance already exists
-                const checkRes = await fetch(`${API_BASE_URL}/api/attendance?date=${attendanceDate}&semester=${encodeURIComponent(selectedSemester)}&subject=${encodeURIComponent(selectedSubject)}&periodTime=${encodeURIComponent(selectedTime)}`);
+                // 1. Check if attendance already exists for today
+                const checkRes = await fetch(`${API_BASE_URL}/api/attendance?date=${attendanceDate}&semester=${encodeURIComponent(selectedSemester)}&subject=${encodeURIComponent(selectedSubject)}`);
                 const existingRecords = await checkRes.json();
                 
                 if (existingRecords && existingRecords.length > 0) {
                     const record = existingRecords[0];
                     setAttendanceExists(true);
                     setExistingId(record._id);
-                    // Map existing records to status object
                     const existingData = {};
                     record.records.forEach(r => { existingData[r.studentId] = r.status; });
                     setAttendanceData(existingData);
-                    
-                    // We still need the student list to display names/roll numbers correctly if the record structure is flat
-                    // but usually record.records has it. Let's use it directly.
                     setStudents(record.records.map(r => ({ ...r, _id: r.studentId })));
                 } else {
                     // 2. Fetch student list for marking
@@ -1181,7 +1180,7 @@ function AttendanceManager() {
         };
 
         fetchStudentsAndRecords();
-    }, [selectedSemester, selectedSubject, selectedTime, attendanceDate, user?.department]);
+    }, [selectedSemester, selectedSubject, attendanceDate, user?.department]);
 
     const toggleStatus = (studentId) => {
         setAttendanceData(prev => ({
@@ -1191,7 +1190,7 @@ function AttendanceManager() {
     };
 
     const submitAttendance = async () => {
-        if (!selectedSemester || !selectedSubject || !selectedTime) return;
+        if (!selectedSemester || !selectedSubject) return;
         
         setSubmitting(true);
         try {
@@ -1279,7 +1278,7 @@ function AttendanceManager() {
                         <h3 style={{ margin: 0 }}>Strategic Filter Interface</h3>
                     </div>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
                         <div className="input-group">
                             <label className="input-label">Academic Semester</label>
                             <select 
@@ -1288,7 +1287,7 @@ function AttendanceManager() {
                                 value={selectedSemester}
                                 onChange={e => { setSelectedSemester(e.target.value); setSelectedSubject(''); }}
                             >
-                                <option value="">-- Select --</option>
+                                <option value="">-- Select Semester --</option>
                                 {semesters.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
@@ -1302,63 +1301,15 @@ function AttendanceManager() {
                                 onChange={e => setSelectedSubject(e.target.value)}
                                 disabled={!selectedSemester}
                             >
-                                <option value="">-- Select --</option>
+                                <option value="">-- Select Subject --</option>
                                 {semesterSubjects.map(s => <option key={s._id} value={s.courseName}>{s.courseName}</option>)}
                             </select>
                         </div>
-
-                        <div className="input-group">
-                            <label className="input-label">Attendance Date</label>
-                            <input 
-                                type="date"
-                                className="modern-input" 
-                                style={{ width: '100%', borderRadius: '12px' }}
-                                value={attendanceDate}
-                                onChange={e => setAttendanceDate(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="input-group">
-                            <label className="input-label">Time Slot</label>
-                            <input 
-                                type="text"
-                                className="modern-input" 
-                                style={{ width: '100%', borderRadius: '12px' }}
-                                value={selectedTime}
-                                placeholder="e.g. 09:30-10:30"
-                                onChange={e => setSelectedTime(e.target.value)}
-                            />
-                        </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                        <button 
-                            className="btn-action primary" 
-                            style={{ 
-                                padding: '10px 24px', 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '0.75rem',
-                                opacity: (!selectedSemester || !selectedSubject) ? 0.6 : 1
-                            }}
-                            disabled={!selectedSemester || !selectedSubject || loading}
-                            onClick={() => {
-                                // Students now load automatically, but this button provides explicit feedback
-                                showToast("Refreshing records...");
-                            }}
-                        >
-                            {loading ? (
-                                <span className="pulse-soft">Synchronizing...</span>
-                            ) : (
-                                <><span>Verify & Load Students</span> <Icons.Check /> </>
-                            )}
-                        </button>
-                    </div>
-
-                    {!loading && selectedSemester && selectedSubject && !selectedTime && (
-                        <div style={{ marginTop: '1rem', padding: '0.75rem 1.25rem', background: '#FFFBEB', color: '#92400e', borderRadius: '12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid #FEF3C7' }}>
-                            <span>⚠️</span>
-                            <span>No matching slot found in today's timetable. Manual time override required.</span>
+                    {loading && (
+                        <div style={{ textAlign: 'center', padding: '1.5rem' }}>
+                            <div className="pulse-soft" style={{ fontSize: '1rem', color: 'var(--primary)' }}>🔍 Loading students...</div>
                         </div>
                     )}
                 </div>
