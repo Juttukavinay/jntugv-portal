@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import './index.css';
+import '../index.css';
 
 let toastCount = 0;
 let addToastFunc = null;
