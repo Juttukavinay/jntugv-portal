@@ -782,7 +782,8 @@ function AttendanceManager() {
     const [viewingRecord, setViewingRecord] = useState(null);
     const [attendanceExists, setAttendanceExists] = useState(false);
     const [existingId, setExistingId] = useState(null);
-
+    const [viewMode, setViewMode] = useState('mark');
+    const [history, setHistory] = useState([]);
     const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const todayName = days[new Date().getDay()];
 
