@@ -1417,56 +1417,7 @@ function AttendanceManager() {
                 )}
                 </>
             ) : (
-                <div className="glass-table-container">
-                    <div className="table-header-premium">
-                        <h3>Attendance Reports (All Records)</h3>
-                        <button className="btn-action" onClick={fetchHistory}>🔄 Refresh</button>
-                    </div>
-                    <div style={{ overflowX: 'auto' }}>
-                        <table className="premium-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Subject</th>
-                                    <th>Class</th>
-                                    <th>Faculty</th>
-                                    <th>Time</th>
-                                    <th style={{ textAlign: 'center' }}>Present/Total</th>
-                                    <th style={{ textAlign: 'center' }}>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {history.length === 0 ? (
-                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No records found</td></tr>
-                                ) : history.map((rec, idx) => {
-                                    const p = rec.records?.filter(r => r.status === 'Present').length || 0;
-                                    const total = rec.records?.length || 0;
-                                    return (
-                                        <tr key={idx}>
-                                            <td style={{ fontWeight: '600' }}>{rec.date}</td>
-                                            <td style={{ fontWeight: '700' }}>{rec.subject}</td>
-                                            <td>{rec.semester}</td>
-                                            <td style={{ fontSize: '0.85rem' }}>{rec.facultyName}</td>
-                                            <td>{rec.periodTime}</td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <span style={{ color: p === total ? '#16a34a' : '#2563eb', fontWeight: 'bold' }}>{p}</span> / {total}
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <button 
-                                                    className="btn-action" 
-                                                    style={{ padding: '4px 12px', fontSize: '0.75rem', background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe' }}
-                                                    onClick={() => setViewingRecord(rec)}
-                                                >
-                                                    View Detailed
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <AttendanceCalendarView history={history} loading={loading} fetchHistory={fetchHistory} setViewingRecord={setViewingRecord} />
             )}
 
             {viewingRecord && createPortal(
@@ -1522,6 +1473,230 @@ function AttendanceManager() {
                     </div>
                 </div>,
                 document.body
+            )}
+        </div>
+    );
+}
+
+function AttendanceCalendarView({ history, loading, fetchHistory, setViewingRecord }) {
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [selectedDate, setSelectedDate] = useState(null);
+
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    // Build a map: dateStr -> array of records
+    const dateMap = {};
+    (history || []).forEach(rec => {
+        const d = rec.date; // e.g. "2026-03-18" or "18-03-2026"
+        if (d) {
+            // Normalize to YYYY-MM-DD
+            let normalized = d;
+            if (d.match(/^\d{2}-\d{2}-\d{4}$/)) {
+                const [dd, mm, yyyy] = d.split('-');
+                normalized = `${yyyy}-${mm}-${dd}`;
+            }
+            if (!dateMap[normalized]) dateMap[normalized] = [];
+            dateMap[normalized].push(rec);
+        }
+    });
+
+    const pad = n => String(n).padStart(2, '0');
+    const todayStr = `${new Date().getFullYear()}-${pad(new Date().getMonth()+1)}-${pad(new Date().getDate())}`;
+
+    const prevMonth = () => setCurrentMonth(new Date(year, month - 1, 1));
+    const nextMonth = () => setCurrentMonth(new Date(year, month + 1, 1));
+
+    const selectedDateStr = selectedDate;
+    const selectedRecords = selectedDateStr ? (dateMap[selectedDateStr] || []) : [];
+
+    // Count total attendance days this month
+    const daysWithAttendance = Object.keys(dateMap).filter(d => {
+        const [y, m] = d.split('-');
+        return parseInt(y) === year && parseInt(m) === month + 1;
+    }).length;
+
+    return (
+        <div className="fade-in-up">
+            <div className="glass-panel" style={{ padding: '2rem', borderRadius: '24px', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <div>
+                        <h3 style={{ margin: 0 }}>📅 Attendance Calendar</h3>
+                        <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                            {daysWithAttendance} day(s) with attendance this month
+                        </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <button onClick={fetchHistory} className="btn-action" style={{ padding: '6px 14px', fontSize: '0.8rem' }}>🔄 Refresh</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'white', padding: '6px', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                            <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 10px', fontSize: '1rem', color: '#64748b' }}>◀</button>
+                            <span style={{ fontWeight: 700, fontSize: '1rem', minWidth: '160px', textAlign: 'center', color: 'var(--accent-dark)' }}>{monthNames[month]} {year}</span>
+                            <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 10px', fontSize: '1rem', color: '#64748b' }}>▶</button>
+                        </div>
+                    </div>
+                </div>
+
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: '3rem' }}>
+                        <div className="pulse-soft" style={{ fontSize: '1.1rem' }}>Loading calendar...</div>
+                    </div>
+                ) : (
+                    <div>
+                        {/* Day Headers */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
+                            {dayNames.map(d => (
+                                <div key={d} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', padding: '8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{d}</div>
+                            ))}
+                        </div>
+
+                        {/* Calendar Grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px' }}>
+                            {/* Empty slots before 1st */}
+                            {Array.from({ length: firstDayOfWeek }).map((_, i) => (
+                                <div key={`e-${i}`} style={{ aspectRatio: '1', borderRadius: '14px' }}></div>
+                            ))}
+                            {/* Day Cells */}
+                            {Array.from({ length: daysInMonth }).map((_, i) => {
+                                const dayNum = i + 1;
+                                const dateStr = `${year}-${pad(month + 1)}-${pad(dayNum)}`;
+                                const hasRecords = !!dateMap[dateStr];
+                                const recordCount = dateMap[dateStr]?.length || 0;
+                                const isToday = dateStr === todayStr;
+                                const isSelected = dateStr === selectedDate;
+                                const isSunday = new Date(year, month, dayNum).getDay() === 0;
+
+                                return (
+                                    <div
+                                        key={dayNum}
+                                        onClick={() => setSelectedDate(isSelected ? null : dateStr)}
+                                        style={{
+                                            aspectRatio: '1',
+                                            borderRadius: '14px',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            background: isSelected ? 'var(--primary)' : isToday ? '#FFF1F2' : hasRecords ? '#F0FDF4' : isSunday ? '#fef2f2' : 'white',
+                                            color: isSelected ? 'white' : isToday ? 'var(--primary)' : isSunday ? '#ef4444' : 'var(--accent-dark)',
+                                            border: isSelected ? '2px solid var(--primary)' : isToday ? '2px solid var(--primary)' : '1px solid #f1f5f9',
+                                            fontWeight: isToday || isSelected ? 800 : 500,
+                                            fontSize: '0.95rem',
+                                            position: 'relative',
+                                            transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                                            boxShadow: isSelected ? '0 4px 15px rgba(255,107,107,0.3)' : 'none'
+                                        }}
+                                    >
+                                        {dayNum}
+                                        {hasRecords && (
+                                            <div style={{
+                                                display: 'flex',
+                                                gap: '2px',
+                                                marginTop: '2px',
+                                            }}>
+                                                {Array.from({ length: Math.min(recordCount, 3) }).map((_, di) => (
+                                                    <div key={di} style={{
+                                                        width: '5px',
+                                                        height: '5px',
+                                                        borderRadius: '50%',
+                                                        background: isSelected ? 'white' : '#22c55e'
+                                                    }} />
+                                                ))}
+                                                {recordCount > 3 && <span style={{ fontSize: '0.5rem', color: isSelected ? 'white' : '#16a34a', fontWeight: 700 }}>+{recordCount - 3}</span>}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Legend */}
+                        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', justifyContent: 'center', fontSize: '0.75rem', color: '#64748b' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e' }} /> Attendance Taken</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '3px', border: '2px solid var(--primary)', background: '#FFF1F2' }} /> Today</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)' }} /> Selected</div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Records for selected date */}
+            {selectedDate && (
+                <div className="glass-table-container fade-in-up" style={{ borderRadius: '24px', overflow: 'hidden' }}>
+                    <div className="table-header-premium" style={{ background: '#f8fafc', padding: '1.25rem 2rem' }}>
+                        <div>
+                            <h3 style={{ margin: 0 }}>Records for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h3>
+                            <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>{selectedRecords.length} session(s) recorded</p>
+                        </div>
+                    </div>
+                    {selectedRecords.length === 0 ? (
+                        <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+                            <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📭</div>
+                            <p>No attendance was taken on this date.</p>
+                        </div>
+                    ) : (
+                        <div style={{ padding: '1rem' }}>
+                            <div style={{ display: 'grid', gap: '0.75rem' }}>
+                                {selectedRecords.map((rec, idx) => {
+                                    const p = rec.records?.filter(r => r.status === 'Present').length || 0;
+                                    const total = rec.records?.length || 0;
+                                    const pct = total > 0 ? Math.round((p / total) * 100) : 0;
+                                    return (
+                                        <div key={idx} style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            padding: '1rem 1.5rem',
+                                            background: 'white',
+                                            borderRadius: '16px',
+                                            border: '1px solid #f1f5f9',
+                                            transition: 'all 0.2s',
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => setViewingRecord(rec)}
+                                        onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.06)'; }}
+                                        onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                <div style={{
+                                                    width: '44px', height: '44px', borderRadius: '12px',
+                                                    background: rec.subject?.toLowerCase().includes('lab') ? '#F5F3FF' : '#EFF6FF',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    fontSize: '1.2rem'
+                                                }}>
+                                                    {rec.subject?.toLowerCase().includes('lab') ? '🔬' : '📖'}
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: 700, color: 'var(--accent-dark)' }}>{rec.subject}</div>
+                                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{rec.semester} • {rec.periodTime || 'N/A'} • {rec.facultyName}</div>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    <div style={{ fontWeight: 800, color: pct >= 75 ? '#16a34a' : pct >= 50 ? '#d97706' : '#ef4444', fontSize: '1.1rem' }}>{pct}%</div>
+                                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{p}/{total} present</div>
+                                                </div>
+                                                <div style={{ 
+                                                    width: '40px', height: '40px', borderRadius: '50%', 
+                                                    background: `conic-gradient(${pct >= 75 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444'} ${pct}%, #f1f5f9 0%)`,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'white' }} />
+                                                </div>
+                                                <span style={{ color: '#94a3b8', fontSize: '1.2rem' }}>→</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
             )}
         </div>
     );
