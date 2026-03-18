@@ -15,6 +15,8 @@ import './App.css'
 import ErrorBoundary from './components/ErrorBoundary'
 import ProgressBar from './components/ProgressBar'
 import ChatBot from './components/ChatBot'
+import { ToastContainer } from './components/ToastContainer'
+import useSSE from './components/useSSE'
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -23,6 +25,9 @@ function App() {
       return saved && saved !== "undefined" ? JSON.parse(saved) : null;
     } catch { return null; }
   });
+
+  // Initialize SSE for real-time notifications globally
+  useSSE(user);
 
   // Listen for login/logout across the app
   useEffect(() => {
@@ -57,6 +62,7 @@ function App() {
   return (
     <Router>
       <ProgressBar />
+      <ToastContainer />
       <ChatBot />
 
       <ErrorBoundary>

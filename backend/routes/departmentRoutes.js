@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 const Department = require('../models/departmentModel');
 const Faculty = require('../models/facultyModel');
+const { cacheMiddleware, invalidateCache } = require('../middleware/cache');
 
-// Get all departments
-router.get('/', async (req, res) => {
+// Get all departments (Cached for 5 minutes)
+router.get('/', cacheMiddleware(300), async (req, res) => {
     try {
         const depts = await Department.find({}).sort({ name: 1 });
         res.json(depts);
@@ -21,6 +22,7 @@ router.post('/', async (req, res) => {
         if (exists) return res.status(400).json({ message: 'Department already exists' });
 
         const dept = await Department.create({ name });
+        invalidateCache('/api/departments'); // Clear cache
         res.status(201).json(dept);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -51,6 +53,7 @@ router.put('/assign-hod', async (req, res) => {
         // 3. Promote New HOD
         await Faculty.findByIdAndUpdate(faculty._id, { role: 'hod' });
 
+        invalidateCache('/api/departments'); // Clear cache
         res.json(dept);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -62,13 +65,9 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Optional: Check if department has faculty or students before deleting?
-        // For now, simple delete as requested.
         await Department.findByIdAndDelete(id);
 
-        // Also update any faculty associated with this department? 
-        // Or leave them? For now, we just delete the department record.
-
+        invalidateCache('/api/departments'); // Clear cache
         res.status(200).json({ message: 'Department deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });

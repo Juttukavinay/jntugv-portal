@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Communication = require('../models/noticeModel');
+const { broadcast } = require('./sseRoutes');
 
 // @route   POST /api/notices
 // @desc    Create a new communication (notice, message, or poll)
@@ -16,7 +17,7 @@ router.post('/', async (req, res) => {
         const comm = await Communication.create({
             senderId,
             senderName,
-            senderRole: senderRole.toUpperCase(),
+            senderRole: String(senderRole).toUpperCase(),
             type: type || 'notice',
             title: title || (type === 'message' ? 'Direct Message' : 'Announcement'),
             content,
@@ -25,6 +26,13 @@ router.post('/', async (req, res) => {
             priority: priority || 'normal',
             attachments: attachments || [],
             pollData: pollData || null
+        });
+
+        // Broadcast real-time event to clients
+        broadcast({
+            type: 'new_notice',
+            message: `New ${comm.type} from ${comm.senderName}`,
+            data: comm
         });
 
         res.status(201).json(comm);
@@ -85,6 +93,12 @@ router.put('/vote/:id', async (req, res) => {
         comm.pollData.options[optionIndex].votes.push(userId);
 
         await comm.save();
+
+        broadcast({
+            type: 'poll_vote',
+            data: comm
+        });
+
         res.json(comm);
     } catch (error) {
         res.status(500).json({ message: error.message });

@@ -39,6 +39,9 @@ app.use('/api/rooms', require('./routes/roomRoutes'));
 app.use('/api/notices', require('./routes/noticeRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 
+const sseRoutes = require('./routes/sseRoutes');
+app.use('/api/sse', sseRoutes);
+
 app.get('/', (req, res) => {
     res.send('API is running...');
 });
