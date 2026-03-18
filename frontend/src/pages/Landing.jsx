@@ -7,12 +7,48 @@ function Landing({ user }) {
     const [serverMsg, setServerMsg] = useState('Connecting...')
     const [isScrolled, setIsScrolled] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+    const [departments, setDepartments] = useState([])
+    const [loadingDepts, setLoadingDepts] = useState(true)
+
+    const fallbackDepts = [
+        { name: 'Computer Science & Engineering', short: 'CSE', icon: '💻', color: '#EFF6FF', iconColor: '#2563EB' },
+        { name: 'Electronics & Communication', short: 'ECE', icon: '📡', color: '#F0FDF4', iconColor: '#16A34A' },
+        { name: 'Mechanical Engineering', short: 'MECH', icon: '⚙️', color: '#FFF7ED', iconColor: '#EA580C' },
+        { name: 'Electrical Engineering', short: 'EEE', icon: '⚡', color: '#FFFBEB', iconColor: '#CA8A04' },
+        { name: 'Information Technology', short: 'IT', icon: '🖥️', color: '#F5F3FF', iconColor: '#7C3AED' },
+        { name: 'Civil Engineering', short: 'CIVIL', icon: '🏗️', color: '#E0FFF7', iconColor: '#0F766E' },
+        { name: 'Metallurgical Engineering', short: 'META', icon: '🔩', color: '#FFF1F2', iconColor: '#BE123C' },
+        { name: 'BS & HSS', short: 'BSH', icon: '📚', color: '#F0F9FF', iconColor: '#0EA5E9' },
+        { name: 'MBA', short: 'MBA', icon: '💼', color: '#FDF4FF', iconColor: '#A21CAF' }
+    ]
 
     useEffect(() => {
         fetch(`${API_BASE_URL}/api`)
             .then(res => res.json())
             .then(data => setServerMsg(data.message))
             .catch(() => setServerMsg('Server Offline'))
+
+        // Fetch Departments from Backend
+        fetch(`${API_BASE_URL}/api/departments`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    // Match backend names with our icon mapping
+                    const mapped = data.map(d => {
+                        const fb = fallbackDepts.find(f => f.name === d.name || f.short === d.name);
+                        return {
+                            ...fb,
+                            name: d.name,
+                            short: fb?.short || d.name.split(' ').map(w => w[0]).join('')
+                        };
+                    });
+                    setDepartments(mapped);
+                } else {
+                    setDepartments(fallbackDepts);
+                }
+            })
+            .catch(() => setDepartments(fallbackDepts))
+            .finally(() => setLoadingDepts(false));
 
         const handleScroll = () => setIsScrolled(window.scrollY > 50)
         window.addEventListener('scroll', handleScroll)
@@ -53,15 +89,9 @@ function Landing({ user }) {
                     <div className="nav-item-dropdown">
                         <Link to="/departments" className="nav-link">Departments ▾</Link>
                         <div className="dropdown-menu-premium">
-                            <Link to="/departments">Computer Science & Engineering</Link>
-                            <Link to="/departments">Electronics & Communication Engineering</Link>
-                            <Link to="/departments">Mechanical Engineering</Link>
-                            <Link to="/departments">Electrical & Electronics Engineering</Link>
-                            <Link to="/departments">Information Technology</Link>
-                            <Link to="/departments">Metallurgical Engineering</Link>
-                            <Link to="/departments">Civil Engineering</Link>
-                            <Link to="/departments">BS & HSS</Link>
-                            <Link to="/departments">MBA</Link>
+                            {departments.map(d => (
+                                <Link key={d.name} to="/departments">{d.name}</Link>
+                            ))}
                         </div>
                     </div>
                     <a href="#features" className="nav-link">Features</a>
@@ -152,7 +182,7 @@ function Landing({ user }) {
                             {[
                                 { label: 'Students', value: '2000+', icon: '🎓' },
                                 { label: 'Faculty', value: '150+', icon: '👨‍🏫' },
-                                { label: 'Departments', value: '9', icon: '🏛️' },
+                                { label: 'Departments', value: departments.length || '9', icon: '🏛️' },
                                 { label: 'Est. Year', value: '2007', icon: '📅' }
                             ].map(stat => (
                                 <div key={stat.label} style={{ textAlign: 'center' }}>
@@ -183,19 +213,9 @@ function Landing({ user }) {
                             gap: '1.25rem',
                             marginBottom: '2rem'
                         }}>
-                            {[
-                                { name: 'Computer Science & Engineering', short: 'CSE', icon: '💻', color: '#EFF6FF', iconColor: '#2563EB' },
-                                { name: 'Electronics & Communication', short: 'ECE', icon: '📡', color: '#F0FDF4', iconColor: '#16A34A' },
-                                { name: 'Mechanical Engineering', short: 'MECH', icon: '⚙️', color: '#FFF7ED', iconColor: '#EA580C' },
-                                { name: 'Electrical Engineering', short: 'EEE', icon: '⚡', color: '#FFFBEB', iconColor: '#CA8A04' },
-                                { name: 'Information Technology', short: 'IT', icon: '🖥️', color: '#F5F3FF', iconColor: '#7C3AED' },
-                                { name: 'Civil Engineering', short: 'CIVIL', icon: '🏗️', color: '#E0FFF7', iconColor: '#0F766E' },
-                                { name: 'Metallurgical Engineering', short: 'META', icon: '🔩', color: '#FFF1F2', iconColor: '#BE123C' },
-                                { name: 'BS & HSS', short: 'BSH', icon: '📚', color: '#F0F9FF', iconColor: '#0EA5E9' },
-                                { name: 'MBA', short: 'MBA', icon: '💼', color: '#FDF4FF', iconColor: '#A21CAF' }
-                            ].map(dept => (
+                            {departments.map(dept => (
                                 <Link
-                                    key={dept.short}
+                                    key={dept.name}
                                     to="/departments"
                                     style={{ textDecoration: 'none' }}
                                 >

@@ -1245,145 +1245,224 @@ function AttendanceManager() {
     };
 
     return (
-        <div>
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-                <button 
-                    className={`btn-action ${viewMode === 'mark' ? 'primary' : ''}`} 
-                    onClick={() => setViewMode('mark')}
-                >
-                    Mark Attendance
-                </button>
-                <button 
-                    className={`btn-action ${viewMode === 'history' ? 'primary' : ''}`} 
-                    onClick={() => setViewMode('history')}
-                >
-                    View Reports
-                </button>
+        <div className="fade-in-up">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <div>
+                    <h2 style={{ margin: 0, color: 'var(--accent-dark)' }}>Attendance Gateway</h2>
+                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Strategic academic tracking for {user.department} department.</p>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', background: 'white', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                    <button 
+                        className={`btn-action ${viewMode === 'mark' ? 'primary' : ''}`} 
+                        onClick={() => { setViewMode('mark'); setStudents([]); }}
+                        style={{ padding: '8px 20px', fontSize: '0.85rem' }}
+                    >
+                        Mark Attendance
+                    </button>
+                    <button 
+                        className={`btn-action ${viewMode === 'history' ? 'primary' : ''}`} 
+                        onClick={() => setViewMode('history')}
+                        style={{ padding: '8px 20px', fontSize: '0.85rem' }}
+                    >
+                        View Reports
+                    </button>
+                </div>
             </div>
 
             {viewMode === 'mark' ? (
                 <>
-                <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
-                    <h3 style={{ margin: '0 0 1.5rem 0' }}>📋 Strategic Attendance Loading</h3>
+                <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '20px', border: '1px solid var(--border-light)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
+                        <div style={{ width: '40px', height: '40px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Icons.Check />
+                        </div>
+                        <h3 style={{ margin: 0 }}>Strategic Filter Interface</h3>
+                    </div>
                     
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                        <div>
-                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Semester</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                        <div className="input-group">
+                            <label className="input-label">Academic Semester</label>
                             <select 
-                                className="search-input-premium" 
-                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                className="modern-input" 
+                                style={{ width: '100%', borderRadius: '12px' }}
                                 value={selectedSemester}
                                 onChange={e => { setSelectedSemester(e.target.value); setSelectedSubject(''); }}
                             >
-                                <option value="">-- Select Semester --</option>
+                                <option value="">-- Select --</option>
                                 {semesters.map(s => <option key={s} value={s}>{s}</option>)}
                             </select>
                         </div>
                         
-                        <div>
-                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Subject / Lab</label>
+                        <div className="input-group">
+                            <label className="input-label">Subject / Laboratory</label>
                             <select 
-                                className="search-input-premium" 
-                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                className="modern-input" 
+                                style={{ width: '100%', borderRadius: '12px' }}
                                 value={selectedSubject}
                                 onChange={e => setSelectedSubject(e.target.value)}
                                 disabled={!selectedSemester}
                             >
-                                <option value="">-- Select Subject --</option>
+                                <option value="">-- Select --</option>
                                 {semesterSubjects.map(s => <option key={s._id} value={s.courseName}>{s.courseName}</option>)}
                             </select>
                         </div>
 
-                        <div>
-                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Date</label>
+                        <div className="input-group">
+                            <label className="input-label">Attendance Date</label>
                             <input 
                                 type="date"
-                                className="search-input-premium" 
-                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                className="modern-input" 
+                                style={{ width: '100%', borderRadius: '12px' }}
                                 value={attendanceDate}
                                 onChange={e => setAttendanceDate(e.target.value)}
                             />
                         </div>
 
-                        <div>
-                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Time Slot</label>
+                        <div className="input-group">
+                            <label className="input-label">Time Slot</label>
                             <input 
                                 type="text"
-                                className="search-input-premium" 
-                                style={{ width: '100%', marginTop: '0.5rem' }}
+                                className="modern-input" 
+                                style={{ width: '100%', borderRadius: '12px' }}
                                 value={selectedTime}
-                                placeholder="09:30-10:30"
+                                placeholder="e.g. 09:30-10:30"
                                 onChange={e => setSelectedTime(e.target.value)}
                             />
                         </div>
                     </div>
 
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                        <button 
+                            className="btn-action primary" 
+                            style={{ 
+                                padding: '10px 24px', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '0.75rem',
+                                opacity: (!selectedSemester || !selectedSubject) ? 0.6 : 1
+                            }}
+                            disabled={!selectedSemester || !selectedSubject || loading}
+                            onClick={() => {
+                                // Students now load automatically, but this button provides explicit feedback
+                                showToast("Refreshing records...");
+                            }}
+                        >
+                            {loading ? (
+                                <span className="pulse-soft">Synchronizing...</span>
+                            ) : (
+                                <><span>Verify & Load Students</span> <Icons.Check /> </>
+                            )}
+                        </button>
+                    </div>
+
                     {!loading && selectedSemester && selectedSubject && !selectedTime && (
-                        <div style={{ textAlign: 'center', padding: '1rem', background: '#fffbeb', color: '#92400e', borderRadius: '8px', fontSize: '0.9rem' }}>
-                            ⚠️ Subject not found in today's timetable. Please enter the time slot manually to load students.
-                        </div>
-                    )}
-                    
-                    {loading && (
-                        <div style={{ textAlign: 'center', padding: '1rem' }}>
-                            <div className="pulse-soft">🔍 Synchronizing records...</div>
+                        <div style={{ marginTop: '1rem', padding: '0.75rem 1.25rem', background: '#FFFBEB', color: '#92400e', borderRadius: '12px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid #FEF3C7' }}>
+                            <span>⚠️</span>
+                            <span>No matching slot found in today's timetable. Manual time override required.</span>
                         </div>
                     )}
                 </div>
 
-                {students.length > 0 && (
-                    <div className="glass-table-container">
-                        <div className="table-header-premium">
+                {students.length > 0 ? (
+                    <div className="glass-table-container fade-in-up" style={{ borderRadius: '24px', overflow: 'hidden' }}>
+                        <div className="table-header-premium" style={{ background: '#f8fafc', padding: '1.5rem 2rem' }}>
                             <div>
-                                <h3 style={{ margin: '0 0 2px 0' }}>{attendanceExists ? '✅ View Record' : '✍️ Mark Attendance'}: {selectedSubject}</h3>
-                                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedSemester} • {selectedTime} {attendanceExists && <span style={{ color: '#16a34a', fontWeight: 'bold', marginLeft: '10px' }}>[RECORDED]</span>}</div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{attendanceExists ? 'Reviewing Record' : 'Attendance Registry'}</h3>
+                                    {attendanceExists && (
+                                        <span style={{ 
+                                            background: '#dcfce7', color: '#16a34a', fontSize: '0.7rem', 
+                                            padding: '2px 10px', borderRadius: '99px', fontWeight: 800,
+                                            border: '1px solid #bbf7d0', textTransform: 'uppercase', letterSpacing: '0.5px'
+                                        }}>Recorded</span>
+                                    )}
+                                </div>
+                                <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '4px' }}>
+                                    {selectedSubject} • {selectedTime} • <span style={{ fontWeight: 600 }}>{students.length} Students Detected</span>
+                                </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ Mark All Present</button>
-                                <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ Mark All Absent</button>
-                                <div style={{ background: '#f8fafc', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: '600' }}>
-                                    <span style={{ marginRight: '1rem', color: '#16a34a' }}>Present: {presentCount}</span>
-                                    <span style={{ color: '#ef4444' }}>Absent: {absentCount}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{ display: 'flex', background: 'white', borderRadius: '12px', padding: '4px', border: '1px solid var(--border-light)', marginRight: '0.5rem' }}>
+                                    <button onClick={() => markAll('Present')} style={{ padding: '6px 14px', border: 'none', background: 'transparent', color: '#16a34a', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer' }}>✓ All P</button>
+                                    <button onClick={() => markAll('Absent')} style={{ padding: '6px 14px', border: 'none', background: 'transparent', color: '#ef4444', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer' }}>✗ All A</button>
+                                </div>
+                                <div style={{ background: 'var(--accent-dark)', color: 'white', padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '600', display: 'flex', gap: '12px' }}>
+                                    <span>P: {presentCount}</span>
+                                    <span style={{ opacity: 0.3 }}>|</span>
+                                    <span>A: {absentCount}</span>
                                 </div>
                             </div>
                         </div>
-                        <table className="premium-table">
-                            <thead>
-                                <tr>
-                                    <th>Roll No</th>
-                                    <th>Name</th>
-                                    <th style={{ textAlign: 'center' }}>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {students.map(s => (
-                                    <tr key={s._id}>
-                                        <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
-                                        <td>{s.name}</td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', borderRadius: '20px', padding: '4px', cursor: 'pointer', transition: 'all 0.3s ease', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
-                                                <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? '#22c55e' : '#ef4444', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
-                                                <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', alignItems: 'center', height: '26px', fontSize: '0.85rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
-                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>A</span>
-                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>P</span>
-                                                </div>
-                                            </div>
-                                        </td>
+                        <div style={{ padding: '0 1rem' }}>
+                            <table className="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ paddingLeft: '2rem' }}>Candidate Roll</th>
+                                        <th>Student Name</th>
+                                        <th style={{ textAlign: 'center' }}>Portal Status</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        <div style={{ padding: '1.5rem', textAlign: 'right' }}>
+                                </thead>
+                                <tbody>
+                                    {students.map((s, idx) => (
+                                        <tr key={s._id} style={{ animation: `fadeIn 0.3s ease-out ${idx * 0.01}s backwards` }}>
+                                            <td style={{ paddingLeft: '2rem', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', color: 'var(--accent-dark)' }}>{s.rollNumber}</td>
+                                            <td style={{ fontWeight: 500 }}>{s.name}</td>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <div 
+                                                    style={{ 
+                                                        display: 'inline-flex', 
+                                                        background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', 
+                                                        borderRadius: '30px', 
+                                                        padding: '4px', 
+                                                        cursor: 'pointer', 
+                                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
+                                                        width: '110px', 
+                                                        position: 'relative',
+                                                        border: `1px solid ${attendanceData[s._id] === 'Present' ? '#bbf7d0' : '#fecaca'}`
+                                                    }} 
+                                                    onClick={() => toggleStatus(s._id)}
+                                                >
+                                                    <div style={{ 
+                                                        position: 'absolute', 
+                                                        top: '4px', 
+                                                        left: attendanceData[s._id] === 'Present' ? '60px' : '4px', 
+                                                        width: '42px', 
+                                                        height: '30px', 
+                                                        background: attendanceData[s._id] === 'Present' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #ef4444, #dc2626)', 
+                                                        borderRadius: '20px', 
+                                                        transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                                                    }}></div>
+                                                    <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 15px', alignItems: 'center', height: '30px', fontSize: '0.75rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
+                                                        <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>ABSENT</span>
+                                                        <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>PRESENT</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style={{ padding: '2rem', textAlign: 'right', background: '#f8fafc', borderTop: '1px solid var(--border-light)' }}>
                             <button
                                 className="btn-action primary"
-                                style={{ width: '200px' }}
+                                style={{ width: '220px', padding: '12px' }}
                                 onClick={submitAttendance}
                                 disabled={submitting}
                             >
-                                {submitting ? 'Processing...' : (attendanceExists ? 'Update Record' : 'Submit Attendance')}
+                                {submitting ? '🔒 Finalizing...' : (attendanceExists ? '🛠️ Update Portal Record' : '🚀 Finalize Attendance')}
                             </button>
                         </div>
                     </div>
+                ) : (
+                    selectedSemester && selectedSubject && !loading && (
+                        <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8', borderRadius: '24px' }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+                            <h3 style={{ color: 'var(--accent-dark)', marginBottom: '0.5rem' }}>No Students Found</h3>
+                            <p>We couldn't find any students for {selectedSemester} in {user.department}.<br/>Please verify the filters or check the student directory.</p>
+                        </div>
+                    )
                 )}
                 </>
             ) : (
