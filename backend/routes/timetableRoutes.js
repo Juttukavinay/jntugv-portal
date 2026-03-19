@@ -166,7 +166,13 @@ router.post('/generate', async (req, res) => {
         let dayIndices = [0, 1, 2, 3, 4].sort(() => Math.random() - 0.5);
         let unallocated = [];
 
-        // --- 3. PLACE LABS ---
+        // --- 3. FETCH AVAILABLE ROOMS ---
+        const Room = require('../models/roomModel');
+        const availableRooms = await Room.find({ type: { $in: ['Classroom', 'Lab'] } });
+        const labRooms = availableRooms.filter(r => r.type === 'Lab');
+        const classRooms = availableRooms.filter(r => r.type === 'Classroom');
+
+        // --- 4. PLACE LABS ---
         const existingTimetables = await Timetable.find({});
 
         for (let lab of queue.labs) {
@@ -181,25 +187,41 @@ router.post('/generate', async (req, res) => {
                 if (placed) break;
                 if (strat === 'afternoon') {
                     for (let i of dayIndices) {
-                        // Check if day already has a lab (either morning or afternoon)
+                        // Check if day already has a lab
                         if (!days[i].afternoonConfig && !days[i].morningConfig) {
                             
-                            // Check cross-class English Lab clash
-                            let conflict = false;
+                            // Find an available physical lab room
+                            let assignedRoom = null;
+                            for (let r of labRooms) {
+                                let roomConflict = false;
+                                for (let t of existingTimetables) {
+                                    if (t.className === semester) continue;
+                                    let sameDay = t.schedule.find(d => d.day === days[i].day);
+                                    if (sameDay && sameDay.periods.some(p => p.time.includes('02:00') && p.room === r.name)) {
+                                        roomConflict = true; break;
+                                    }
+                                }
+                                if (!roomConflict) { assignedRoom = r.name; break; }
+                            }
+
+                            // If no lab room is free, we might need to skip or just place it without room (though user wants rooms)
+                            if (!assignedRoom && labRooms.length > 0) continue; 
+
+                            // English Lab clash check (legacy rule)
+                            let englishConflict = false;
                             if (isEnglishLab) {
                                 for(let t of existingTimetables) {
-                                    // Make sure we are not comparing with the same class's old timetable
                                     if(t.className === semester) continue; 
                                     let sameDay = t.schedule.find(d => d.day === days[i].day);
                                     if(sameDay && sameDay.afternoonConfig && sameDay.assignedLab && sameDay.assignedLab.courseName.toLowerCase().includes('english')) {
-                                        conflict = true; break;
+                                        englishConflict = true; break;
                                     }
                                 }
                             }
-                            if (conflict) continue;
+                            if (englishConflict) continue;
 
                             days[i].afternoonConfig = lab.type;
-                            days[i].assignedLab = lab;
+                            days[i].assignedLab = { ...lab, room: assignedRoom || 'Main Lab' };
                             placed = true; break;
                         }
                     }
@@ -207,24 +229,36 @@ router.post('/generate', async (req, res) => {
                 else if (strat === 'morning') {
                     if (lab.type === 'Lab3' || lab.type === 'Lab2') {
                         for (let i of dayIndices) {
-                            // Check if day already has a lab (either morning or afternoon)
                             if (!days[i].morningConfig && !days[i].afternoonConfig) {
                                 
-                                // Check cross-class English Lab clash
-                                let conflict = false;
+                                let assignedRoom = null;
+                                for (let r of labRooms) {
+                                    let roomConflict = false;
+                                    for (let t of existingTimetables) {
+                                        if (t.className === semester) continue;
+                                        let sameDay = t.schedule.find(d => d.day === days[i].day);
+                                        if (sameDay && sameDay.periods.some(p => p.time.includes('09:30') && p.room === r.name)) {
+                                            roomConflict = true; break;
+                                        }
+                                    }
+                                    if (!roomConflict) { assignedRoom = r.name; break; }
+                                }
+                                if (!assignedRoom && labRooms.length > 0) continue;
+
+                                let englishConflict = false;
                                 if (isEnglishLab) {
                                     for(let t of existingTimetables) {
                                         if(t.className === semester) continue;
                                         let sameDay = t.schedule.find(d => d.day === days[i].day);
                                         if(sameDay && sameDay.morningConfig && sameDay.assignedMorningLab && sameDay.assignedMorningLab.courseName.toLowerCase().includes('english')) {
-                                            conflict = true; break;
+                                            englishConflict = true; break;
                                         }
                                     }
                                 }
-                                if (conflict) continue;
+                                if (englishConflict) continue;
 
                                 days[i].morningConfig = 'Lab';
-                                days[i].assignedMorningLab = lab;
+                                days[i].assignedMorningLab = { ...lab, room: assignedRoom || 'Main Lab' };
                                 placed = true; break;
                             }
                         }
@@ -456,9 +490,20 @@ router.post('/generate', async (req, res) => {
 
             // A. Morning
             if (d.morningConfig === 'Lab') {
-                p.push({ time: '09:30 - 12:30', subject: d.assignedMorningLab.courseName + ' (Lab)', type: 'Lab', credits: 3, ltp: d.assignedMorningLab.ltp, locked: true });
+                p.push({ 
+                    time: '09:30 - 12:30', 
+                    subject: d.assignedMorningLab.courseName + ' (Lab)', 
+                    type: 'Lab', 
+                    credits: 3, 
+                    ltp: d.assignedMorningLab.ltp, 
+                    room: d.assignedMorningLab.room || 'Main Lab',
+                    locked: true 
+                });
             } else {
                 let slots = fillBlock(d.morningConfig, d.morningPeriods || [], 9.5, 12.5);
+                // Assign a theory room if available
+                const theoryRoom = classRooms[Math.floor(Math.random() * classRooms.length)]?.name || 'TBD';
+                slots.forEach(s => { if (s.type === 'Lecture') s.room = theoryRoom; });
                 p.push(...slots);
             }
 
@@ -467,21 +512,34 @@ router.post('/generate', async (req, res) => {
 
             // C. Afternoon
             if (d.afternoonConfig === 'Lab3') {
-                p.push({ time: '02:00 - 05:00', subject: d.assignedLab.courseName + ' (Lab)', type: 'Lab', credits: 3, ltp: d.assignedLab.ltp, locked: true });
+                p.push({ 
+                    time: '02:00 - 05:00', 
+                    subject: d.assignedLab.courseName + ' (Lab)', 
+                    type: 'Lab', 
+                    credits: 3, 
+                    ltp: d.assignedLab.ltp, 
+                    room: d.assignedLab.room || 'Main Lab',
+                    locked: true 
+                });
             }
             else if (d.afternoonConfig === 'Lab2') {
                 // 2h Lab + 1h Sport
-                p.push({ time: '02:00 - 04:00', subject: d.assignedLab.courseName + ' (Lab)', type: 'Lab', credits: 2, ltp: d.assignedLab.ltp, locked: true });
+                p.push({ 
+                    time: '02:00 - 04:00', 
+                    subject: d.assignedLab.courseName + ' (Lab)', 
+                    type: 'Lab', 
+                    credits: 2, 
+                    ltp: d.assignedLab.ltp, 
+                    room: d.assignedLab.room || 'Main Lab',
+                    locked: true 
+                });
                 p.push({ time: '04:00 - 05:00', subject: 'Sports / Gap', type: 'Activity', credits: 1, locked: true });
             }
             else {
-                // To allow 2h items (start at 2PM or 3PM?)
-                // Actually my fillBlock sorts descending, so 2h item will be 2-4. 1h item 4-5.
-                // Or 1h item, 1h item, 1h item.
                 let slots = fillBlock(d.afternoonConfig, d.afternoonPeriods || [], 14, 17);
-                // Convert 24h to 12h for display if needed, but '02:00' format is fine.
-                // 14 -> 02, 17 -> 05.
-                slots.forEach(s => {
+                const theoryRoom = classRooms[Math.floor(Math.random() * classRooms.length)]?.name || 'TBD';
+                slots.forEach(s => { 
+                    if (s.type === 'Lecture') s.room = theoryRoom;
                     s.time = s.time.replace('14:', '02:').replace('15:', '03:').replace('16:', '04:').replace('17:', '05:');
                 });
                 p.push(...slots);

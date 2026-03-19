@@ -110,7 +110,7 @@ function HodDashboard() {
 
                 <div className="sidebar-footer">
                     <div className="user-snippet">
-                        <div className="user-avatar" style={{ background: '#3b82f6' }} title={user.name}>{user.name ? user.name.charAt(0) : 'H'}</div>
+                        <div className="user-avatar" style={{ background: 'var(--primary)' }} title={user.name}>{user.name ? user.name.charAt(0) : 'H'}</div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || 'HOD'}</div>
                             <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Head of Dept</div>
@@ -161,7 +161,8 @@ function HodDashboard() {
                     alignItems: 'center',
                     gap: '1rem',
                     zIndex: 9999,
-                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`
+                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`,
+                    animation: 'slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}>
                     <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
                         {toast.type === 'success' ? <Icons.Check /> : '❌'}
@@ -231,12 +232,12 @@ function HodOverview({ onNavigate, user }) {
 
             <div className="modern-stats-grid">
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#eff6ff', color: '#2563eb' }}><Icons.GradCap /></div>
-                    <div className="stat-content"><h5>Dept. Students</h5><h3>{stats.students}</h3><span className="stat-trend trend-up">Registered</span></div>
+                    <div className="stat-icon-wrapper" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}><Icons.GradCap /></div>
+                    <div className="stat-content"><h5>Dept. Students</h5><h3>{stats.students}</h3><span className="stat-trend trend-up">Active Enrollment</span></div>
                 </div>
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#f5f3ff', color: '#7c3aed' }}><Icons.Building /></div>
-                    <div className="stat-content"><h5>Infrastructure</h5><h3 onClick={() => onNavigate('infrastructure')} style={{ cursor: 'pointer' }}>Manage Rooms</h3><span className="stat-trend trend-neutral">Department Grid</span></div>
+                    <div className="stat-icon-wrapper" style={{ background: 'var(--secondary-light)', color: 'var(--secondary)' }}><Icons.Building /></div>
+                    <div className="stat-content"><h5>Asset Capacity</h5><h3 onClick={() => onNavigate('infrastructure')} style={{ cursor: 'pointer' }}>Manage Spaces</h3><span className="stat-trend trend-neutral">Department Grid</span></div>
                 </div>
             </div>
 
@@ -249,7 +250,7 @@ function HodOverview({ onNavigate, user }) {
                     {todayClasses.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {todayClasses.map((cls, i) => (
-                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#f8fafc', borderRadius: '12px', borderLeft: `4px solid ${cls.type === 'Lab' ? '#3b82f6' : '#10b981'}` }}>
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#fff', borderRadius: '12px', boxShadow: 'var(--shadow-sm)', borderLeft: `5px solid ${cls.type === 'Lab' ? 'var(--secondary)' : 'var(--primary)'}` }}>
                                     <div>
                                         <div style={{ fontWeight: '700', color: '#0f172a' }}>{cls.subject}</div>
                                         <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.semester} • {cls.room || 'TBD'}</div>
@@ -266,13 +267,13 @@ function HodOverview({ onNavigate, user }) {
                 <div className="glass-table-container" style={{ padding: '1.5rem' }}>
                     <h3 style={{ margin: '0 0 1.5rem 0' }}>Quick Management</h3>
                     <div className="grid-split" style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div className="stat-card-mini" onClick={() => onNavigate('timetable')} style={{ cursor: 'pointer', padding: '1rem', background: '#eff6ff', borderRadius: '12px', textAlign: 'center' }}>
-                            <div style={{ color: '#2563eb', marginBottom: '0.5rem' }}><Icons.Calendar /></div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>Manage Timetables</div>
+                        <div className="stat-card-mini" onClick={() => onNavigate('timetable')} style={{ cursor: 'pointer', padding: '1.25rem', background: 'var(--primary-light)', borderRadius: '16px', textAlign: 'center', transition: 'transform 0.2s', border: '1px solid var(--primary-hover)22' }}>
+                            <div style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}><Icons.Calendar /></div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>Timetable Engine</div>
                         </div>
-                        <div className="stat-card-mini" onClick={() => onNavigate('faculty')} style={{ cursor: 'pointer', padding: '1rem', background: '#f5f3ff', borderRadius: '12px', textAlign: 'center' }}>
-                            <div style={{ color: '#7c3aed', marginBottom: '0.5rem' }}><Icons.Users /></div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>Faculty Workload</div>
+                        <div className="stat-card-mini" onClick={() => onNavigate('faculty')} style={{ cursor: 'pointer', padding: '1.25rem', background: 'var(--secondary-light)', borderRadius: '16px', textAlign: 'center', transition: 'transform 0.2s', border: '1px solid var(--secondary-hover)22' }}>
+                            <div style={{ color: 'var(--secondary)', marginBottom: '0.5rem' }}><Icons.Users /></div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '700' }}>Faculty Workload</div>
                         </div>
                     </div>
                 </div>
@@ -516,7 +517,7 @@ function FacultyManager({ showToast }) {
                                                 <span style={{ fontWeight: 'bold', color: work.percentage > 100 ? '#ef4444' : '#16a34a' }}>{work.percentage}%</span>
                                             </div>
                                             <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${Math.min(work.percentage, 100)}%`, height: '100%', background: work.percentage > 100 ? '#ef4444' : '#3b82f6', transition: 'width 0.3s ease' }} />
+                                                <div style={{ width: `${Math.min(work.percentage, 100)}%`, height: '100%', background: work.percentage > 100 ? '#ef4444' : 'var(--primary)', transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }} />
                                             </div>
                                         </td>
                                         <td>
@@ -1302,7 +1303,9 @@ function AttendanceManager() {
                                 disabled={!selectedSemester}
                             >
                                 <option value="">-- Select Subject --</option>
-                                {semesterSubjects.map(s => <option key={s._id} value={s.courseName}>{s.courseName}</option>)}
+                                {[...new Set(semesterSubjects.map(s => s.courseName))].map(courseName => (
+                                    <option key={courseName} value={courseName}>{courseName}</option>
+                                ))}
                             </select>
                         </div>
                     </div>
@@ -1799,9 +1802,17 @@ function InfrastructureManager({ showToast }) {
                             <option value="CIVIL">CIVIL</option>
                         </select>
                     </div>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                            <label style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>Count</label>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                        <div style={{ padding: '0.75rem 1.25rem', background: 'var(--primary-light)', borderRadius: '12px', border: '1px solid var(--primary-hover)44' }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>Classes Created</div>
+                            <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--primary)' }}>{rooms.filter(r => r.type === 'Classroom').length} <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>/ Goal: Auto</span></div>
+                        </div>
+                        <div style={{ padding: '0.75rem 1.25rem', background: 'var(--secondary-light)', borderRadius: '12px', border: '1px solid var(--secondary-hover)44' }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 'bold', textTransform: 'uppercase' }}>Labs Created</div>
+                            <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--secondary)' }}>{rooms.filter(r => r.type === 'Lab').length} <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>/ Min: 2</span></div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '1rem' }}>
+                            <label style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>Batch Size</label>
                             <input
                                 type="number"
                                 min="1"
@@ -1809,13 +1820,13 @@ function InfrastructureManager({ showToast }) {
                                 value={addCount}
                                 onChange={e => setAddCount(e.target.value)}
                                 className="modern-input"
-                                style={{ width: '60px', padding: '6px', color: '#1e293b' }}
+                                style={{ width: '70px', padding: '8px', color: '#1e293b', border: '2px solid var(--border-light)' }}
                             />
                         </div>
-                        <button onClick={() => addRoomsBulk('Classroom')} className="btn-action primary" style={{ background: '#10b981' }}>+ Add Classes</button>
-                        <button onClick={() => addRoomsBulk('Lab')} className="btn-action primary" style={{ background: '#3b82f6' }}>+ Add Labs</button>
-                        <button onClick={saveRooms} className="btn-action primary" disabled={isSaving}>
-                            {isSaving ? '⏳ Saving...' : '💾 Save Changes'}
+                        <button onClick={() => addRoomsBulk('Classroom')} className="btn-action primary" style={{ background: 'var(--primary)' }}>+ Classes</button>
+                        <button onClick={() => addRoomsBulk('Lab')} className="btn-action primary" style={{ background: 'var(--secondary)' }}>+ Labs</button>
+                        <button onClick={saveRooms} className="btn-action primary" disabled={isSaving} style={{ background: 'var(--accent-dark)' }}>
+                            {isSaving ? '⏳ Saving...' : '💾 Save Infrastructure'}
                         </button>
                     </div>
                 </div>
