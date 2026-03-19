@@ -97,12 +97,8 @@ function Landing({ user }) {
                     <a href="#features" className="nav-link">Features</a>
                 </div>
 
-                <div className="nav-actions desktop-only">
-                    {user ? (
-                        <Link to={getDashboardLink()} className="btn-glow">Dashboard</Link>
-                    ) : (
-                        <Link to="/login" className="btn-glow">Sign In →</Link>
-                    )}
+                <div className="nav-actions desktop-only" style={{ display: 'flex', alignItems: 'center' }}>
+                    <Link to="/login" className="btn-glow">Sign In →</Link>
                 </div>
 
                 {/* Mobile Toggle */}
@@ -114,7 +110,7 @@ function Landing({ user }) {
                         background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)',
                         border: '1.5px solid #e2e8f0', width: '44px', height: '44px',
                         borderRadius: '10px', cursor: 'pointer', fontSize: '1.2rem',
-                        color: '#1A1D2E', transition: 'all 0.2s'
+                        color: '#1F1A12', transition: 'all 0.2s'
                     }}
                 >
                     {isMobileMenuOpen ? '✕' : '☰'}
@@ -128,11 +124,11 @@ function Landing({ user }) {
                         <Link to="/departments" onClick={() => setIsMobileMenuOpen(false)}>Departments</Link>
                         <a href="#features" onClick={() => setIsMobileMenuOpen(false)}>Features</a>
                         <Link
-                            to={user ? getDashboardLink() : '/login'}
+                            to="/login"
                             className="btn-mobile"
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
-                            {user ? 'Dashboard' : 'Sign In'}
+                            Sign In →
                         </Link>
                     </div>
                 )}
@@ -164,9 +160,9 @@ function Landing({ user }) {
                             A unified smart academic management system for students, faculty, HODs, and administration — all in one place.
                         </p>
 
-                        <div className="hero-actions" style={{ justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                            <Link to={user ? getDashboardLink() : '/login'} className="btn-primary-lg">
-                                {user ? 'Go to Dashboard →' : 'Get Started →'}
+                        <div className="hero-actions" style={{ justifyContent: 'center', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <Link to="/login" className="btn-primary-lg">
+                                Get Started →
                             </Link>
                             <a href="#about" className="btn-outline-lg">Learn More</a>
                         </div>

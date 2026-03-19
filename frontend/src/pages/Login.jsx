@@ -99,7 +99,7 @@ function Login() {
     }
 
     const demoRoles = [
-        { key: 'admin', label: '⚙️ Admin', color: '#FF6B6B' },
+        { key: 'admin', label: '⚙️ Admin', color: '#C5A059' },
         { key: 'principal', label: '🏛️ Principal', color: '#8B5CF6' },
         { key: 'hod', label: '👨‍💼 HOD', color: '#00C9A7' },
         { key: 'faculty', label: '👨‍🏫 Faculty', color: '#3B82F6' },
@@ -112,33 +112,34 @@ function Login() {
             {/* Left Side – Campus Image */}
             <div
                 className="login-hero-section"
-                style={{ backgroundImage: bgImage ? `url("${bgImage}")` : 'linear-gradient(135deg, #1A1D2E 0%, #FF6B6B 100%)' }}
+                style={{ backgroundImage: bgImage ? `url("${bgImage}")` : 'linear-gradient(135deg, #1F1A12 0%, #C5A059 100%)' }}
             >
-                <div className="login-hero-overlay"></div>
-                <div className="hero-content">
+                <div className="login-hero-overlay" style={{ background: 'linear-gradient(135deg, rgba(31, 26, 18, 0.9) 0%, rgba(197, 160, 89, 0.2) 100%)' }}></div>
+                <div className="hero-content" style={{ padding: '0 10%' }}>
                     {/* University Branding */}
                     <div style={{
                         display: 'inline-flex', alignItems: 'center', gap: '0.75rem',
-                        background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255,255,255,0.15)', borderRadius: '12px',
-                        padding: '0.5rem 1rem', marginBottom: '2rem'
+                        background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px',
+                        padding: '0.6rem 1.2rem', marginBottom: '2.5rem',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
                     }}>
-                        <img src="/jntugv-logo.png" alt="Logo" style={{ height: '32px', filter: 'brightness(0) invert(1)' }} />
-                        <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, fontSize: '0.9rem' }}>JNTU-GV</span>
+                        <img src="/jntugv-logo.png" alt="Logo" style={{ height: '36px', filter: 'brightness(0) invert(1)' }} />
+                        <span style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 700, fontSize: '1rem', letterSpacing: '0.05em' }}>JNTU-GV</span>
                     </div>
 
-                    <h1 style={{ fontSize: '3rem', fontWeight: 800, color: 'white', lineHeight: 1.1, margin: '0 0 1rem 0', letterSpacing: '-0.02em' }}>
+                    <h1 style={{ fontSize: '3.5rem', fontWeight: 800, color: 'white', lineHeight: 1.1, margin: '0 0 1.5rem 0', letterSpacing: '-0.03em' }}>
                         Jawaharlal Nehru<br />
                         <span style={{
-                            background: 'linear-gradient(135deg, #FF6B6B, #00C9A7)',
+                            background: 'linear-gradient(135deg, #FDFCF8, #C5A059)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                             backgroundClip: 'text'
                         }}>Technological University</span>
                     </h1>
 
-                    <p style={{ fontSize: '1rem', color: 'rgba(255,255,255,0.8)', margin: '0 0 2.5rem 0', lineHeight: 1.6 }}>
-                        Vizianagaram Campus — Smart Academic Management Portal for students, faculty & administration.
+                    <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', margin: '0 0 3rem 0', lineHeight: 1.7, maxWidth: '500px' }}>
+                        Empowering innovation and digital excellence through our unified smart academic management ecosystem.
                     </p>
 
                     {/* Feature pills */}
@@ -146,9 +147,13 @@ function Login() {
                         {['📊 Live Attendance', '📅 Smart Timetable', '🔒 Secure Access', '📱 Mobile Ready'].map(f => (
                             <div key={f} style={{
                                 background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
-                                border: '1px solid rgba(255,255,255,0.2)', borderRadius: '99px',
-                                padding: '0.4rem 1rem', color: 'white', fontSize: '0.8rem', fontWeight: 500
-                            }}>{f}</div>
+                                border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px',
+                                padding: '0.5rem 1.2rem', color: 'white', fontSize: '0.85rem', fontWeight: 600,
+                                transition: 'all 0.3s ease', cursor: 'default'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                            >{f}</div>
                         ))}
                     </div>
                 </div>

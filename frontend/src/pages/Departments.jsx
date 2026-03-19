@@ -293,7 +293,7 @@ function Departments() {
                         </p>
                         <Link to="/login" style={{
                             display: 'inline-block', padding: '0.875rem 2.5rem',
-                            background: 'linear-gradient(135deg, var(--primary), #FF8E8E)',
+                            background: 'linear-gradient(135deg, var(--primary), #D4AF37)',
                             color: 'white', borderRadius: '12px', fontWeight: 700, fontSize: '1rem',
                             textDecoration: 'none', boxShadow: '0 8px 25px rgba(255,107,107,0.4)',
                             transition: 'all 0.3s'

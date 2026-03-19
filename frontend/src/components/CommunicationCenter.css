@@ -43,8 +43,8 @@
 
 .comm-search-bar input:focus {
     outline: none;
-    border-color: var(--primary, #FF6B6B);
-    box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
+    border-color: var(--primary, #C5A059);
+    box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.1);
     background: white;
 }
 
@@ -88,8 +88,8 @@
 
 .comm-tab.active {
     color: white;
-    background: var(--primary, #FF6B6B);
-    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.25);
+    background: var(--primary, #C5A059);
+    box-shadow: 0 2px 8px rgba(197, 160, 89, 0.25);
 }
 
 .message-list {
@@ -121,8 +121,8 @@
 
 .message-item.active {
     background: white;
-    border-color: var(--primary, #FF6B6B);
-    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.1);
+    border-color: var(--primary, #C5A059);
+    box-shadow: 0 4px 20px rgba(197, 160, 89, 0.1);
 }
 
 .message-item.active::before {
@@ -133,7 +133,7 @@
     transform: translateY(-50%);
     width: 3px;
     height: 60%;
-    background: var(--primary, #FF6B6B);
+    background: var(--primary, #C5A059);
     border-radius: 0 4px 4px 0;
 }
 
@@ -305,7 +305,7 @@
 
 .poll-progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--primary, #FF6B6B), #FF8E8E);
+    background: linear-gradient(90deg, var(--primary, #C5A059), #D4AF37);
     border-radius: 10px;
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -395,10 +395,10 @@
 }
 
 .type-btn.active {
-    border-color: var(--primary, #FF6B6B);
+    border-color: var(--primary, #C5A059);
     background: #FFF1F2;
-    color: var(--primary, #FF6B6B);
-    box-shadow: 0 4px 16px rgba(255, 107, 107, 0.15);
+    color: var(--primary, #C5A059);
+    box-shadow: 0 4px 16px rgba(197, 160, 89, 0.15);
 }
 
 .recipient-chips {
@@ -425,10 +425,10 @@
 }
 
 .chip.active {
-    background: var(--primary, #FF6B6B);
+    background: var(--primary, #C5A059);
     color: white;
-    border-color: var(--primary, #FF6B6B);
-    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
+    border-color: var(--primary, #C5A059);
+    box-shadow: 0 2px 8px rgba(197, 160, 89, 0.3);
 }
 
 .composer-footer {

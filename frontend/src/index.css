@@ -1,39 +1,39 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Brand Colors — Clean Coral + Pure White Palette */
-  --primary: #FF6B6B;
-  --primary-hover: #E85555;
-  --primary-light: #FFF1F2;
-  --secondary: #00C9A7;
-  --secondary-hover: #00B396;
-  --secondary-light: #E0FFF7;
-  --accent-dark: #1A1D2E;
-  --accent-gold: #F5E6C8;          /* Soft light gold (muted) */
-  --accent-gold-text: #B8976A;     /* Light gold text */
+  /* Brand Colors — Premium Gold & White Palette */
+  --primary: #C5A059;       /* Rich Dark Gold */
+  --primary-hover: #B08D4A;
+  --primary-light: #FBF9F3; /* Light gold/white */
+  --secondary: #D4AF37;     /* Classic Gold */
+  --secondary-hover: #B8972E;
+  --secondary-light: #FAF5E8;
+  --accent-dark: #1F1A12;   /* Deep charcoal with warmth */
+  --accent-gold: #D4AF37;          
+  --accent-gold-text: #B08D4A;     
 
   /* Legacy variable mappings */
-  --univ-red: #FF6B6B;
-  --univ-yellow: #F5E6C8;
-  --univ-blue: #4A90D9;
-  --univ-green: #00C9A7;
+  --univ-red: #C5A059;
+  --univ-yellow: #D4AF37;
+  --univ-blue: #B08D4A;
+  --univ-green: #D4AF37;
 
   /* Backgrounds — Pure White Focus */
-  --bg-main: #FAFBFC;
-  --bg-card: #ffffff;
-  --bg-subtle: #F8FAFC;
-  --bg-input: #ffffff;
-  --bg-dark: #1A1D2E;
+  --bg-main: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #FDFCF8;
+  --bg-input: #FFFFFF;
+  --bg-dark: #1F1A12;
 
   /* Text */
-  --text-primary: #1A1D2E;
-  --text-secondary: #64748B;
+  --text-primary: #1F1A12;
+  --text-secondary: #5C5441;
   --text-on-primary: #ffffff;
-  --text-muted: #94A3B8;
+  --text-muted: #A39B8B;
 
   /* Borders & Shadows */
-  --border-light: #F1F5F9;
-  --border-medium: #E2E8F0;
+  --border-light: #F0EDE1;
+  --border-medium: #E1DACB;
   --radius-xl: 20px;
   --radius-lg: 16px;
   --radius-md: 12px;
@@ -44,7 +44,7 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
   --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.06), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
   --shadow-xl: 0 20px 40px -8px rgba(0, 0, 0, 0.08);
-  --shadow-primary: 0 4px 14px rgba(255, 107, 107, 0.25);
+  --shadow-primary: 0 4px 14px rgba(197, 160, 89, 0.25);
 
   --sidebar-width: 280px;
 
@@ -133,7 +133,7 @@ a:hover {
   transition: box-shadow 0.3s var(--ease-smooth);
 }
 .hover-glow:hover {
-  box-shadow: 0 0 20px rgba(255, 107, 107, 0.15);
+  box-shadow: 0 0 20px rgba(197, 160, 89, 0.15);
 }
 
 /* Ripple effect on buttons */
@@ -375,7 +375,7 @@ a:hover {
   border-color: var(--primary);
   background: var(--primary-light);
   transform: scale(1.02);
-  box-shadow: 0 0 30px rgba(255, 107, 107, 0.1);
+  box-shadow: 0 0 30px rgba(197, 160, 89, 0.1);
 }
 
 .drop-zone-icon {
@@ -489,7 +489,7 @@ a:hover {
 }
 
 .snackbar-action:hover {
-  background: rgba(255,107,107,0.15);
+  background: rgba(197, 160, 89,0.15);
 }
 
 @keyframes snackbarIn {
@@ -620,7 +620,7 @@ a:hover {
 .login-hero-overlay {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: linear-gradient(135deg, rgba(26, 29, 46, 0.92) 0%, rgba(255, 107, 107, 0.3) 100%);
+  background: linear-gradient(135deg, rgba(31, 26, 18, 0.92) 0%, rgba(197, 160, 89, 0.3) 100%);
   z-index: -1;
 }
 
@@ -744,7 +744,7 @@ a:hover {
 .modern-input:focus {
   border-color: var(--primary);
   background: white;
-  box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.08);
+  box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.08);
 }
 
 .modern-input::placeholder {
@@ -756,7 +756,7 @@ a:hover {
   padding: 1rem;
   border-radius: var(--radius-md);
   border: none;
-  background: linear-gradient(135deg, var(--primary) 0%, #FF8E8E 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #D4AF37 100%);
   color: white;
   font-size: 1rem;
   font-weight: 600;
@@ -771,7 +771,7 @@ a:hover {
 .btn-primary:hover {
   background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.35);
+  box-shadow: 0 6px 20px rgba(197, 160, 89, 0.35);
 }
 
 .btn-primary:active {
@@ -818,13 +818,13 @@ a:hover {
   background: var(--primary);
   color: white;
   border-color: var(--primary);
-  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.2);
+  box-shadow: 0 2px 6px rgba(197, 160, 89, 0.2);
 }
 
 .btn-action.primary:hover {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+  box-shadow: 0 4px 12px rgba(197, 160, 89, 0.3);
 }
 
 .demo-login-section {
@@ -878,7 +878,7 @@ a:hover {
   color: var(--primary);
   background: var(--primary-light);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.12);
+  box-shadow: 0 4px 12px rgba(197, 160, 89, 0.12);
 }
 
 .error-banner {
@@ -1014,8 +1014,8 @@ a:hover {
 }
 
 @keyframes glowPrimary {
-  from { box-shadow: 0 0 5px rgba(255,107,107,0.2); }
-  to { box-shadow: 0 0 20px rgba(255,107,107,0.4); }
+  from { box-shadow: 0 0 5px rgba(197, 160, 89,0.2); }
+  to { box-shadow: 0 0 20px rgba(197, 160, 89,0.4); }
 }
 
 @keyframes fadeInUser {

@@ -14,10 +14,10 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%); /* Using Coral palette */
+    background: linear-gradient(135deg, #C5A059 0%, #D4AF37 100%); /* Using Coral palette */
     color: white;
     border: none;
-    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+    box-shadow: 0 4px 20px rgba(197, 160, 89, 0.4);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -28,14 +28,14 @@
 
 /* Blinking Animation */
 @keyframes blink-chat {
-    0% { transform: scale(1); box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4); }
-    50% { transform: scale(1.1); box-shadow: 0 0 25px rgba(255, 107, 107, 0.8); }
-    100% { transform: scale(1); box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4); }
+    0% { transform: scale(1); box-shadow: 0 4px 20px rgba(197, 160, 89, 0.4); }
+    50% { transform: scale(1.1); box-shadow: 0 0 25px rgba(197, 160, 89, 0.8); }
+    100% { transform: scale(1); box-shadow: 0 4px 20px rgba(197, 160, 89, 0.4); }
 }
 
 .chatbot-toggle:hover {
     transform: scale(1.1) rotate(5deg);
-    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+    box-shadow: 0 8px 25px rgba(197, 160, 89, 0.6);
     animation: none; /* Stop blinking on hover */
 }
 
@@ -87,14 +87,14 @@
     width: 40px;
     height: 40px;
     background: #FFF1F2;
-    color: #FF6B6B;
+    color: #C5A059;
     border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
     font-size: 0.8rem;
-    border: 1px solid rgba(255, 107, 107, 0.2);
+    border: 1px solid rgba(197, 160, 89, 0.2);
 }
 
 .chatbot-header h3 {
@@ -151,10 +151,10 @@
 }
 
 .user .message-bubble {
-    background: #FF6B6B;
+    background: #C5A059;
     color: white;
     border-bottom-right-radius: 4px;
-    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+    box-shadow: 0 4px 12px rgba(197, 160, 89, 0.2);
 }
 
 .assistant .message-bubble {
@@ -185,16 +185,16 @@
 }
 
 .chatbot-input input:focus {
-    border-color: #FF6B6B;
+    border-color: #C5A059;
     background: white;
-    box-shadow: 0 0 0 4px rgba(255, 107, 107, 0.1);
+    box-shadow: 0 0 0 4px rgba(197, 160, 89, 0.1);
 }
 
 .chatbot-input button {
     width: 45px;
     height: 45px;
     border-radius: 12px;
-    background: #FF6B6B;
+    background: #C5A059;
     color: white;
     border: none;
     cursor: pointer;
@@ -224,7 +224,7 @@
 .dot {
     width: 6px;
     height: 6px;
-    background: #FF6B6B;
+    background: #C5A059;
     border-radius: 50%;
     animation: bounce 1.4s infinite ease-in-out both;
 }

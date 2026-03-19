@@ -144,8 +144,8 @@ const CommunicationCenter = ({ user, showToast }) => {
     };
 
     const getAvatarColor = (name) => {
-        if (!name) return '#FF6B6B';
-        const colors = ['#FF6B6B', '#8b5cf6', '#ec4899', '#f59e0b', '#00C9A7', '#06b6d4', '#3b82f6'];
+        if (!name) return '#C5A059';
+        const colors = ['#C5A059', '#8b5cf6', '#ec4899', '#f59e0b', '#00C9A7', '#06b6d4', '#3b82f6'];
         let hash = 0;
         for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
         return colors[Math.abs(hash) % colors.length];
@@ -503,7 +503,7 @@ const CommunicationCenter = ({ user, showToast }) => {
                                 <button type="submit"
                                     style={{ 
                                         padding: '0.75rem 2rem', borderRadius: '12px', 
-                                        background: 'var(--primary, #FF6B6B)', color: 'white', 
+                                        background: 'var(--primary, #C5A059)', color: 'white', 
                                         border: 'none', fontWeight: 700, cursor: 'pointer',
                                         display: 'flex', alignItems: 'center', gap: '8px',
                                         boxShadow: '0 4px 12px rgba(255,107,107,0.3)'
