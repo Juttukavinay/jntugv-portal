@@ -1,14 +1,14 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
-  /* Brand Colors — Professional Indigo & Slate Palette */
-  --primary: #4f46e5;       /* Modern Indigo */
-  --primary-hover: #4338ca;
-  --primary-light: #f5f3ff; /* Very faint indigo */
-  --secondary: #0ea5e9;     /* Deep Sky Blue for secondary accents */
-  --secondary-hover: #0284c7;
-  --secondary-light: #f0f9ff;
-  --accent-dark: #0f172a;   /* Slate 900 */
-  --accent-gold: #fbbf24;   /* Kept gold but as a sparse accent */
+  /* Brand Colors — Classic Blue & White Palette */
+  --primary: #0047AB;       /* Classic Cobalt/Royal Blue */
+  --primary-hover: #003380;
+  --primary-light: #f0f7ff; 
+  --secondary: #3b82f6;     /* Brighter Blue */
+  --secondary-hover: #2563eb;
+  --secondary-light: #eff6ff;
+  --accent-dark: #1e293b;   
+  --accent-gold: #fbbf24;   
   --accent-gold-text: #b45309;     
 
   /* Legacy variable mappings - repurposed */
