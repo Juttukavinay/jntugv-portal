@@ -32,6 +32,7 @@ function HodDashboard() {
     const [error, setError] = useState(null);
     const [existingClasses, setExistingClasses] = useState([]);
     const [upcomingClasses, setUpcomingClasses] = useState([]);
+    const [quickAttendance, setQuickAttendance] = useState(null);
 
     const showToast = useCallback((message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -66,6 +67,11 @@ function HodDashboard() {
         if (user.name) fetchClasses();
     }, [user.name]);
 
+    const handleQuickAttendance = (params) => {
+        setQuickAttendance(params);
+        setActiveTab('attendance');
+    };
+
     const renderContent = () => {
         switch (activeTab) {
             case 'students': return <StudentManager showToast={showToast} />;
@@ -73,9 +79,22 @@ function HodDashboard() {
             case 'timetable': return <TimetableManager showToast={showToast} />;
             case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} />;
             case 'infrastructure': return <InfrastructureManager showToast={showToast} />;
-            case 'attendance': return <AttendanceManager showToast={showToast} />;
+            case 'attendance': return (
+                <AttendanceManager 
+                    showToast={showToast} 
+                    initialParams={quickAttendance} 
+                    onClearParams={() => setQuickAttendance(null)} 
+                />
+            );
             case 'notices': return <CommunicationCenter user={user} showToast={showToast} />;
-            default: return <HodOverview onNavigate={setActiveTab} user={user} totalFaculty={allFaculty.length} />;
+            default: return (
+                <HodOverview 
+                    onNavigate={setActiveTab} 
+                    onQuickAttendance={handleQuickAttendance}
+                    user={user} 
+                    totalFaculty={allFaculty.length} 
+                />
+            );
         }
     };
 
@@ -188,7 +207,7 @@ function NavItem({ icon, label, active, onClick }) {
 
 
 // --- OVERVIEW COMPONENT ---
-function HodOverview({ onNavigate, user }) {
+function HodOverview({ onNavigate, onQuickAttendance, user }) {
     const [stats, setStats] = useState({ students: 0, faculty: 0, alerts: 0 });
     const [loading, setLoading] = useState(true);
 
@@ -250,7 +269,28 @@ function HodOverview({ onNavigate, user }) {
                     {todayClasses.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {todayClasses.map((cls, i) => (
-                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#fff', borderRadius: '12px', boxShadow: 'var(--shadow-sm)', borderLeft: `5px solid ${cls.type === 'Lab' ? 'var(--secondary)' : 'var(--primary)'}` }}>
+                                <div 
+                                    key={i} 
+                                    onClick={() => onQuickAttendance({
+                                        semester: cls.semester,
+                                        subject: cls.subject,
+                                        time: cls.time
+                                    })}
+                                    style={{ 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between', 
+                                        alignItems: 'center', 
+                                        padding: '1rem', 
+                                        background: '#fff', 
+                                        borderRadius: '12px', 
+                                        boxShadow: 'var(--shadow-sm)', 
+                                        borderLeft: `5px solid ${cls.type === 'Lab' ? 'var(--secondary)' : 'var(--primary)'}`,
+                                        cursor: 'pointer',
+                                        transition: 'transform 0.2s'
+                                    }}
+                                    onMouseOver={e => e.currentTarget.style.transform = 'translateX(5px)'}
+                                    onMouseOut={e => e.currentTarget.style.transform = 'translateX(0)'}
+                                >
                                     <div>
                                         <div style={{ fontWeight: '700', color: '#0f172a' }}>{cls.subject}</div>
                                         <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.semester} • {cls.room || 'TBD'}</div>
@@ -288,7 +328,7 @@ function StudentManager({ showToast }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState('');
     const [currentStudent, setCurrentStudent] = useState(null);
-    const [formData, setFormData] = useState({ rollNumber: '', name: '', year: '3', semester: '1', department: 'IT' });
+    const [formData, setFormData] = useState({ rollNumber: '', name: '', year: '3', semester: '1', department: user.department || 'IT' });
     const [activeCourse, setActiveCourse] = useState('B.Tech');
     const [activeYear, setActiveYear] = useState('All');
 
@@ -358,7 +398,7 @@ function StudentManager({ showToast }) {
                                 📂 CSV
                                 <input type="file" accept=".csv" onChange={handleBulkUpload} style={{ display: 'none' }} />
                             </label>
-                            <button className="btn-action primary" onClick={() => { setModalType('add'); setFormData({ rollNumber: '', name: '', year: '3', semester: '1', department: 'IT' }); setIsModalOpen(true); }}>+ Add Student</button>
+                            <button className="btn-action primary" onClick={() => { setModalType('add'); setFormData({ rollNumber: '', name: '', year: '3', semester: '1', department: user.department || 'IT' }); setIsModalOpen(true); }}>+ Add Student</button>
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -498,7 +538,7 @@ function FacultyManager({ showToast }) {
                             📂 CSV
                             <input type="file" accept=".csv" onChange={handleBulkUpload} style={{ display: 'none' }} />
                         </label>
-                        <button className="btn-action primary" onClick={() => { setModalType('add'); setFormData({ sNo: faculty.length + 1, name: '', email: '', mobileNumber: '', designation: 'Assistant Professor', type: 'Regular', department: 'IT' }); setIsModalOpen(true); }}>+ Add Faculty</button>
+                        <button className="btn-action primary" onClick={() => { setModalType('add'); setFormData({ sNo: faculty.length + 1, name: '', email: '', mobileNumber: '', designation: 'Assistant Professor', type: 'Regular', department: user.department || 'IT' }); setIsModalOpen(true); }}>+ Add Faculty</button>
                     </div>
                 </div>
                 <div style={{ overflowX: 'auto' }}>
@@ -1046,12 +1086,21 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
     );
 }
 
-function AttendanceManager() {
+function AttendanceManager({ showToast, initialParams, onClearParams }) {
     const [user, setUser] = useState({});
     const [selectedSemester, setSelectedSemester] = useState('');
     const [semesterSubjects, setSemesterSubjects] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
+
+    useEffect(() => {
+        if (initialParams) {
+            setSelectedSemester(initialParams.semester);
+            setSelectedSubject(initialParams.subject);
+            setSelectedTime(initialParams.time);
+            onClearParams();
+        }
+    }, [initialParams, onClearParams]);
     const [students, setStudents] = useState([]);
     const [attendanceData, setAttendanceData] = useState({});
     const [loading, setLoading] = useState(false);
@@ -1077,9 +1126,9 @@ function AttendanceManager() {
     ];
 
     const fetchHistory = useCallback(() => {
-        if (!user?.department) return;
         setLoading(true);
-        fetch(`${API_BASE_URL}/api/attendance?department=${encodeURIComponent(user.department)}`)
+        const deptParam = user?.department ? `department=${encodeURIComponent(user.department)}` : '';
+        fetch(`${API_BASE_URL}/api/attendance?${deptParam}`)
             .then(res => res.json())
             .then(data => { if (Array.isArray(data)) setHistory(data); })
             .catch(console.error)
@@ -1139,7 +1188,7 @@ function AttendanceManager() {
     // AUTO-LOAD LOGIC: Effect to fetch students when semester + subject are selected
     useEffect(() => {
         const fetchStudentsAndRecords = async () => {
-            if (!selectedSemester || !selectedSubject || !user?.department) return;
+            if (!selectedSemester || !selectedSubject) return;
             
             // Auto-set time from timetable if available
             const autoTime = selectedTime || 'N/A';
@@ -1163,7 +1212,8 @@ function AttendanceManager() {
                     setStudents(record.records.map(r => ({ ...r, _id: r.studentId })));
                 } else {
                     // 2. Fetch student list for marking
-                    const studentRes = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(selectedSemester)}&department=${encodeURIComponent(user.department)}`);
+                    const deptParam = user?.department ? `&department=${encodeURIComponent(user.department)}` : '';
+                    const studentRes = await fetch(`${API_BASE_URL}/api/attendance/students?semester=${encodeURIComponent(selectedSemester)}${deptParam}`);
                     const studentList = await studentRes.json();
                     
                     if (Array.isArray(studentList)) {

@@ -101,6 +101,7 @@ function Login() {
     const demoRoles = [
         { key: 'admin', label: '⚙️ Admin', color: '#C5A059' },
         { key: 'principal', label: '🏛️ Principal', color: '#8B5CF6' },
+        { key: 'vice_principal', label: '🏟️ Vice Principal', color: '#8B5CF6' },
         { key: 'hod', label: '👨‍💼 HOD', color: '#00C9A7' },
         { key: 'faculty', label: '👨‍🏫 Faculty', color: '#3B82F6' },
         { key: 'student1', label: '🎓 Student (IT)', color: '#F59E0B' },
