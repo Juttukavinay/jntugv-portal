@@ -271,31 +271,68 @@ function HodOverview({ onNavigate, onQuickAttendance, user }) {
                             {todayClasses.map((cls, i) => (
                                 <div 
                                     key={i} 
-                                    onClick={() => onQuickAttendance({
-                                        semester: cls.semester,
-                                        subject: cls.subject,
-                                        time: cls.time
-                                    })}
                                     style={{ 
                                         display: 'flex', 
                                         justifyContent: 'space-between', 
                                         alignItems: 'center', 
-                                        padding: '1rem', 
+                                        padding: '1.25rem', 
                                         background: '#fff', 
-                                        borderRadius: '12px', 
+                                        borderRadius: '16px', 
                                         boxShadow: 'var(--shadow-sm)', 
-                                        borderLeft: `5px solid ${cls.type === 'Lab' ? 'var(--secondary)' : 'var(--primary)'}`,
-                                        cursor: 'pointer',
-                                        transition: 'transform 0.2s'
+                                        borderLeft: `6px solid ${cls.type === 'Lab' ? 'var(--secondary)' : 'var(--primary)'}`,
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        border: '1px solid #f1f5f9'
                                     }}
-                                    onMouseOver={e => e.currentTarget.style.transform = 'translateX(5px)'}
-                                    onMouseOut={e => e.currentTarget.style.transform = 'translateX(0)'}
+                                    onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+                                    onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
                                 >
-                                    <div>
-                                        <div style={{ fontWeight: '700', color: '#0f172a' }}>{cls.subject}</div>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.semester} • {cls.room || 'TBD'}</div>
+                                    <div style={{ flex: 1 }}>
+                                        <div 
+                                            onClick={() => onQuickAttendance({
+                                                semester: cls.semester,
+                                                subject: cls.subject,
+                                                time: cls.time
+                                            })}
+                                            style={{ 
+                                                fontWeight: '800', 
+                                                color: 'var(--primary)', 
+                                                fontSize: '1.1rem',
+                                                cursor: 'pointer',
+                                                marginBottom: '4px',
+                                                display: 'inline-block'
+                                            }}
+                                            onMouseOver={e => e.currentTarget.style.textDecoration = 'underline'}
+                                            onMouseOut={e => e.currentTarget.style.textDecoration = 'none'}
+                                        >
+                                            {cls.subject}
+                                        </div>
+                                        <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: '500' }}>
+                                            {cls.semester} • <span style={{ color: 'var(--secondary)', fontWeight: '700' }}>{cls.room || 'TBD'}</span>
+                                        </div>
                                     </div>
-                                    <div style={{ fontWeight: '600', color: '#334155' }}>{cls.time}</div>
+                                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
+                                        <div style={{ 
+                                            background: '#f1f5f9', 
+                                            padding: '4px 12px', 
+                                            borderRadius: '8px', 
+                                            fontSize: '0.85rem', 
+                                            fontWeight: '700', 
+                                            color: 'var(--accent-dark)' 
+                                        }}>
+                                            {cls.time}
+                                        </div>
+                                        <button 
+                                            className="btn-action primary" 
+                                            onClick={() => onQuickAttendance({
+                                                semester: cls.semester,
+                                                subject: cls.subject,
+                                                time: cls.time
+                                            })}
+                                            style={{ fontSize: '0.75rem', padding: '6px 12px', borderRadius: '8px' }}
+                                        >
+                                            📝 Take Attendance
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
