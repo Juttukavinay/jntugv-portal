@@ -36,12 +36,9 @@ function Landing({ user }) {
 
     return (
         <div className="app-container">
-            {/* Top Utility Bar */}
+            {/* Top Utility Bar - Removed Placeholder Links */}
             <div className="top-utility-bar desktop-only">
-                <a href="#admissions">Admissions</a>
-                <a href="#academics">Academics</a>
-                <a href="#research">Research</a>
-                <a href="#administration">Administration</a>
+                <span style={{ color: 'var(--brand-purple)', fontWeight: 600 }}>Official Portal of JNTU-GV Vizianagaram</span>
             </div>
 
             {/* University Navbar */}
@@ -55,10 +52,7 @@ function Landing({ user }) {
                 </div>
 
                 <div className="nav-search-container desktop-only">
-                    <div className="search-bar-wrapper">
-                        <input type="text" placeholder="Search..." />
-                    </div>
-                    <Link to="/login" className="btn-apply">Apply Now</Link>
+                    <Link to="/login" className="btn-apply">Student/Faculty Login →</Link>
                 </div>
 
                 {/* Mobile Toggle */}
@@ -73,10 +67,7 @@ function Landing({ user }) {
             {/* Mobile Menu */}
             {isMobileMenuOpen && (
                 <div className="mobile-menu">
-                    <a href="#home" onClick={() => setIsMobileMenuOpen(false)}>Home</a>
-                    <a href="#admissions" onClick={() => setIsMobileMenuOpen(false)}>Admissions</a>
-                    <a href="#academics" onClick={() => setIsMobileMenuOpen(false)}>Academics</a>
-                    <a href="#research" onClick={() => setIsMobileMenuOpen(false)}>Research</a>
+                    <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
                     <Link to="/login" className="btn-mobile" onClick={() => setIsMobileMenuOpen(false)}>Sign In →</Link>
                 </div>
             )}
@@ -88,8 +79,7 @@ function Landing({ user }) {
                         <p style={{ color: '#8B734B', fontWeight: 700, letterSpacing: '2px', marginBottom: '1rem' }}>ESTABLISHED EXCELLENCE</p>
                         <h1>Empowering Rural Minds Through <span>Global Engineering</span></h1>
                         <div className="btn-group">
-                            <Link to="/login" className="btn-purple">Explore Programs →</Link>
-                            <button className="btn-white">Virtual Tour</button>
+                            <Link to="/login" className="btn-purple">Access Portal →</Link>
                         </div>
                     </div>
                 </section>
@@ -123,10 +113,9 @@ function Landing({ user }) {
                     <div className="news-column">
                         <div className="news-section-header">
                             <div>
-                                <h2>University News & Global Updates</h2>
-                                <p style={{ color: '#666', marginTop: '1rem' }}>Stay informed with the latest breakthroughs, announcements, and cultural milestones at JNTU-GV.</p>
+                                <h2>University Highlights</h2>
+                                <p style={{ color: '#666', marginTop: '1rem' }}>The latest announcements and cultural milestones at JNTU-GV.</p>
                             </div>
-                            <a href="#news" className="view-archive">View News Archive →</a>
                         </div>
 
                         <div className="news-cards-grid">
@@ -187,26 +176,24 @@ function Landing({ user }) {
                         </div>
                         <div className="sus-text">
                             <h2>Pioneering a Greener Tomorrow</h2>
-                            <p>At JNTU-GV, sustainability isn't just a goal—it's part of our DNA. Our 200-acre **Green Campus** initiative has transformed the university into a carbon-neutral haven.</p>
+                            <p>At JNTU-GV, sustainability is part of our DNA. Our 200-acre **Green Campus** initiative has transformed the university into a carbon-neutral haven.</p>
                             
                             <div className="sus-features">
                                 <div className="sus-feature-item">
                                     <div className="sus-icon-box">⚡</div>
                                     <div className="sus-feature-text">
                                         <h4>Innovation Center: EV Buggies</h4>
-                                        <p>Entirely student-developed electric transport for intra-campus mobility, showcasing our commitment to practical engineering.</p>
+                                        <p>Entirely student-developed electric transport for intra-campus mobility.</p>
                                     </div>
                                 </div>
                                 <div className="sus-feature-item">
                                     <div className="sus-icon-box">☀️</div>
                                     <div className="sus-feature-text">
                                         <h4>Renewable Energy Hub</h4>
-                                        <p>Our campus is powered by a 500kW rooftop solar grid, reducing our carbon footprint by 40% annually.</p>
+                                        <p>Our campus is powered by a 500kW rooftop solar grid.</p>
                                     </div>
                                 </div>
                             </div>
-
-                            <button className="btn-report">Read Our Sustainability Report 📤</button>
                         </div>
                     </div>
                 </section>
@@ -218,29 +205,25 @@ function Landing({ user }) {
                     <div className="footer-col">
                         <h2 style={{ color: 'white', marginBottom: '1.5rem' }}>JNTU-GV</h2>
                         <p>Empowering the next generation of engineers with a legacy of excellence and a vision for the future.</p>
-                        <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-                            <span>🌐</span> <span>✉️</span> <span>📞</span>
-                        </div>
                     </div>
                     <div className="footer-col">
                         <h3>Quick Links</h3>
                         <ul className="footer-links-univ">
                             <li><Link to="/login">Student Portal</Link></li>
-                            <li><a href="#green">Green Initiative</a></li>
-                            <li><a href="#map">Campus Map</a></li>
+                            <li><Link to="/login">Faculty Login</Link></li>
                         </ul>
                     </div>
                     <div className="footer-col">
-                        <h3>Support</h3>
-                        <ul className="footer-links-univ">
-                            <li><a href="#privacy">Privacy Policy</a></li>
-                            <li><a href="#contact">Contact Us</a></li>
-                            <li><a href="#faq">FAQ</a></li>
-                        </ul>
+                        <h3>Reach Us</h3>
+                        <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>
+                            JNTU-GV College of Engineering,<br />
+                            Vizianagaram, Andhra Pradesh - 535003<br />
+                            Email: support@jntugv.edu.in
+                        </p>
                     </div>
                     <div className="footer-col">
                         <h3>Newsletter</h3>
-                        <p>Join our mailing list to stay updated on university events.</p>
+                        <p>Join our mailing list to stay updated.</p>
                         <form className="newsletter-form">
                             <input type="email" placeholder="Email Address" />
                             <button type="submit">Join</button>
