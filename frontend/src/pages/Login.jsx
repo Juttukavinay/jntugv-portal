@@ -99,156 +99,91 @@ function Login() {
     }
 
     const demoRoles = [
-        { key: 'admin', label: '⚙️ Admin', color: '#C5A059' },
-        { key: 'principal', label: '🏛️ Principal', color: '#8B5CF6' },
-        { key: 'vice_principal', label: '🏛️ Vice Principal', color: '#8B5CF6' },
-        { key: 'hod', label: '👨‍💼 HOD', color: '#00C9A7' },
-        { key: 'faculty', label: '👨‍🏫 Faculty', color: '#3B82F6' },
-        { key: 'student1', label: '🎓 Student (IT)', color: '#F59E0B' },
-        { key: 'student2', label: '🎓 Student (CSE)', color: '#EC4899' }
+        { key: 'admin', label: 'Admin' },
+        { key: 'principal', label: 'Principal' },
+        { key: 'vice_principal', label: 'Vice Principal' },
+        { key: 'hod', label: 'HOD' },
+        { key: 'faculty', label: 'Faculty' },
+        { key: 'student1', label: 'Student (IT)' },
+        { key: 'student2', label: 'Student (CSE)' }
     ]
 
     return (
-        <div className="login-container">
-            {/* Left Side – Campus Image */}
-            <div
-                className="login-hero-section"
-                style={{ backgroundImage: bgImage ? `url("${bgImage}")` : 'linear-gradient(135deg, #1F1A12 0%, #C5A059 100%)' }}
-            >
-                <div className="login-hero-overlay" style={{ background: 'linear-gradient(135deg, rgba(31, 26, 18, 0.9) 0%, rgba(197, 160, 89, 0.2) 100%)' }}></div>
-                <div className="hero-content" style={{ padding: '0 10%' }}>
-                    {/* University Branding */}
-                    <div style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '0.75rem',
-                        background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(12px)',
-                        border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px',
-                        padding: '0.6rem 1.2rem', marginBottom: '2.5rem',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
-                    }}>
-                        <img src="/jntugv-logo.png" alt="Logo" style={{ height: '36px', filter: 'brightness(0) invert(1)' }} />
-                        <span style={{ color: 'rgba(255,255,255,0.95)', fontWeight: 700, fontSize: '1rem', letterSpacing: '0.05em' }}>JNTU-GV</span>
-                    </div>
-
-                    <h1 style={{ fontSize: '3.5rem', fontWeight: 800, color: 'white', lineHeight: 1.1, margin: '0 0 1.5rem 0', letterSpacing: '-0.03em' }}>
-                        Jawaharlal Nehru<br />
-                        <span style={{
-                            background: 'linear-gradient(135deg, #FDFCF8, #C5A059)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
-                            backgroundClip: 'text'
-                        }}>Technological University</span>
+        <div className="login-dark-wrapper">
+            {/* Left Side – Hero Side */}
+            <div className="login-hero-side" style={{ backgroundImage: `url("${bgImage}")` }}>
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                    <h1 style={{ fontSize: '3.5rem', fontWeight: 800, color: 'white', lineHeight: 1.1, marginBottom: '1.5rem' }}>
+                        Empowering Digital<br />
+                        <span style={{ color: 'var(--brand-gold)' }}>Academic Excellence</span>
                     </h1>
-
-                    <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.85)', margin: '0 0 3rem 0', lineHeight: 1.7, maxWidth: '500px' }}>
-                        Empowering innovation and digital excellence through our unified smart academic management ecosystem.
+                    <p style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', maxWidth: '500px', lineHeight: 1.6 }}>
+                        Jawaharlal Nehru Technological University - Gurazada, Vizianagaram. A legacy of innovation and engineering brilliance.
                     </p>
-
-                    {/* Feature pills */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-                        {['📊 Live Attendance', '📅 Smart Timetable', '🔒 Secure Access', '📱 Mobile Ready'].map(f => (
-                            <div key={f} style={{
-                                background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)',
-                                border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px',
-                                padding: '0.5rem 1.2rem', color: 'white', fontSize: '0.85rem', fontWeight: 600,
-                                transition: 'all 0.3s ease', cursor: 'default'
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                            >{f}</div>
-                        ))}
-                    </div>
                 </div>
             </div>
 
-            {/* Right Side – Login Form */}
-            <div className="login-form-section">
-                <div className="login-form-wrapper">
-                    {/* Back to Home */}
-                    <div style={{ marginBottom: '2rem' }}>
-                        <Link to="/" style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                            color: 'var(--text-secondary)', fontSize: '0.85rem', fontWeight: 500,
-                            textDecoration: 'none', transition: 'color 0.2s'
-                        }}
-                            onMouseEnter={e => e.currentTarget.style.color = 'var(--primary)'}
-                            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
-                        >
-                            ← Back to Home
-                        </Link>
-                    </div>
+            {/* Right Side – Form Side */}
+            <div className="login-form-side">
+                <div className="login-glass-card">
+                    <Link to="/" className="login-back-btn">
+                        <span>←</span> Back to University Home
+                    </Link>
 
-                    {/* Logo */}
-                    <div className="brand-header">
-                        <img src="/jntugv-logo.png" alt="JNTU-GV Logo" className="brand-logo" />
-                        <div className="brand-text">
-                            <h1>JNTU-GV</h1>
-                            <p>Academic Portal</p>
+                    <div style={{ marginBottom: '2.5rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                            <img src="/jntugv-logo.png" alt="Logo" style={{ height: '50px' }} />
+                            <div>
+                                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>Sign In</h2>
+                                <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: 0 }}>Enter your credentials to access the portal</p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Headings */}
-                    <h2 className="form-title">Welcome back 👋</h2>
-                    <p className="form-subtitle">Sign in to access your personalized dashboard.</p>
-
-                    {/* Error Banner */}
                     {error && (
-                        <div style={{
-                            background: '#FEF2F2', border: '1px solid #FECACA', color: '#EF4444',
-                            padding: '0.875rem 1.25rem', borderRadius: '10px', marginBottom: '1.5rem',
-                            display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem',
-                            animation: 'fadeIn 0.3s ease-out'
-                        }}>
-                            <span style={{ fontSize: '1.2rem' }}>⚠️</span>
-                            <span style={{ fontWeight: 500 }}>{error}</span>
+                        <div className="login-status-error">
+                            <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+                            <span>{error}</span>
                         </div>
                     )}
 
-                    {/* Form */}
                     <form onSubmit={handleLogin}>
-                        {/* Email / ID Field */}
-                        <div className="input-group">
-                            <label className="input-label" style={{ color: activeField === 'email' ? 'var(--primary)' : '' }}>
-                                Username / Roll Number
+                        <div className="login-form-group">
+                            <label className="login-label-dark" style={{ color: activeField === 'email' ? 'var(--brand-gold)' : '' }}>
+                                Username / Admission No.
                             </label>
-                            <div style={{ position: 'relative' }}>
-                                <span style={{
-                                    position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)',
-                                    fontSize: '1rem', opacity: 0.5
-                                }}>👤</span>
+                            <div className="login-input-wrapper">
+                                <span className="input-icon-dark" style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>👤</span>
                                 <input
                                     type="text"
                                     name="email"
-                                    className="modern-input"
-                                    placeholder="Enter your ID or email"
+                                    className="login-input-dark"
+                                    placeholder="e.g. 21131A0501"
                                     value={credentials.email}
                                     onChange={handleChange}
                                     onFocus={() => setActiveField('email')}
                                     onBlur={() => setActiveField('')}
-                                    style={{ paddingLeft: '3rem' }}
+                                    style={{ paddingLeft: '3.5rem' }}
                                 />
                             </div>
                         </div>
 
-                        {/* Password Field */}
-                        <div className="input-group">
-                            <label className="input-label" style={{ color: activeField === 'password' ? 'var(--primary)' : '' }}>
+                        <div className="login-form-group">
+                            <label className="login-label-dark" style={{ color: activeField === 'password' ? 'var(--brand-gold)' : '' }}>
                                 Password
                             </label>
-                            <div style={{ position: 'relative' }}>
-                                <span style={{
-                                    position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)',
-                                    fontSize: '1rem', opacity: 0.5
-                                }}>🔒</span>
+                            <div className="login-input-wrapper">
+                                <span className="input-icon-dark" style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔒</span>
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     name="password"
-                                    className="modern-input"
+                                    className="login-input-dark"
                                     placeholder="••••••••"
                                     value={credentials.password}
                                     onChange={handleChange}
                                     onFocus={() => setActiveField('password')}
                                     onBlur={() => setActiveField('')}
-                                    style={{ paddingLeft: '3rem', paddingRight: '3rem' }}
+                                    style={{ paddingLeft: '3.5rem', paddingRight: '3.5rem' }}
                                 />
                                 <button
                                     type="button"
@@ -256,93 +191,39 @@ function Login() {
                                     style={{
                                         position: 'absolute', right: '1rem', top: '50%',
                                         transform: 'translateY(-50%)', background: 'none',
-                                        border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: '1rem'
+                                        border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1.1rem'
                                     }}
-                                    title={showPassword ? 'Hide' : 'Show'}
                                 >
                                     {showPassword ? '🙈' : '👁️'}
                                 </button>
                             </div>
                         </div>
 
-                        {/* Submit */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="btn-primary"
-                            style={{ width: '100%', padding: '0.875rem', fontSize: '1rem', fontWeight: 700, marginTop: '0.5rem' }}
-                        >
-                            {loading ? (
-                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                                    <span style={{
-                                        width: '18px', height: '18px', border: '3px solid rgba(255,255,255,0.3)',
-                                        borderTop: '3px solid white', borderRadius: '50%',
-                                        display: 'inline-block', animation: 'spin 1s linear infinite'
-                                    }} />
-                                    Signing in...
-                                </span>
-                            ) : 'Sign In →'}
+                        <button type="submit" className="btn-login-gold" disabled={loading}>
+                            {loading ? 'Processing...' : 'Secure Authorization →'}
                         </button>
                     </form>
 
-                    {/* Demo Logins */}
-                    <div className="demo-login-section">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                            <div style={{ flex: 1, height: '1px', background: 'var(--border-light)' }}></div>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                                Quick Demo Access
-                            </span>
-                            <div style={{ flex: 1, height: '1px', background: 'var(--border-light)' }}></div>
+                    <div style={{ marginTop: '3rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Demo Access</span>
+                            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.6rem' }}>
+                        <div className="login-demo-grid-dark">
                             {demoRoles.map(role => (
                                 <button
                                     key={role.key}
                                     onClick={() => fillDemo(role.key)}
-                                    style={{
-                                        padding: '0.625rem 0.5rem',
-                                        background: 'white',
-                                        border: '1.5px solid var(--border-light)',
-                                        borderRadius: '10px',
-                                        color: 'var(--text-secondary)',
-                                        fontSize: '0.78rem',
-                                        fontWeight: 600,
-                                        cursor: 'pointer',
-                                        transition: 'all 0.25s',
-                                        textAlign: 'center',
-                                        lineHeight: 1.3
-                                    }}
-                                    onMouseEnter={e => {
-                                        e.currentTarget.style.borderColor = role.color
-                                        e.currentTarget.style.color = role.color
-                                        e.currentTarget.style.background = `${role.color}12`
-                                        e.currentTarget.style.transform = 'translateY(-2px)'
-                                    }}
-                                    onMouseLeave={e => {
-                                        e.currentTarget.style.borderColor = 'var(--border-light)'
-                                        e.currentTarget.style.color = 'var(--text-secondary)'
-                                        e.currentTarget.style.background = 'white'
-                                        e.currentTarget.style.transform = 'translateY(0)'
-                                    }}
+                                    className="login-demo-btn-dark"
                                 >
                                     {role.label}
                                 </button>
                             ))}
                         </div>
                     </div>
-
-                    {/* Footer */}
-                    <div style={{ marginTop: '2rem', textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)', paddingTop: '1.5rem', borderTop: '1px solid var(--border-light)' }}>
-                        © {new Date().getFullYear()} JNTU-GV — Dept. of Information Technology
-                    </div>
                 </div>
             </div>
-
-            <style>{`
-                @keyframes spin {
-                    to { transform: rotate(360deg); }
-                }
-            `}</style>
         </div>
     )
 }
