@@ -1,16 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
 
 :root {
-  /* Brand Colors — Classic Blue & White Palette */
-  --primary: #0047AB;       /* Classic Cobalt/Royal Blue */
+  /* Brand Colors — Classic University Palette */
+  --primary: #0047AB;       
   --primary-hover: #003380;
   --primary-light: #f0f7ff; 
-  --secondary: #3b82f6;     /* Brighter Blue */
+  --secondary: #3b82f6;     
   --secondary-hover: #2563eb;
   --secondary-light: #eff6ff;
   --accent-dark: #1e293b;   
   --accent-gold: #fbbf24;   
   --accent-gold-text: #b45309;     
+  --brand-purple: #1a0b2e;
+  --brand-maroon: #3d0303;
+  --brand-gold: #FFB800;
+  --brand-gold-dark: #8B734B;
+
 
   /* Legacy variable mappings - repurposed */
   --univ-red: #ef4444;
