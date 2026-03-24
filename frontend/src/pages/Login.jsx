@@ -215,13 +215,13 @@ function Login() {
                 }
 
                 .login-v2-card {
-                    background: rgba(30, 41, 59, 0.7);
-                    backdrop-filter: blur(20px);
-                    -webkit-backdrop-filter: blur(20px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    background: rgba(30, 41, 59, 0.45);
+                    backdrop-filter: blur(25px) saturate(180%);
+                    -webkit-backdrop-filter: blur(25px) saturate(180%);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
                     border-radius: 32px;
                     padding: 3rem;
-                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
                     text-align: center;
                 }
 
@@ -230,17 +230,18 @@ function Login() {
                 }
 
                 .login-v2-logo {
-                    height: 70px;
+                    height: 80px;
                     margin-bottom: 1rem;
-                    filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
+                    filter: drop-shadow(0 0 20px rgba(255,255,255,0.15));
                 }
 
                 .login-v2-subtitle {
                     color: #94a3b8;
-                    font-size: 0.9rem;
-                    letter-spacing: 1px;
+                    font-size: 0.85rem;
+                    letter-spacing: 2px;
                     text-transform: uppercase;
                     margin-top: 0.5rem;
+                    font-weight: 700;
                 }
 
                 .login-v2-form {
@@ -266,35 +267,39 @@ function Login() {
                     text-align: left;
                     display: flex;
                     flex-direction: column;
-                    gap: 0.5rem;
+                    gap: 0.6rem;
+                    transition: all 0.3s ease;
                 }
 
                 .login-v2-input-wrapper label {
-                    color: #94a3b8;
-                    font-size: 0.8rem;
-                    font-weight: 600;
+                    color: #f8fafc;
+                    font-size: 0.85rem;
+                    font-weight: 700;
                     margin-left: 0.5rem;
+                    letter-spacing: 0.3px;
                 }
 
                 .login-v2-input-wrapper input {
-                    background: rgba(15, 23, 42, 0.6);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 14px;
-                    padding: 0.875rem 1.25rem;
+                    background: rgba(15, 23, 42, 0.7);
+                    border: 1.5px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 16px;
+                    padding: 1rem 1.25rem;
                     color: white;
                     font-size: 1rem;
-                    transition: all 0.2s;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    outline: none;
                 }
 
                 .login-v2-input-wrapper.active input {
-                    border-color: var(--brand-purple);
-                    background: rgba(15, 23, 42, 0.8);
-                    box-shadow: 0 0 0 4px rgba(68, 45, 99, 0.3);
+                    border-color: #7c3aed;
+                    background: rgba(15, 23, 42, 0.9);
+                    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.2);
+                    transform: translateY(-1px);
                 }
 
                 .password-input-row {
                     display: flex;
-                    gap: 8px;
+                    gap: 10px;
                 }
 
                 .password-input-row input {
@@ -303,36 +308,42 @@ function Login() {
 
                 .password-toggle {
                     background: rgba(255, 255, 255, 0.05);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 12px;
-                    padding: 0 1rem;
+                    border: 1.5px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 16px;
+                    width: 54px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     color: white;
                     cursor: pointer;
-                    transition: all 0.2s;
+                    transition: all 0.3s ease;
                 }
 
                 .password-toggle:hover {
-                    background: rgba(255, 255, 255, 0.1);
+                    background: rgba(255, 255, 255, 0.15);
+                    border-color: rgba(255, 255, 255, 0.2);
                 }
 
                 .login-v2-btn {
-                    background: var(--brand-purple);
+                    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
                     color: white;
                     border: none;
-                    padding: 1rem;
-                    border-radius: 14px;
-                    font-size: 1rem;
-                    font-weight: 700;
+                    padding: 1.1rem;
+                    border-radius: 16px;
+                    font-size: 1.05rem;
+                    font-weight: 800;
                     cursor: pointer;
-                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                    margin-top: 0.5rem;
-                    box-shadow: 0 10px 20px -5px rgba(68, 45, 99, 0.5);
+                    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                    margin-top: 0.8rem;
+                    box-shadow: 0 12px 24px -6px rgba(124, 58, 237, 0.4);
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
                 }
 
                 .login-v2-btn:hover:not(:disabled) {
-                    background: #362450;
-                    transform: translateY(-2px);
-                    box-shadow: 0 15px 25px -5px rgba(68, 45, 99, 0.6);
+                    transform: translateY(-2px) scale(1.01);
+                    box-shadow: 0 20px 30px -8px rgba(124, 58, 237, 0.5);
+                    filter: brightness(1.1);
                 }
 
                 .login-v2-btn:disabled {
