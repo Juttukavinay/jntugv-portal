@@ -109,9 +109,10 @@ function FacultyDashboard() {
                 <header className="mobile-header">
                     <button
                         onClick={() => setMobileMenuOpen(true)}
-                        style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', padding: '0.5rem', display: 'flex' }}
+                        className="mobile-menu-btn"
+                        style={{ background: 'var(--primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '0.6rem', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '700' }}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <Icons.Home /> Menu
                     </button>
                     <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Faculty Dashboard</span>
                 </header>

@@ -32,6 +32,7 @@ function HodDashboard() {
     const [error, setError] = useState(null);
     const [existingClasses, setExistingClasses] = useState([]);
     const [upcomingClasses, setUpcomingClasses] = useState([]);
+    const [allRooms, setAllRooms] = useState([]);
     const [quickAttendance, setQuickAttendance] = useState(null);
 
     const showToast = useCallback((message, type = 'success') => {
@@ -63,9 +64,21 @@ function HodDashboard() {
         }
     };
 
+    const fetchAllRooms = useCallback(async () => {
+        const deptParam = user.department ? `?department=${encodeURIComponent(user.department)}` : '';
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/rooms${deptParam}`);
+            const data = await res.json();
+            setAllRooms(Array.isArray(data) ? data : []);
+        } catch (e) {
+            console.error("Failed to fetch rooms:", e);
+        }
+    }, [user.department]);
+
     useEffect(() => {
         if (user.name) fetchClasses();
-    }, [user.name]);
+        if (user.department) fetchAllRooms();
+    }, [user.name, user.department, fetchAllRooms]);
 
     const handleQuickAttendance = (params) => {
         setQuickAttendance(params);
@@ -76,9 +89,9 @@ function HodDashboard() {
         switch (activeTab) {
             case 'students': return <StudentManager showToast={showToast} />;
             case 'faculty': return <FacultyManager showToast={showToast} />;
-            case 'timetable': return <TimetableManager showToast={showToast} />;
+            case 'timetable': return <TimetableManager showToast={showToast} allFaculty={allFaculty} allRooms={allRooms} />;
             case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} />;
-            case 'infrastructure': return <InfrastructureManager showToast={showToast} />;
+            case 'infrastructure': return <InfrastructureManager user={user} showToast={showToast} />;
             case 'attendance': return (
                 <AttendanceManager 
                     showToast={showToast} 
@@ -156,9 +169,10 @@ function HodDashboard() {
                 <header className="mobile-header">
                     <button
                         onClick={() => setMobileMenuOpen(true)}
-                        style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', cursor: 'pointer', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        className="mobile-menu-btn"
+                        style={{ background: 'var(--primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '0.6rem', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '700' }}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                        <Icons.Home /> Menu
                     </button>
                     <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>HOD Dashboard</span>
                 </header>
@@ -656,7 +670,7 @@ function FacultyManager({ showToast }) {
         </>
     );
 }
-function TimetableManager({ showToast }) {
+function TimetableManager({ showToast, allFaculty, allRooms }) {
     const [timetable, setTimetable] = useState(null)
     const [loading, setLoading] = useState(false)
     const [selectedSemester, setSelectedSemester] = useState('I-B.Tech I Sem')
@@ -667,7 +681,6 @@ function TimetableManager({ showToast }) {
     const [activeCourse, setActiveCourse] = useState('B.Tech');
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [bookingSlot, setBookingSlot] = useState(null);
-    const [allFaculty, setAllFaculty] = useState([]);
 
     useEffect(() => {
         if (activeCourse === 'B.Tech') setSelectedSemester('I-B.Tech I Sem');
@@ -688,12 +701,19 @@ function TimetableManager({ showToast }) {
     }, [selectedSemester])
 
     useEffect(() => { fetchTimetable() }, [fetchTimetable]);
-    useEffect(() => { fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setAllFaculty).catch(console.error); }, []);
 
     const generateTimetable = async () => {
         setLoading(true)
         try {
-            const res = await fetch(`${API_BASE_URL}/api/timetables/generate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ semester: selectedSemester, options: genOptions }) })
+            const res = await fetch(`${API_BASE_URL}/api/timetables/generate`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ 
+                    semester: selectedSemester, 
+                    options: genOptions,
+                    department: user.department 
+                }) 
+            })
             const data = await res.json()
             if (res.ok) {
                 if (data.unallocated?.length > 0) showToast(`Generated with warnings: ${data.unallocated.length} slots skipped`, 'error');
@@ -714,6 +734,7 @@ function TimetableManager({ showToast }) {
             currentSubject: (period.subject === '-' || !period.subject) ? '' : period.subject,
             faculty: period.faculty || '',
             assistants: period.assistants || [],
+            room: period.room || '',
             wing: period.wing || ''
         });
         setShowBookingModal(true);
@@ -730,10 +751,11 @@ function TimetableManager({ showToast }) {
                     subject: details.subject || '-',
                     faculty: details.faculty,
                     assistants: details.assistants,
+                    room: details.room,
                     wing: details.wing,
                     semester: selectedSemester,
-                    updateAll: details.updateAll, // Pass propagation flag
-                    originalSubject: bookingSlot.currentSubject // Pass original subject for better propagation
+                    updateAll: details.updateAll,
+                    originalSubject: bookingSlot.currentSubject
                 })
             });
             if (res.ok) {
@@ -838,8 +860,8 @@ function TimetableManager({ showToast }) {
                                             {periods.map((p, i) => (
                                                 <div key={i} onClick={() => updateCell(dIndex, day.periods.indexOf(p))} style={{ flex: p.credits || 1, background: p.type === 'Lab' ? '#eff6ff' : (p.type === 'Theory' ? '#fffbeb' : '#f4f4f5'), padding: '6px', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.8rem' }}>
                                                     <div style={{ fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.subject}</div>
+                                                    {p.subject && <div style={{ fontSize: '0.65rem', color: '#16a34a', fontWeight: '800', marginTop: '2px' }}>🏢 {p.room || (p.type === 'Lab' ? 'Lab' : 'LH')}</div>}
                                                     {p.faculty && <div style={{ fontSize: '0.65rem', color: '#2563eb', fontWeight: '700' }}>{p.faculty} (M)</div>}
-                                                    {p.wing && <div style={{ fontSize: '0.6rem', color: '#16a34a', fontWeight: 'bold', marginTop: '2px' }}>📍 {p.wing}</div>}
                                                     {p.assistants?.length > 0 && (
                                                         <div style={{ fontSize: '0.6rem', color: '#64748b' }}>
                                                             + {p.assistants.join(', ')}
@@ -873,7 +895,7 @@ function TimetableManager({ showToast }) {
                             <h3 style={{ margin: 0 }}>Edit Slot: {bookingSlot.day} ({bookingSlot.time})</h3>
                             <button onClick={() => setShowBookingModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
                         </div>
-                        <BookingForm initialData={bookingSlot} facultyList={allFaculty} onSubmit={handleConfirmBooking} onCancel={() => setShowBookingModal(false)} />
+                        <BookingForm initialData={bookingSlot} facultyList={allFaculty} roomList={allRooms} onSubmit={handleConfirmBooking} onCancel={() => setShowBookingModal(false)} />
                     </div>
                 </div>, document.body
             )}
@@ -1050,6 +1072,7 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
     const [subject, setSubject] = useState(initialData.currentSubject);
     const [mainFaculty, setMainFaculty] = useState(initialData.faculty);
     const [assistants, setAssistants] = useState(initialData.assistants || []);
+    const [room, setRoom] = useState(initialData.room || '');
     const [wing, setWing] = useState(initialData.wing || '');
     const [updateAll, setUpdateAll] = useState(true);
     const isLab = (subject || '').toLowerCase().includes('lab') || (subject || '').toLowerCase().includes('project');
@@ -1090,6 +1113,15 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
                     </select>
                 </div>
             )}
+            <div>
+                <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Allotted Room / Lab</label>
+                <select className="search-input-premium" value={room} onChange={e => setRoom(e.target.value)}>
+                    <option value="">-- Select Room --</option>
+                    {roomList.map(r => (
+                        <option key={r._id} value={r.name}>{r.name} ({r.type} - {r.wing})</option>
+                    ))}
+                </select>
+            </div>
             {isLab && (
                 <div>
                     <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Laboratory Wing</label>
@@ -1116,7 +1148,7 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
                 </button>
                 <div style={{ display: 'flex', gap: '1rem' }}>
                     <button className="btn-action" onClick={onCancel}>Cancel</button>
-                    <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants, wing, updateAll })}>Save</button>
+                    <button className="btn-action primary" onClick={() => onSubmit({ subject, faculty: mainFaculty, assistants, wing, room, updateAll })}>Save</button>
                 </div>
             </div>
         </div>
@@ -1792,17 +1824,19 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
     );
 }
 
-function InfrastructureManager({ showToast }) {
+function InfrastructureManager({ user, showToast }) {
     const [rooms, setRooms] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
     const [addCount, setAddCount] = useState(1);
-    const [filterDept, setFilterDept] = useState('IT');
+    const [filterDept, setFilterDept] = useState(user.department || 'IT');
+    const [batch, setBatch] = useState('2024-2028');
 
     const fetchRooms = useCallback(async () => {
-        const res = await fetch(`${API_BASE_URL}/api/rooms`);
+        const deptParam = user.department ? `?department=${encodeURIComponent(user.department)}` : '';
+        const res = await fetch(`${API_BASE_URL}/api/rooms${deptParam}`);
         const data = await res.json();
-        setRooms(data);
-    }, []);
+        setRooms(Array.isArray(data) ? data : []);
+    }, [user.department]);
 
     useEffect(() => { fetchRooms(); }, [fetchRooms]);
 
@@ -1827,12 +1861,16 @@ function InfrastructureManager({ showToast }) {
 
         for (let i = 0; i < count; i++) {
             newBatch.push({
-                name: type === 'Lab' ? `Lab ${existingLabCount + i + 1}` : `Room ${existingClassCount + i + 101}`,
+                name: type === 'Lab' ? `LAB-${(existingLabCount + i + 1).toString().padStart(2, '0')}` : `LH-${(existingClassCount + i + 1).toString().padStart(2, '0')}`,
                 type: type,
-                wing: type === 'Lab' ? 'LAB 1' : 'AB1',
+                wing: type === 'Lab' ? 'LAB BLOCK' : 'AB1',
+                year: '1st Year',
+                semester: '1st Sem',
+                batch: batch || '2024-2028',
+                section: 'Section A',
                 morningSession: 'Available',
                 afternoonSession: 'Available',
-                department: filterDept === 'All' ? 'IT' : filterDept
+                department: user.department || 'IT'
             });
         }
         setRooms([...rooms, ...newBatch]);
@@ -1875,19 +1913,19 @@ function InfrastructureManager({ showToast }) {
                             <h3>University Infrastructure Manager</h3>
                             <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Define and Manage Physical Assets (Classes & Labs)</p>
                         </div>
-                        <select
-                            value={filterDept}
-                            onChange={e => setFilterDept(e.target.value)}
-                            className="search-input-premium"
-                            style={{ width: '150px', padding: '6px' }}
-                        >
-                            <option value="All">All Depts</option>
-                            <option value="IT">IT</option>
-                            <option value="CSE">CSE</option>
-                            <option value="ECE">ECE</option>
-                            <option value="MECH">MECH</option>
-                            <option value="CIVIL">CIVIL</option>
-                        </select>
+                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '12px', padding: '0.5rem', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase' }}>Dept: {user.department || 'IT'}</span>
+                        </div>
+                        <div style={{ marginLeft: '1rem' }}>
+                            <label style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>Current Batch</label>
+                            <input 
+                                className="modern-input" 
+                                style={{ width: '120px', padding: '6px' }} 
+                                value={batch} 
+                                onChange={e => setBatch(e.target.value)} 
+                                placeholder="e.g. 2024-2028"
+                            />
+                        </div>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <div style={{ padding: '0.75rem 1.25rem', background: 'var(--primary-light)', borderRadius: '12px', border: '1px solid var(--primary-hover)44' }}>
@@ -1921,10 +1959,13 @@ function InfrastructureManager({ showToast }) {
                     <table className="premium-table">
                         <thead>
                             <tr>
-                                <th>Name / Identifier</th>
-                                <th style={{ width: '150px' }}>Type</th>
-                                <th style={{ width: '200px' }}>Location / Block</th>
-                                <th style={{ width: '150px' }}>Department</th>
+                                <th>Identifier (e.g. LH-36)</th>
+                                <th style={{ width: '120px' }}>Type</th>
+                                <th style={{ width: '110px' }}>Mapping</th>
+                                <th style={{ width: '110px' }}>Sem</th>
+                                <th style={{ width: '120px' }}>Batch</th>
+                                <th style={{ width: '120px' }}>Section</th>
+                                <th style={{ width: '120px' }}>Wing</th>
                                 <th>Morning (FN)</th>
                                 <th>Afternoon (AN)</th>
                                 <th>Action</th>
@@ -1938,7 +1979,7 @@ function InfrastructureManager({ showToast }) {
                                             value={r.name}
                                             onChange={e => handleRoomChange(r, 'name', e.target.value)}
                                             className="modern-input"
-                                            style={{ fontWeight: '700', width: '130px' }}
+                                            style={{ fontWeight: '700', width: '120px' }}
                                         />
                                     </td>
                                     <td>
@@ -1953,45 +1994,60 @@ function InfrastructureManager({ showToast }) {
                                         </select>
                                     </td>
                                     <td>
-                                        {r.type === 'Classroom' ? (
-                                            <select
-                                                value={r.wing}
-                                                onChange={e => handleRoomChange(r, 'wing', e.target.value)}
-                                                className="modern-input"
-                                                style={{ padding: '6px' }}
-                                            >
-                                                <option value="AB1">AB1</option>
-                                                <option value="AB2">AB2</option>
-                                                <option value="1ST YEAR">1ST YEAR</option>
-                                                <option value="PHARAMCY BLOCK">PHARAMCY BLOCK</option>
-                                            </select>
-                                        ) : (
-                                            <select
-                                                value={r.wing}
-                                                onChange={e => handleRoomChange(r, 'wing', e.target.value)}
-                                                className="modern-input"
-                                                style={{ padding: '6px' }}
-                                            >
-                                                <option value="LAB 1">LAB 1</option>
-                                                <option value="LAB 2">LAB 2</option>
-                                                <option value="LAB 3">LAB 3</option>
-                                                <option value="LAB 4">LAB 4</option>
-                                            </select>
-                                        )}
+                                        <select
+                                            value={r.year || '1st Year'}
+                                            onChange={e => handleRoomChange(r, 'year', e.target.value)}
+                                            className="modern-input"
+                                            style={{ padding: '4px', fontSize: '0.75rem' }}
+                                        >
+                                            <option value="1st Year">1st Year</option>
+                                            <option value="2nd Year">2nd Year</option>
+                                            <option value="3rd Year">3rd Year</option>
+                                            <option value="4th Year">4th Year</option>
+                                        </select>
                                     </td>
                                     <td>
                                         <select
-                                            value={r.department || 'IT'}
-                                            onChange={e => handleRoomChange(r, 'department', e.target.value)}
+                                            value={r.semester || '1st Sem'}
+                                            onChange={e => handleRoomChange(r, 'semester', e.target.value)}
                                             className="modern-input"
-                                            style={{ padding: '6px' }}
+                                            style={{ padding: '4px', fontSize: '0.75rem' }}
                                         >
-                                            <option value="IT">IT</option>
-                                            <option value="CSE">CSE</option>
-                                            <option value="ECE">ECE</option>
-                                            <option value="MECH">MECH</option>
-                                            <option value="CIVIL">CIVIL</option>
+                                            <option value="1st Sem">1st Sem</option><option value="2nd Sem">2nd Sem</option>
+                                            <option value="3rd Sem">3rd Sem</option><option value="4th Sem">4th Sem</option>
+                                            <option value="5th Sem">5th Sem</option><option value="6th Sem">6th Sem</option>
+                                            <option value="7th Sem">7th Sem</option><option value="8th Sem">8th Sem</option>
                                         </select>
+                                    </td>
+                                    <td>
+                                        <input
+                                            value={r.batch || '2024-2028'}
+                                            onChange={e => handleRoomChange(r, 'batch', e.target.value)}
+                                            className="modern-input"
+                                            style={{ padding: '4px', fontSize: '0.75rem', width: '90px' }}
+                                        />
+                                    </td>
+                                    <td>
+                                        <select
+                                            value={r.section || 'All'}
+                                            onChange={e => handleRoomChange(r, 'section', e.target.value)}
+                                            className="modern-input"
+                                            style={{ padding: '4px', fontSize: '0.75rem' }}
+                                        >
+                                            <option value="Section A">Section A</option>
+                                            <option value="Section B">Section B</option>
+                                            <option value="Wing 1">Wing 1</option>
+                                            <option value="Wing 2">Wing 2</option>
+                                            <option value="All">All</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input
+                                            value={r.wing}
+                                            onChange={e => handleRoomChange(r, 'wing', e.target.value)}
+                                            className="modern-input"
+                                            style={{ width: '100px', fontSize: '0.75rem' }}
+                                        />
                                     </td>
                                     <td>
                                         <select
@@ -2033,8 +2089,8 @@ function InfrastructureManager({ showToast }) {
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
-                                        No infrastructure data found. Add assets to get started.
+                                    <td colSpan="11" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                                        No infrastructure data found. Add assets to get started. 🚀
                                     </td>
                                 </tr>
                             )}
@@ -2043,23 +2099,6 @@ function InfrastructureManager({ showToast }) {
                 </div>
             </div>
 
-            <div className="glass-table-container" style={{ padding: '1.5rem', background: 'linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)' }}>
-                <h4 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>💡 Asset Strategy</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-                    <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <h5 style={{ color: '#3b82f6', marginBottom: '0.5rem' }}>Laboratory Usage</h5>
-                        <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.5' }}>
-                            Labs can be tracked for separate FN and AN sessions. Use Lab 1 or Lab 2 for specialized equipment tracking.
-                        </p>
-                    </div>
-                    <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <h5 style={{ color: '#10b981', marginBottom: '0.5rem' }}>Classroom Blocks</h5>
-                        <p style={{ fontSize: '0.85rem', color: '#475569', lineHeight: '1.5' }}>
-                            Assign classes to blocks like AB1, AB2 or Pharmacy for better department-wise organization.
-                        </p>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }

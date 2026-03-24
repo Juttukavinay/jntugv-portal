@@ -59,7 +59,7 @@ router.delete('/', async (req, res) => {
 
 // GENERATE ALGORITHM (CUSTOMIZABLE)
 router.post('/generate', async (req, res) => {
-    const { semester, options } = req.body;
+    const { semester, options, department } = req.body;
 
     // Defaults
     const slotMode = options?.slotMode || 'dynamic';
@@ -168,9 +168,22 @@ router.post('/generate', async (req, res) => {
 
         // --- 3. FETCH AVAILABLE ROOMS ---
         const Room = require('../models/roomModel');
-        const availableRooms = await Room.find({ type: { $in: ['Classroom', 'Lab'] } });
+        const roomQuery = { type: { $in: ['Classroom', 'Lab'] } };
+        if (department) roomQuery.department = department;
+        
+        const availableRooms = await Room.find(roomQuery);
+        
+        // Try to find specific room for this semester if mapped
+        // We match by semester string or extract year/sem
+        const mappedRooms = availableRooms.filter(r => r.semester === semester || (r.year && semester.startsWith(r.year)));
+        
         const labRooms = availableRooms.filter(r => r.type === 'Lab');
         const classRooms = availableRooms.filter(r => r.type === 'Classroom');
+        
+        // Preference for Theory: prioritized mappedrooms
+        const theoryRooms = mappedRooms.filter(r => r.type === 'Classroom').length > 0 
+            ? mappedRooms.filter(r => r.type === 'Classroom') 
+            : classRooms;
 
         // --- 4. PLACE LABS ---
         const existingTimetables = await Timetable.find({});
@@ -502,7 +515,7 @@ router.post('/generate', async (req, res) => {
             } else {
                 let slots = fillBlock(d.morningConfig, d.morningPeriods || [], 9.5, 12.5);
                 // Assign a theory room if available
-                const theoryRoom = classRooms[Math.floor(Math.random() * classRooms.length)]?.name || 'TBD';
+                const theoryRoom = theoryRooms[Math.floor(Math.random() * theoryRooms.length)]?.name || 'TBD';
                 slots.forEach(s => { if (s.type === 'Lecture') s.room = theoryRoom; });
                 p.push(...slots);
             }
@@ -537,7 +550,7 @@ router.post('/generate', async (req, res) => {
             }
             else {
                 let slots = fillBlock(d.afternoonConfig, d.afternoonPeriods || [], 14, 17);
-                const theoryRoom = classRooms[Math.floor(Math.random() * classRooms.length)]?.name || 'TBD';
+                const theoryRoom = theoryRooms[Math.floor(Math.random() * theoryRooms.length)]?.name || 'TBD';
                 slots.forEach(s => { 
                     if (s.type === 'Lecture') s.room = theoryRoom;
                     s.time = s.time.replace('14:', '02:').replace('15:', '03:').replace('16:', '04:').replace('17:', '05:');
@@ -785,6 +798,7 @@ router.put('/update', async (req, res) => {
                             p.type = isLab ? 'Lab' : 'Lecture';
                             p.isFixed = true;
                             if (wing) p.wing = wing;
+                            if (room) p.room = room;
                         }
                     });
                 });
