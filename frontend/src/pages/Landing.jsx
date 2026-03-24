@@ -75,11 +75,15 @@ function Landing({ user }) {
             <main>
                 {/* Hero Section */}
                 <section className="hero-university" style={{ backgroundImage: 'url("/jntugv-main-block.png")' }}>
-                    <div className="hero-card">
-                        <p style={{ color: '#8B734B', fontWeight: 700, letterSpacing: '2px', marginBottom: '1rem' }}>ESTABLISHED EXCELLENCE</p>
-                        <h1>Empowering Rural Minds Through <span>Global Engineering</span></h1>
+                    <div className="hero-card fade-in-up">
+                        <div className="badge-role" style={{ marginBottom: '1.5rem', background: 'rgba(68, 45, 99, 0.1)', color: 'var(--brand-purple)' }}>ESTABLISHED EXCELLENCE</div>
+                        <h1>Empowering Rural Minds Through <span className="title-gradient">Global Engineering</span></h1>
+                        <p style={{ color: '#64748b', fontSize: '1.1rem', marginBottom: '2.5rem', lineHeight: '1.6' }}>
+                            Join India's premier technological university for innovation-driven research and academic brilliance.
+                        </p>
                         <div className="btn-group">
-                            <Link to="/login" className="btn-purple">Access Portal →</Link>
+                            <Link to="/login" className="btn-purple" style={{ borderRadius: '12px' }}>Access Portal →</Link>
+                            <Link to="/departments" className="btn-white" style={{ borderRadius: '12px' }}>Explore Departments</Link>
                         </div>
                     </div>
                 </section>
@@ -199,39 +203,44 @@ function Landing({ user }) {
                 </section>
             </main>
 
-            {/* Modern Footer */}
+            {/* Premium Footer */}
             <footer className="footer-university">
                 <div className="footer-grid-univ">
                     <div className="footer-col">
-                        <h2 style={{ color: 'white', marginBottom: '1.5rem' }}>JNTU-GV</h2>
-                        <p>Empowering the next generation of engineers with a legacy of excellence and a vision for the future.</p>
+                        <div className="logo-container" style={{ padding: 0, marginBottom: '1.5rem' }}>
+                            <img src="/jntugv-logo.png" alt="Logo" style={{ height: '50px' }} />
+                            <div className="logo-text-group">
+                                <div className="logo-main" style={{ color: 'white' }}>JNTU-GV</div>
+                                <div className="logo-sub" style={{ opacity: 0.6 }}>Vizianagaram</div>
+                            </div>
+                        </div>
+                        <p style={{ opacity: 0.7, lineHeight: '1.7' }}>Empowering the next generation of engineers with a legacy of excellence and a vision for the future of technological education.</p>
                     </div>
                     <div className="footer-col">
-                        <h3>Quick Links</h3>
+                        <h3>Quick Navigation</h3>
                         <ul className="footer-links-univ">
                             <li><Link to="/login">Student Portal</Link></li>
-                            <li><Link to="/login">Faculty Login</Link></li>
+                            <li><Link to="/login">Faculty Dashboard</Link></li>
+                            <li><Link to="/departments">Academic Programs</Link></li>
+                            <li><Link to="/">Campus Life</Link></li>
                         </ul>
                     </div>
                     <div className="footer-col">
-                        <h3>Reach Us</h3>
-                        <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>
-                            JNTU-GV College of Engineering,<br />
-                            Vizianagaram, Andhra Pradesh - 535003<br />
-                            Email: support@jntugv.edu.in
+                        <h3>Connect</h3>
+                        <p style={{ opacity: 0.7, fontSize: '0.9rem', lineHeight: '1.8' }}>
+                            College of Engineering,<br />
+                            Vizianagaram, AP - 535003<br />
+                            <span style={{ color: 'var(--brand-gold)' }}>support@jntugv.edu.in</span>
                         </p>
                     </div>
                     <div className="footer-col">
-                        <h3>Newsletter</h3>
-                        <p>Join our mailing list to stay updated.</p>
-                        <form className="newsletter-form">
-                            <input type="email" placeholder="Email Address" />
-                            <button type="submit">Join</button>
-                        </form>
+                        <h3>Academic Calendar</h3>
+                        <p>Stay updated with our latest semester schedules and university events.</p>
+                        <Link to="/login" className="btn-apply" style={{ display: 'inline-block', marginTop: '1rem', textAlign: 'center' }}>Portal Login →</Link>
                     </div>
                 </div>
                 <div className="footer-bottom-univ">
-                    <p>© {new Date().getFullYear()} JNTU-GV University. All Rights Reserved.</p>
+                    <p>© {new Date().getFullYear()} JNTU-GV University. All Rights Reserved. Crafted for Excellence.</p>
                 </div>
             </footer>
         </div>

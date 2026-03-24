@@ -129,10 +129,10 @@ function HodDashboard() {
 
                 <div className="sidebar-footer">
                     <div className="user-snippet">
-                        <div className="user-avatar" style={{ background: 'var(--primary)' }} title={user.name}>{user.name ? user.name.charAt(0) : 'H'}</div>
+                        <div className="user-avatar" title={user.name}>{user.name ? user.name.charAt(0) : 'H'}</div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || 'HOD'}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Head of Dept</div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Head of Dept</div>
                         </div>
                         <button
                             onClick={() => {
@@ -251,12 +251,12 @@ function HodOverview({ onNavigate, onQuickAttendance, user }) {
 
             <div className="modern-stats-grid">
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}><Icons.GradCap /></div>
-                    <div className="stat-content"><h5>Dept. Students</h5><h3>{stats.students}</h3><span className="stat-trend trend-up">Active Enrollment</span></div>
+                    <div className="stat-icon-wrapper stat-blue"><Icons.GradCap /></div>
+                    <div className="stat-content"><h5>Dept. Students</h5><h3>{stats.students}</h3><span className="badge-role">Active Enrollment</span></div>
                 </div>
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: 'var(--secondary-light)', color: 'var(--secondary)' }}><Icons.Building /></div>
-                    <div className="stat-content"><h5>Asset Capacity</h5><h3 onClick={() => onNavigate('infrastructure')} style={{ cursor: 'pointer' }}>Manage Spaces</h3><span className="stat-trend trend-neutral">Department Grid</span></div>
+                    <div className="stat-icon-wrapper stat-orange"><Icons.Building /></div>
+                    <div className="stat-content"><h5>Asset Capacity</h5><h3 onClick={() => onNavigate('infrastructure')} style={{ cursor: 'pointer' }}>Manage Spaces</h3><span className="badge-role">Department Grid</span></div>
                 </div>
             </div>
 

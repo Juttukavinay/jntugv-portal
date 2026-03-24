@@ -47,12 +47,12 @@ function AdminDashboard() {
     return (
         <div className="dashboard-container">
             {/* Sidebar */}
-            <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ background: 'rgba(15, 23, 42, 0.95)', color: 'white' }}>
+            <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <img src="/jntugv-logo.png" alt="Logo" className="sidebar-logo" />
                     <div>
                         <div className="sidebar-title">JNTU-GV</div>
-                        <div className="sidebar-role" style={{ color: '#fbbf24' }}>System Admin</div>
+                        <div className="sidebar-role">System Admin</div>
                     </div>
                 </div>
 
@@ -66,7 +66,7 @@ function AdminDashboard() {
 
                 <div className="sidebar-footer">
                     <div className="user-snippet">
-                        <div className="user-avatar" style={{ background: '#f59e0b' }}>A</div>
+                        <div className="user-avatar">A</div>
                         <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Admin Console</div>
                             <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Root Access</div>

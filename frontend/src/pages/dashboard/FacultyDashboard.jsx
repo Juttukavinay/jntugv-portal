@@ -47,12 +47,13 @@ function FacultyDashboard() {
     return (
         <div className="dashboard-container">
             {/* Sidebar with consistent class */}
-            <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`} style={{ backdropFilter: 'blur(0px)', WebkitBackdropFilter: 'blur(0px)' }}>
+            <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <img src="/jntugv-logo.png" alt="Logo" className="sidebar-logo" />
                     <div>
                         <div className="sidebar-title">JNTU-GV</div>
                         <div className="sidebar-role">Faculty Portal</div>
+
                     </div>
                 </div>
 
@@ -69,7 +70,7 @@ function FacultyDashboard() {
                         <div className="user-avatar">{currentUser?.name?.charAt(0) || 'F'}</div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentUser?.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Faculty</div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Faculty</div>
                         </div>
                         <button
                             onClick={() => { localStorage.removeItem('user'); window.location.href = '/login'; }}
@@ -209,22 +210,22 @@ function FacultyOverview({ currentUser, onNavigate }) {
 
             <div className="modern-stats-grid">
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#eff6ff', color: '#2563eb' }}><Icons.Calendar /></div>
+                    <div className="stat-icon-wrapper stat-blue"><Icons.Calendar /></div>
                     <div className="stat-content">
                         <h5>Today's Classes</h5>
                         <h3>{todayClasses.length}</h3>
-                        <span className="stat-trend trend-neutral">
+                        <span className="badge-role">
                             {todayClasses.length === 0 ? 'No classes today' : `Next: ${todayClasses[0]?.time || '-'}`}
                         </span>
                     </div>
                 </div>
                 <div className="premium-stat-card">
-                    <div className="stat-icon-wrapper" style={{ background: '#f5f3ff', color: '#7c3aed' }}><Icons.Users /></div>
+                    <div className="stat-icon-wrapper stat-purple"><Icons.Users /></div>
                     <div className="stat-content">
                         <h5>Teaching Workload</h5>
                         <h3>{workload.totalHours || 0} / {workload.targetHours || 16} Hrs</h3>
-                        <span className="stat-trend" style={{ color: workload.percentage > 100 ? '#ef4444' : '#16a34a' }}>
-                            {workload.percentage || 0}% Occupied (L:{workload.labHours || 0})
+                        <span className="badge-role">
+                            {workload.percentage || 0}% Occupied
                         </span>
                     </div>
                 </div>

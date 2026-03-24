@@ -96,7 +96,7 @@ function VicePrincipalDashboard() {
                         <div className="user-avatar">P</div>
                         <div style={{ flex: 1 }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Vice Principal</div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Administrator</div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Administrator</div>
                         </div>
                         <button
                             onClick={logout}
@@ -199,14 +199,14 @@ function PremiumStatCard({ title, value, icon, color, trend, trendType }) {
 
     return (
         <div className="premium-stat-card">
-            <div className="stat-icon-wrapper" style={{ background: c.bg, color: c.icon }}>
+            <div className={`stat-icon-wrapper stat-${color}`} style={{ background: c.bg, color: c.icon }}>
                 {icon}
             </div>
             <div className="stat-content">
                 <h5>{title}</h5>
                 <h3>{value}</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                    <span className={`stat-trend trend-${trendType}`}>{trend}</span>
+                    <span className={`badge-role`}>{trend}</span>
                 </div>
             </div>
         </div>

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 import API_BASE_URL from '../config'
 import '../App.css'
 
@@ -17,8 +16,6 @@ function Login() {
         '/jntugv-library.jpg',
         '/jntugv-dispensary.png',
         '/jntugv-entrance.jpg',
-        '/jntugv-board-english.jpg',
-        '/jntugv-board-telugu.jpg',
         '/jntugv-building-sign.png'
     ]
 
@@ -35,7 +32,7 @@ function Login() {
     const handleLogin = async (e) => {
         e.preventDefault()
         if (!credentials.email.trim() || !credentials.password.trim()) {
-            setError('Please enter both your ID and password.')
+            setError('Please enter your credentials.')
             return
         }
         setLoading(true)
@@ -49,14 +46,14 @@ function Login() {
             })
             const data = await res.json()
             if (!res.ok) {
-                setError(data.message || 'Invalid credentials. Please try again.')
+                setError(data.message || 'Authentication failed. Please check your credentials.')
                 setLoading(false)
                 return
             }
             finalizeLogin(data)
         } catch (err) {
             console.error(err)
-            setError('Unable to connect to server. Please check your connection.')
+            setError('Network error. Unable to connect to the academic portal.')
             setLoading(false)
         }
     }
@@ -80,7 +77,7 @@ function Login() {
         if (routes[cleanRole]) {
             window.location.href = routes[cleanRole]
         } else {
-            setError(`Unknown role: ${role}`)
+            setError(`Authorized access only. Role: ${role}`)
             setLoading(false)
         }
     }
@@ -93,137 +90,368 @@ function Login() {
             hod: { email: 'drb.4@jntugv.edu.in', password: '9876543204' },
             faculty: { email: 'mranilwurity5@jntugv.edu.in', password: '9876543205' },
             student1: { email: '21131A0501', password: 'password' },
-            student2: { email: '23VV5A1201', password: 'password' }
         }
         if (demos[role]) setCredentials(demos[role])
     }
 
-    const demoRoles = [
-        { key: 'admin', label: 'Admin' },
-        { key: 'principal', label: 'Principal' },
-        { key: 'vice_principal', label: 'Vice Principal' },
-        { key: 'hod', label: 'HOD' },
-        { key: 'faculty', label: 'Faculty' },
-        { key: 'student1', label: 'Student (IT)' },
-        { key: 'student2', label: 'Student (CSE)' }
-    ]
-
     return (
-        <div className="login-dark-wrapper">
-            {/* Left Side – Hero Side */}
-            <div className="login-hero-side" style={{ backgroundImage: `url("${bgImage}")` }}>
-                <div style={{ position: 'relative', zIndex: 2 }}>
-                    <h1 style={{ fontSize: '3.5rem', fontWeight: 800, color: 'white', lineHeight: 1.1, marginBottom: '1.5rem' }}>
-                        Empowering Digital<br />
-                        <span style={{ color: 'var(--brand-gold)' }}>Academic Excellence</span>
-                    </h1>
-                    <p style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.7)', maxWidth: '500px', lineHeight: 1.6 }}>
-                        Jawaharlal Nehru Technological University - Gurazada, Vizianagaram. A legacy of innovation and engineering brilliance.
-                    </p>
-                </div>
+        <div className="login-v2-container">
+            {/* Background Layer */}
+            <div className="login-v2-bg" style={{ backgroundImage: `url(${bgImage})` }}>
+                <div className="login-v2-overlay"></div>
             </div>
 
-            {/* Right Side – Form Side */}
-            <div className="login-form-side">
-                <div className="login-glass-card">
-                    <Link to="/" className="login-back-btn">
-                        <span>←</span> Back to University Home
-                    </Link>
-
-                    <div style={{ marginBottom: '2.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                            <img src="/jntugv-logo.png" alt="Logo" style={{ height: '50px' }} />
-                            <div>
-                                <h2 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, color: 'white' }}>Sign In</h2>
-                                <p style={{ fontSize: '0.9rem', color: '#94a3b8', margin: 0 }}>Enter your credentials to access the portal</p>
-                            </div>
-                        </div>
+            <div className="login-v2-content">
+                <div className="login-v2-card fade-in-up">
+                    <div className="login-v2-header">
+                        <img src="/jntugv-logo.png" alt="Logo" className="login-v2-logo" />
+                        <h1 className="title-gradient">JNTU-GV</h1>
+                        <p className="login-v2-subtitle">Secure Academic Gateway</p>
                     </div>
 
-                    {error && (
-                        <div className="login-status-error">
-                            <span style={{ fontSize: '1.25rem' }}>⚠️</span>
-                            <span>{error}</span>
-                        </div>
-                    )}
-
-                    <form onSubmit={handleLogin}>
-                        <div className="login-form-group">
-                            <label className="login-label-dark" style={{ color: activeField === 'email' ? 'var(--brand-gold)' : '' }}>
-                                Username / Admission No.
-                            </label>
-                            <div className="login-input-wrapper">
-                                <span className="input-icon-dark" style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>👤</span>
-                                <input
-                                    type="text"
-                                    name="email"
-                                    className="login-input-dark"
-                                    placeholder="e.g. 21131A0501"
-                                    value={credentials.email}
-                                    onChange={handleChange}
-                                    onFocus={() => setActiveField('email')}
-                                    onBlur={() => setActiveField('')}
-                                    style={{ paddingLeft: '3.5rem' }}
-                                />
+                    <form onSubmit={handleLogin} className="login-v2-form">
+                        {error && (
+                            <div className="login-v2-error pulse-soft">
+                                <span>⚠️</span> {error}
                             </div>
+                        )}
+
+                        <div className={`login-v2-input-wrapper ${activeField === 'email' ? 'active' : ''}`}>
+                            <label>Institutional ID</label>
+                            <input
+                                type="text"
+                                name="email"
+                                placeholder="Email or Roll Number"
+                                value={credentials.email}
+                                onChange={handleChange}
+                                onFocus={() => setActiveField('email')}
+                                onBlur={() => setActiveField('')}
+                                required
+                            />
                         </div>
 
-                        <div className="login-form-group">
-                            <label className="login-label-dark" style={{ color: activeField === 'password' ? 'var(--brand-gold)' : '' }}>
-                                Password
-                            </label>
-                            <div className="login-input-wrapper">
-                                <span className="input-icon-dark" style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔒</span>
+                        <div className={`login-v2-input-wrapper ${activeField === 'password' ? 'active' : ''}`}>
+                            <label>Password</label>
+                            <div className="password-input-row">
                                 <input
                                     type={showPassword ? 'text' : 'password'}
                                     name="password"
-                                    className="login-input-dark"
                                     placeholder="••••••••"
                                     value={credentials.password}
                                     onChange={handleChange}
                                     onFocus={() => setActiveField('password')}
                                     onBlur={() => setActiveField('')}
-                                    style={{ paddingLeft: '3.5rem', paddingRight: '3.5rem' }}
+                                    required
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    style={{
-                                        position: 'absolute', right: '1rem', top: '50%',
-                                        transform: 'translateY(-50%)', background: 'none',
-                                        border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1.1rem'
-                                    }}
-                                >
-                                    {showPassword ? '🙈' : '👁️'}
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="password-toggle">
+                                    {showPassword ? '👁️' : '🔒'}
                                 </button>
                             </div>
                         </div>
 
-                        <button type="submit" className="btn-login-gold" disabled={loading}>
-                            {loading ? 'Processing...' : 'Secure Authorization →'}
+                        <button type="submit" className="login-v2-btn" disabled={loading}>
+                            {loading ? <div className="spinner-small"></div> : 'Log In to Dashboard'}
                         </button>
                     </form>
 
-                    <div style={{ marginTop: '3rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
-                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Demo Access</span>
-                            <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+                    <div className="login-v2-divider">
+                        <span>OR</span>
+                    </div>
+
+                    <div className="login-v2-demos">
+                        <p>One-Click Access for Evaluation</p>
+                        <div className="demo-grid">
+                            <button onClick={() => fillDemo('admin')} className="demo-btn admin">Admin Login</button>
+                            <button onClick={() => fillDemo('principal')} className="demo-btn">Principal</button>
+                            <button onClick={() => fillDemo('hod')} className="demo-btn">HOD</button>
+                            <button onClick={() => fillDemo('student1')} className="demo-btn">Student</button>
                         </div>
-                        <div className="login-demo-grid-dark">
-                            {demoRoles.map(role => (
-                                <button
-                                    key={role.key}
-                                    onClick={() => fillDemo(role.key)}
-                                    className="login-demo-btn-dark"
-                                >
-                                    {role.label}
-                                </button>
-                            ))}
+                    </div>
+
+                    <div className="login-v2-footer">
+                        <p>&copy; {new Date().getFullYear()} JNTU-GV Vizianagaram. All rights reserved.</p>
+                        <div className="footer-links">
+                            <span>Privacy Policy</span>
+                            <span>System Support</span>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <style>{`
+                .login-v2-container {
+                    position: relative;
+                    width: 100vw;
+                    height: 100vh;
+                    overflow: hidden;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-family: 'Outfit', sans-serif;
+                    background: #0f172a;
+                }
+
+                .login-v2-bg {
+                    position: absolute;
+                    inset: 0;
+                    background-size: cover;
+                    background-position: center;
+                    transition: background 1s ease-in-out;
+                    filter: saturate(1.2) contrast(1.1);
+                }
+
+                .login-v2-overlay {
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.8) 50%, rgba(15, 23, 42, 0.95) 100%);
+                }
+
+                .login-v2-content {
+                    position: relative;
+                    z-index: 10;
+                    width: 100%;
+                    max-width: 440px;
+                    padding: 20px;
+                }
+
+                .login-v2-card {
+                    background: rgba(30, 41, 59, 0.7);
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 32px;
+                    padding: 3rem;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                    text-align: center;
+                }
+
+                .login-v2-header {
+                    margin-bottom: 2.5rem;
+                }
+
+                .login-v2-logo {
+                    height: 70px;
+                    margin-bottom: 1rem;
+                    filter: drop-shadow(0 0 15px rgba(255,255,255,0.1));
+                }
+
+                .login-v2-subtitle {
+                    color: #94a3b8;
+                    font-size: 0.9rem;
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                    margin-top: 0.5rem;
+                }
+
+                .login-v2-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.5rem;
+                }
+
+                .login-v2-error {
+                    background: rgba(239, 68, 68, 0.15);
+                    border: 1px solid rgba(239, 68, 68, 0.2);
+                    color: #fca5a5;
+                    padding: 0.75rem;
+                    border-radius: 12px;
+                    font-size: 0.85rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 8px;
+                }
+
+                .login-v2-input-wrapper {
+                    text-align: left;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+
+                .login-v2-input-wrapper label {
+                    color: #94a3b8;
+                    font-size: 0.8rem;
+                    font-weight: 600;
+                    margin-left: 0.5rem;
+                }
+
+                .login-v2-input-wrapper input {
+                    background: rgba(15, 23, 42, 0.6);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 14px;
+                    padding: 0.875rem 1.25rem;
+                    color: white;
+                    font-size: 1rem;
+                    transition: all 0.2s;
+                }
+
+                .login-v2-input-wrapper.active input {
+                    border-color: var(--brand-purple);
+                    background: rgba(15, 23, 42, 0.8);
+                    box-shadow: 0 0 0 4px rgba(68, 45, 99, 0.3);
+                }
+
+                .password-input-row {
+                    display: flex;
+                    gap: 8px;
+                }
+
+                .password-input-row input {
+                    flex: 1;
+                }
+
+                .password-toggle {
+                    background: rgba(255, 255, 255, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                    border-radius: 12px;
+                    padding: 0 1rem;
+                    color: white;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .password-toggle:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                .login-v2-btn {
+                    background: var(--brand-purple);
+                    color: white;
+                    border: none;
+                    padding: 1rem;
+                    border-radius: 14px;
+                    font-size: 1rem;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    margin-top: 0.5rem;
+                    box-shadow: 0 10px 20px -5px rgba(68, 45, 99, 0.5);
+                }
+
+                .login-v2-btn:hover:not(:disabled) {
+                    background: #362450;
+                    transform: translateY(-2px);
+                    box-shadow: 0 15px 25px -5px rgba(68, 45, 99, 0.6);
+                }
+
+                .login-v2-btn:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+
+                .login-v2-divider {
+                    margin: 2rem 0;
+                    position: relative;
+                    text-align: center;
+                }
+
+                .login-v2-divider::before {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 0;
+                    width: 100%;
+                    height: 1px;
+                    background: rgba(255, 255, 255, 0.1);
+                }
+
+                .login-v2-divider span {
+                    position: relative;
+                    z-index: 1;
+                    background: #1e293b;
+                    padding: 0 1rem;
+                    color: #64748b;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                }
+
+                .login-v2-demos {
+                    margin-bottom: 2rem;
+                }
+
+                .login-v2-demos p {
+                    font-size: 0.8rem;
+                    color: #94a3b8;
+                    margin-bottom: 1rem;
+                }
+
+                .demo-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 8px;
+                }
+
+                .demo-btn {
+                    background: rgba(255, 255, 255, 0.03);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    color: #cbd5e1;
+                    padding: 0.5rem;
+                    border-radius: 10px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+
+                .demo-btn:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: rgba(255, 255, 255, 0.2);
+                    color: white;
+                }
+
+                .demo-btn.admin {
+                   border-color: rgba(255, 184, 0, 0.3);
+                   color: var(--brand-gold);
+                }
+
+                .login-v2-footer {
+                    margin-top: 1rem;
+                    border-top: 1px solid rgba(255, 255, 255, 0.05);
+                    padding-top: 1.5rem;
+                }
+
+                .login-v2-footer p {
+                    font-size: 0.7rem;
+                    color: #64748b;
+                    margin-bottom: 0.75rem;
+                }
+
+                .footer-links {
+                    display: flex;
+                    justify-content: center;
+                    gap: 1.5rem;
+                    font-size: 0.7rem;
+                    font-weight: 600;
+                    color: #475569;
+                }
+
+                .spinner-small {
+                    width: 20px;
+                    height: 20px;
+                    border: 2px solid rgba(255,255,255,0.3);
+                    border-top-color: white;
+                    border-radius: 50%;
+                    animation: spin 0.8s linear infinite;
+                    margin: 0 auto;
+                }
+
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
+                }
+
+                @media (max-width: 480px) {
+                    .login-v2-card {
+                        padding: 2.5rem 1.5rem;
+                        border-radius: 0;
+                        height: 100vh;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        background: #0f172a;
+                    }
+                }
+            `}</style>
         </div>
     )
 }

@@ -104,7 +104,7 @@ function StudentDashboard() {
 
                 <div className="premium-stat-card">
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div className="stat-icon-wrapper" style={{ background: '#eff6ff', color: '#3b82f6' }}><Icons.Clock /></div>
+                        <div className="stat-icon-wrapper stat-blue"><Icons.Clock /></div>
                         <div>
                             <h5 style={{ margin: 0, color: '#64748b' }}>Current Session</h5>
                             {currentClass ? (
@@ -121,11 +121,11 @@ function StudentDashboard() {
 
                 <div className="premium-stat-card">
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div className="stat-icon-wrapper" style={{ background: '#f0fdf4', color: '#16a34a' }}><Icons.Award /></div>
+                        <div className="stat-icon-wrapper stat-green"><Icons.Award /></div>
                         <div>
                             <h5 style={{ margin: 0, color: '#64748b' }}>Overall CGPA</h5>
                             <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a' }}>8.4</div>
-                            <span style={{ fontSize: '0.75rem', color: '#16a34a' }}>+0.2 from last sem</span>
+                            <span className="badge-role">Good Standing</span>
                         </div>
                     </div>
                 </div>
@@ -435,10 +435,10 @@ function StudentDashboard() {
 
                 <div className="sidebar-footer">
                     <div className="user-snippet">
-                        <div className="user-avatar" style={{ background: '#3b82f6' }}>{currentUser?.name?.charAt(0) || 'S'}</div>
+                        <div className="user-avatar">{currentUser?.name?.charAt(0) || 'S'}</div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentUser?.name || 'Student'}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{currentUser?.email}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{currentUser?.email}</div>
                         </div>
                         <button onClick={logout} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }} title="Logout">
                             <Icons.LogOut />
