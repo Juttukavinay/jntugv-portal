@@ -88,9 +88,16 @@ function Login() {
             principal: { email: 'principal@jntugv.edu', password: 'Jntugv@2024' },
             vice_principal: { email: 'viceprincipal@jntugv.edu', password: 'Jntugv@2024' },
             hod: { email: 'drch1@jntugv.edu.in', password: '9876543201' },
-            faculty1: { email: 'dr2@jntugv.edu.in', password: '9876543202' },
-            faculty2: { email: 'drg.3@jntugv.edu.in', password: '9876543203' },
-            faculty3: { email: 'mranilwurity5@jntugv.edu.in', password: '9876543205' },
+            fac_sri: { email: 'SRI1@GMAIL.COM', password: '741852963' },
+            fac_kiran: { email: 'KIRAN@GMAIL.COM', password: '741852963' },
+            fac_jaya: { email: 'dr2@jntugv.edu.in', password: '9876543202' },
+            fac_madhavi: { email: 'drg.3@jntugv.edu.in', password: '9876543203' },
+            fac_tirimula: { email: 'drb.4@jntugv.edu.in', password: '9876543204' },
+            fac_anil: { email: 'mranilwurity5@jntugv.edu.in', password: '9876543205' },
+            fac_srikanth: { email: 'ksrikanth8@jntugv.edu.in', password: '9876543208' },
+            fac_roje: { email: 'rrojespandana9@jntugv.edu.in', password: '9876543209' },
+            fac_manasa: { email: 'bmanasa11@jntugv.edu.in', password: '9876543211' },
+            fac_madhumita: { email: 'madhumita12@jntugv.edu.in', password: '9876543212' },
             student1: { email: '24131A0501', password: 'password' },
             student2: { email: '23131A0501', password: 'password' },
             student3: { email: '22131A0501', password: 'password' },
@@ -194,9 +201,16 @@ function Login() {
                             <button onClick={() => fillDemoAndLogin('vice_principal')} className="demo-btn admin">Vice Principal</button>
                             
                             <button onClick={() => fillDemoAndLogin('hod')} className="demo-btn admin">HOD (Dr. Bindu)</button>
-                            <button onClick={() => fillDemoAndLogin('faculty1')} className="demo-btn fac">Dr. Jaya Suma</button>
-                            <button onClick={() => fillDemoAndLogin('faculty2')} className="demo-btn fac">Dr. Madhavi</button>
-                            <button onClick={() => fillDemoAndLogin('faculty3')} className="demo-btn fac">Mr. Anil</button>
+                            <button onClick={() => fillDemoAndLogin('fac_sri')} className="demo-btn fac">Sri</button>
+                            <button onClick={() => fillDemoAndLogin('fac_kiran')} className="demo-btn fac">Kiran</button>
+                            <button onClick={() => fillDemoAndLogin('fac_jaya')} className="demo-btn fac">Dr. Jaya Suma</button>
+                            <button onClick={() => fillDemoAndLogin('fac_madhavi')} className="demo-btn fac">Dr. Madhavi</button>
+                            <button onClick={() => fillDemoAndLogin('fac_tirimula')} className="demo-btn fac">Dr. Tirimula Rao</button>
+                            <button onClick={() => fillDemoAndLogin('fac_anil')} className="demo-btn fac">Mr. Anil Wurity</button>
+                            <button onClick={() => fillDemoAndLogin('fac_srikanth')} className="demo-btn fac">K. Srikanth</button>
+                            <button onClick={() => fillDemoAndLogin('fac_roje')} className="demo-btn fac">R. Roje Spandana</button>
+                            <button onClick={() => fillDemoAndLogin('fac_manasa')} className="demo-btn fac">B. Manasa</button>
+                            <button onClick={() => fillDemoAndLogin('fac_madhumita')} className="demo-btn fac">Madhumita Chanda</button>
 
                             <button onClick={() => fillDemoAndLogin('student1')} className="demo-btn stu">1st Yr Stu</button>
                             <button onClick={() => fillDemoAndLogin('student2')} className="demo-btn stu">2nd Yr Stu</button>
