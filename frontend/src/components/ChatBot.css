@@ -14,7 +14,7 @@
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #C5A059 0%, #D4AF37 100%); /* Using Coral palette */
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); /* Using Primary palette */
     color: white;
     border: none;
     box-shadow: 0 4px 20px rgba(197, 160, 89, 0.4);

@@ -87,10 +87,10 @@ function Login() {
             admin: { email: 'admin@jntugv.edu', password: 'Admin@JNTUGV#2026!Secured' },
             principal: { email: 'principal@jntugv.edu', password: 'Jntugv@2024' },
             vice_principal: { email: 'viceprincipal@jntugv.edu', password: 'Jntugv@2024' },
-            hod: { email: 'drb.4@jntugv.edu.in', password: '9876543204' },
-            faculty1: { email: 'mranilwurity5@jntugv.edu.in', password: '9876543205' },
-            faculty2: { email: 'drgjnreddy@jntugv.edu.in', password: 'password' },
-            faculty3: { email: 'drrddv.prasad@jntugv.edu.in', password: 'password' },
+            hod: { email: 'drch1@jntugv.edu.in', password: '9876543201' },
+            faculty1: { email: 'dr2@jntugv.edu.in', password: '9876543202' },
+            faculty2: { email: 'drg.3@jntugv.edu.in', password: '9876543203' },
+            faculty3: { email: 'mranilwurity5@jntugv.edu.in', password: '9876543205' },
             student1: { email: '24131A0501', password: 'password' },
             student2: { email: '23131A0501', password: 'password' },
             student3: { email: '22131A0501', password: 'password' },
@@ -193,10 +193,10 @@ function Login() {
                             <button onClick={() => fillDemoAndLogin('principal')} className="demo-btn admin">Principal</button>
                             <button onClick={() => fillDemoAndLogin('vice_principal')} className="demo-btn admin">Vice Principal</button>
                             
-                            <button onClick={() => fillDemoAndLogin('hod')} className="demo-btn admin">HOD</button>
-                            <button onClick={() => fillDemoAndLogin('faculty1')} className="demo-btn fac">Faculty 1</button>
-                            <button onClick={() => fillDemoAndLogin('faculty2')} className="demo-btn fac">Faculty 2</button>
-                            <button onClick={() => fillDemoAndLogin('faculty3')} className="demo-btn fac">Faculty 3</button>
+                            <button onClick={() => fillDemoAndLogin('hod')} className="demo-btn admin">HOD (Dr. Bindu)</button>
+                            <button onClick={() => fillDemoAndLogin('faculty1')} className="demo-btn fac">Dr. Jaya Suma</button>
+                            <button onClick={() => fillDemoAndLogin('faculty2')} className="demo-btn fac">Dr. Madhavi</button>
+                            <button onClick={() => fillDemoAndLogin('faculty3')} className="demo-btn fac">Mr. Anil</button>
 
                             <button onClick={() => fillDemoAndLogin('student1')} className="demo-btn stu">1st Yr Stu</button>
                             <button onClick={() => fillDemoAndLogin('student2')} className="demo-btn stu">2nd Yr Stu</button>
@@ -453,12 +453,12 @@ function Login() {
                 }
 
                 .demo-btn.admin {
-                   border-color: #fbbf24;
-                   color: #b45309;
-                   background: #fffbeb;
+                   border-color: #cbd5e1;
+                   color: #0f172a;
+                   background: #f1f5f9;
                 }
                 .demo-btn.admin:hover {
-                   background: #fbbf24;
+                   background: #0f172a;
                    color: #fff;
                 }
 

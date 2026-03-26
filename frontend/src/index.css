@@ -9,12 +9,12 @@
   --secondary-hover: #2563eb;
   --secondary-light: #eff6ff;
   --accent-dark: #1e293b;   
-  --accent-gold: #fbbf24;   
-  --accent-gold-text: #b45309;     
+  --accent-gold: #e2e8f0;   
+  --accent-gold-text: #0f172a;     
   --brand-purple: #1a0b2e;
   --brand-maroon: #3d0303;
-  --brand-gold: #FFB800;
-  --brand-gold-dark: #8B734B;
+  --brand-gold: #0047AB;
+  --brand-gold-dark: #003380;
 
 
   /* Legacy variable mappings - repurposed */
@@ -761,7 +761,7 @@ a:hover {
   padding: 1rem;
   border-radius: var(--radius-md);
   border: none;
-  background: linear-gradient(135deg, var(--primary) 0%, #D4AF37 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
   color: white;
   font-size: 1rem;
   font-weight: 600;
