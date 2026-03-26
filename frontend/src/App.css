@@ -912,6 +912,10 @@
     overflow: hidden;
   }
 
+  .mobile-menu-btn {
+    display: none !important;
+  }
+
   .glass-sidebar {
     width: 280px !important;
     padding: 2.5rem 1.5rem !important;

@@ -1013,13 +1013,13 @@ a:hover {
 /* OVERLAPPING BLOCK */
 .edubin-features-overlap {
   position: absolute;
-  bottom: -80px;
+  bottom: -40px; /* Reduced negative bottom so it doesn't cover face too much */
   left: 50%;
   transform: translateX(-50%);
   width: 85%;
   max-width: 1200px;
   display: flex;
-  height: 180px;
+  height: 150px; /* Slightly shorter */
   box-shadow: 0 20px 40px rgba(0,0,0,0.15);
   border-radius: 12px;
   overflow: hidden;

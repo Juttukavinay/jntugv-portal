@@ -45,7 +45,6 @@ function Landing({ user }) {
                 <div className="topbar-right">
                     <span className="social-text">Follow Us : </span>
                     <span className="social-icons">f 🐦 📷 in</span>
-                    <Link to="/login" className="topbar-login">Login / Register</Link>
                 </div>
             </div>
 
@@ -59,9 +58,9 @@ function Landing({ user }) {
                     <Link to="/" className="active">HOME</Link>
                     <Link to="/about">ABOUT</Link>
                     <Link to="/departments">DEPARTMENTS</Link>
-                    <Link to="/admissions">ADMISSIONS</Link>
-                    <Link to="/campus">CAMPUS</Link>
-                    <Link to="/contact">CONTACT</Link>
+                    {/* Simplified Navbar */}
+                    <Link to="/login" className="edu-btn primary" style={{ padding: '0.5rem 1.5rem', marginLeft: '1rem', color: 'white' }}>Login</Link>
+                    <Link to="/login" className="edu-btn secondary" style={{ padding: '0.5rem 1.5rem', color: '#0b1f38' }}>Sign In</Link>
                 </div>
                 <div className="edu-actions desktop-only">
                     <span className="search-icon">🔍</span>
