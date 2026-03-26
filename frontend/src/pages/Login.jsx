@@ -59,8 +59,8 @@ function Login() {
     }
 
     const finalizeLogin = (data) => {
-        const { role, name, email: userEmail, semester } = data
-        const user = { email: userEmail, role, name, semester }
+        const { role, name, email: userEmail, semester, dept, department: deptField } = data
+        const user = { email: userEmail, role, name, semester, department: dept || deptField || '' }
         localStorage.setItem('user', JSON.stringify(user))
         window.dispatchEvent(new Event('auth-change'))
 

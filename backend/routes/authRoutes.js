@@ -47,6 +47,7 @@ router.post('/login', async (req, res) => {
                     role: 'faculty',
                     name: faculty.name,
                     email: faculty.email,
+                    department: faculty.department,
                     _id: faculty._id
                 });
             } else {
