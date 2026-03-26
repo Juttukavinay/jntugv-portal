@@ -886,6 +886,215 @@ a:hover {
   box-shadow: 0 4px 12px rgba(197, 160, 89, 0.12);
 }
 
+.error-.btn-action.danger:hover {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* =========================================
+   EDUBIN LANDING PAGE STYLE
+   ========================================= */
+.edubin-layout {
+  min-height: 100vh;
+  background: #fff;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* TOP BAR */
+.edubin-topbar {
+  background: #0b1f38;
+  color: #d1d5db;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.8rem 4rem;
+  font-size: 0.85rem;
+}
+.topbar-left span, .topbar-right span {
+  margin-right: 1.5rem;
+}
+.social-icons { letter-spacing: 5px; cursor: pointer; }
+.topbar-login {
+  color: #3b82f6; /* Blue instead of yellow as per guidelines */
+  font-weight: 700;
+  text-decoration: none;
+}
+.topbar-login:hover { color: #60a5fa; }
+
+/* NAVBAR */
+.edubin-navbar {
+  background: #fff;
+  padding: 1.2rem 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+.edu-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.edu-logo img { height: 45px; }
+.edu-logo h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #0b1f38;
+  font-weight: 800;
+}
+.edu-links {
+  display: flex;
+  gap: 2rem;
+}
+.edu-links a {
+  text-decoration: none;
+  color: #0b1f38;
+  font-weight: 700;
+  font-size: 0.95rem;
+  transition: color 0.3s;
+}
+.edu-links a.active, .edu-links a:hover {
+  color: #3b82f6; /* Active blue */
+}
+.edu-actions { font-size: 1.2rem; cursor: pointer; }
+
+/* HERO */
+.edubin-hero {
+  height: 80vh;
+  min-height: 600px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.hero-content-container {
+  padding: 0 4rem;
+  max-width: 800px;
+}
+.hero-heading {
+  font-size: 4.5rem;
+  font-weight: 800;
+  color: white;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+.hero-paragraph {
+  font-size: 1.2rem;
+  color: #e2e8f0;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
+}
+.hero-buttons { display: flex; gap: 1rem; }
+.edu-btn {
+  padding: 1rem 2.5rem;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  font-size: 1.05rem;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.edu-btn.primary {
+  background: #3b82f6; /* Vibrant classic blue */
+  color: white;
+  border: 2px solid #3b82f6;
+}
+.edu-btn.secondary {
+  background: white;
+  color: #0b1f38;
+  border: 2px solid white;
+}
+.edu-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+
+/* OVERLAPPING BLOCK */
+.edubin-features-overlap {
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  max-width: 1200px;
+  display: flex;
+  height: 180px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 10;
+}
+.feature-left-box {
+  background: #0b1f38;
+  color: white;
+  padding: 2rem 3rem;
+  width: 35%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+.feature-left-box h3 {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0;
+  font-weight: 800;
+}
+.feature-arrows {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  gap: 10px;
+}
+.arrow-btn {
+  width: 35px;
+  height: 35px;
+  background: rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.arrow-btn:hover { background: rgba(255,255,255,0.3); }
+
+.feature-right-boxes {
+  display: flex;
+  width: 65%;
+}
+.feat-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: filter 0.3s;
+  cursor: pointer;
+}
+.feat-box:hover { filter: brightness(1.1); }
+.feat-icon { font-size: 3.5rem; margin-bottom: 0.5rem; }
+.feat-box h4 { font-size: 1.3rem; margin: 0; font-weight: 700; }
+
+.feat-box.blue { background: #3b82f6; }
+.feat-box.green { background: #84cc16; }
+.feat-box.red { background: #fb7185; }
+
+@media (max-width: 1024px) {
+  .edubin-hero { height: auto; padding: 6rem 0 10rem; }
+  .edubin-features-overlap { flex-direction: column; height: auto; bottom: -200px; }
+  .feature-left-box { width: 100%; padding: 2rem; }
+  .feature-right-boxes { width: 100%; flex-wrap: wrap; }
+  .feat-box { padding: 2rem; min-width: 33.33%; }
+  .desktop-only { display: none; }
+  .edubin-topbar, .edubin-navbar { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .hero-heading { font-size: 3rem; }
+  .hero-content-container { padding: 0 2rem; }
+}
+
 .error-banner {
   background: #FEF2F2;
   border: 1px solid #FEE2E2;
