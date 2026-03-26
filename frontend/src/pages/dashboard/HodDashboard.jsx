@@ -740,6 +740,23 @@ function TimetableManager({ showToast, allFaculty, allRooms }) {
         setShowBookingModal(true);
     }
 
+    const createBlankTimetable = async () => {
+        setLoading(true)
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/timetables/manual`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ semester: selectedSemester }) 
+            })
+            const data = await res.json()
+            if (res.ok) {
+                showToast("Blank Timetable Created Successfully!");
+                fetchTimetable();
+            }
+            else showToast("Error: " + data.message, 'error')
+        } catch (err) { showToast("Failed to connect", 'error'); } finally { setLoading(false) }
+    }
+
     const handleConfirmBooking = async (details) => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/timetables/update`, {
@@ -838,6 +855,7 @@ function TimetableManager({ showToast, allFaculty, allRooms }) {
                             <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">📕 PDF</button>
                             <button className="btn-action" onClick={() => setShowSettings(true)}>⚙️ Settings</button>
                             <button className="btn-action primary" onClick={generateTimetable} disabled={loading}>{loading ? 'Generating...' : '⚡ Auto-Generate'}</button>
+                            <button className="btn-action" style={{ background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' }} onClick={createBlankTimetable} disabled={loading}>📝 Create Blank</button>
                             {timetable && (
                                 <button className="btn-action" style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={async () => { if (confirm('Delete ENTIRE timetable for this semester?')) { await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`, { method: 'DELETE' }); fetchTimetable(); } }}>
                                     <Icons.Trash /> Delete Timetable

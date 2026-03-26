@@ -36,10 +36,7 @@ function Landing({ user }) {
 
     return (
         <div className="app-container">
-            {/* Top Utility Bar - Removed Placeholder Links */}
-            <div className="top-utility-bar desktop-only">
-                <span style={{ color: 'var(--brand-purple)', fontWeight: 600 }}>Official Portal of JNTU-GV Vizianagaram</span>
-            </div>
+            {/* Top Utility Bar Removed */}
 
             {/* University Navbar */}
             <nav className="university-navbar">

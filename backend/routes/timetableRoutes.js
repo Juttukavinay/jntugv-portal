@@ -646,6 +646,38 @@ router.post('/generate', async (req, res) => {
     }
 });
 
+// CREATE BLANK MANUAL TIMETABLE
+router.post('/manual', async (req, res) => {
+    const { semester } = req.body;
+    if (!semester) return res.status(400).json({ message: "Semester required" });
+
+    try {
+        await Timetable.deleteOne({ className: semester });
+        
+        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const blankPeriods = [
+            { time: '09:30 - 10:30', subject: '-', type: 'Free', credits: 1 },
+            { time: '10:30 - 11:30', subject: '-', type: 'Free', credits: 1 },
+            { time: '11:30 - 12:30', subject: '-', type: 'Free', credits: 1 },
+            { time: '02:00 - 03:00', subject: '-', type: 'Free', credits: 1 },
+            { time: '03:00 - 04:00', subject: '-', type: 'Free', credits: 1 },
+            { time: '04:00 - 05:00', subject: '-', type: 'Free', credits: 1 }
+        ];
+
+        let schedule = dayNames.map(day => ({
+            day,
+            periods: JSON.parse(JSON.stringify(blankPeriods))
+        }));
+
+        const newT = await Timetable.create({ className: semester, schedule });
+        res.status(201).json({ timetable: newT });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: "Internal Error: " + e.message });
+    }
+});
+
 // MANUAL UPDATE / BOOK SLOT WITH CONFLICT CHECK
 router.put('/update', async (req, res) => {
     const { semester, dayIndex, periodIndex, subject, faculty, assistants, room } = req.body;
