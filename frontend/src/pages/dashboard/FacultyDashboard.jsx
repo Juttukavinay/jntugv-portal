@@ -26,6 +26,10 @@ function FacultyDashboard() {
     const [mySubject, setMySubject] = useState('')
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' })
     const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString())
+    
+    // Workload and Profile Hoisted State
+    const [facultyProfile, setFacultyProfile] = useState(null)
+    const [workload, setWorkload] = useState({ currentHours: 0, targetHours: 16, percentage: 0 })
 
     const showToast = useCallback((message, type = 'success') => {
         setToast({ show: true, message, type })
@@ -40,6 +44,33 @@ function FacultyDashboard() {
         const timeInterval = setInterval(() => {
             setCurrentTime(new Date().toLocaleTimeString())
         }, 1000)
+
+        // Fetch Faculty Profile & Calculate Dynamic Workload
+        fetch(`${API_BASE_URL}/api/faculty`)
+            .then(res => res.json())
+            .then(data => {
+                const profile = data.find(f => f.email === user.email || f.name === user.name);
+                if (profile) {
+                    setFacultyProfile(profile);
+                    // Determine Max Workload Based on Designation
+                    let limit = 16;
+                    const desig = (profile.designation || '').toLowerCase();
+                    if (desig.includes('associate')) limit = 12;
+                    else if (desig.includes('professor') && !desig.includes('asst') && !desig.includes('assistant')) limit = 10;
+
+                    // Fetch Active Workload
+                    fetch(`${API_BASE_URL}/api/timetables/workload`)
+                        .then(res => res.json())
+                        .then(wlData => {
+                            const myWork = wlData.find(w => w.facultyName === profile.name || w.facultyName === user.name);
+                            const currentHours = myWork ? myWork.totalHours : 0;
+                            const percentage = Math.round((currentHours / limit) * 100);
+                            setWorkload({ currentHours, targetHours: limit, percentage });
+                        }).catch(console.error);
+                } else {
+                    setFacultyProfile({ designation: 'Assistant Professor' });
+                }
+            }).catch(console.error);
 
         return () => clearInterval(timeInterval)
     }, [])
@@ -70,7 +101,13 @@ function FacultyDashboard() {
                         <div className="user-avatar">{currentUser?.name?.charAt(0) || 'F'}</div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentUser?.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Faculty</div>
+                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {facultyProfile?.designation || 'Asst. Professor'}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: workload.currentHours > workload.targetHours ? '#ef4444' : '#10b981', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Icons.Check width={12} height={12} />
+                                Load: {workload.currentHours} / {workload.targetHours} Hrs
+                            </div>
                         </div>
                         <button
                             onClick={() => { localStorage.removeItem('user'); window.location.href = '/login'; }}
@@ -118,7 +155,7 @@ function FacultyDashboard() {
                 </header>
 
                 <div className="fade-in-up">
-                    {activeTab === 'overview' && <FacultyOverview currentUser={currentUser} onNavigate={setActiveTab} />}
+                    {activeTab === 'overview' && <FacultyOverview currentUser={currentUser} onNavigate={setActiveTab} workload={workload} facultyProfile={facultyProfile} />}
                     {activeTab === 'timetable' && <FacultyTimetable currentUser={currentUser} showToast={showToast} />}
                     {activeTab === 'students' && <SectionStudentList />}
                     {activeTab === 'attendance' && <AttendanceManager />}
@@ -163,24 +200,13 @@ function NavItem({ icon, label, active, onClick }) {
 
 // --- SUB COMPONENTS ---
 
-function FacultyOverview({ currentUser, onNavigate }) {
-    const [workload, setWorkload] = useState({ currentHours: 0, targetHours: 16, percentage: 0 });
+function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) {
     const [todayClasses, setTodayClasses] = useState([]);
     const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const todayName = days[new Date().getDay()];
 
     useEffect(() => {
         if (!currentUser?.name) return;
-        fetch(`${API_BASE_URL}/api/timetables/workload`)
-            .then(res => res.json())
-            .then(data => {
-                const myWork = data.find(w => w.facultyName === currentUser.name);
-                if (myWork) {
-                    const targetHours = 16;
-                    const percentage = Math.round((myWork.totalHours / targetHours) * 100);
-                    setWorkload({ ...myWork, targetHours, percentage });
-                }
-            }).catch(console.error);
 
         // Fetch all timetables and find today's classes for this faculty
         fetch(`${API_BASE_URL}/api/timetables`)
@@ -224,8 +250,8 @@ function FacultyOverview({ currentUser, onNavigate }) {
                     <div className="stat-icon-wrapper stat-purple"><Icons.Users /></div>
                     <div className="stat-content">
                         <h5>Teaching Workload</h5>
-                        <h3>{workload.totalHours || 0} / {workload.targetHours || 16} Hrs</h3>
-                        <span className="badge-role">
+                        <h3>{workload.currentHours || 0} / {workload.targetHours || 16} Hrs</h3>
+                        <span className="badge-role" style={{ color: workload.currentHours > workload.targetHours ? '#ef4444' : 'inherit' }}>
                             {workload.percentage || 0}% Occupied
                         </span>
                     </div>

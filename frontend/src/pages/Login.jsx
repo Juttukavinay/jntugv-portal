@@ -193,9 +193,9 @@ function Login() {
                         <span>OR</span>
                     </div>
 
-                    <div className="login-v2-demos">
-                        <p style={{ fontWeight: 600, color: '#444' }}>Select Demo Role for Instant Login</p>
-                        <div className="demo-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                    <div className="login-v2-demos" style={{ maxHeight: '250px', overflowY: 'auto', paddingRight: '10px' }}>
+                        <p style={{ fontWeight: 600, color: '#444', position: 'sticky', top: 0, background: '#fff', paddingBottom: '10px', margin: 0, zIndex: 2 }}>Select Demo Role for Instant Login</p>
+                        <div className="demo-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '10px' }}>
                             <button onClick={() => fillDemoAndLogin('admin')} className="demo-btn admin">Admin</button>
                             <button onClick={() => fillDemoAndLogin('principal')} className="demo-btn admin">Principal</button>
                             <button onClick={() => fillDemoAndLogin('vice_principal')} className="demo-btn admin">Vice Principal</button>
