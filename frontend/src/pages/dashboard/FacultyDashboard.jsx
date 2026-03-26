@@ -249,13 +249,17 @@ function LeaveManager({ currentUser, showToast, facultyProfile }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            // Get department from multiple sources for reliability
+            const user = JSON.parse(localStorage.getItem('user')) || {};
+            const dept = facultyProfile?.department || user.department || 'IT';
+
             const res = await fetch(`${API_BASE_URL}/api/leaves`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     facultyName: currentUser.name,
                     facultyEmail: currentUser.email || currentUser.name,
-                    department: facultyProfile?.department || 'IT', // Fallback if no profile
+                    department: dept,
                     ...formData
                 })
             });
@@ -265,10 +269,12 @@ function LeaveManager({ currentUser, showToast, facultyProfile }) {
                 setFormData({ fromDate: '', toDate: '', reason: '' });
                 fetchLeaves();
             } else {
-                showToast('Failed to apply for leave', 'error');
+                let errMsg = 'Failed to apply for leave';
+                try { errMsg = (await res.json()).message || errMsg; } catch {}
+                showToast(errMsg, 'error');
             }
         } catch (err) {
-            showToast('Error applying for leave', 'error');
+            showToast('Cannot connect to server. Please try again.', 'error');
         }
     };
 
