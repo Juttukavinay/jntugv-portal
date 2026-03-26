@@ -82,16 +82,44 @@ function Login() {
         }
     }
 
-    const fillDemo = (role) => {
+    const fillDemoAndLogin = async (role) => {
         const demos = {
             admin: { email: 'admin@jntugv.edu', password: 'Admin@JNTUGV#2026!Secured' },
             principal: { email: 'principal@jntugv.edu', password: 'Jntugv@2024' },
             vice_principal: { email: 'viceprincipal@jntugv.edu', password: 'Jntugv@2024' },
             hod: { email: 'drb.4@jntugv.edu.in', password: '9876543204' },
-            faculty: { email: 'mranilwurity5@jntugv.edu.in', password: '9876543205' },
-            student1: { email: '21131A0501', password: 'password' },
+            faculty1: { email: 'mranilwurity5@jntugv.edu.in', password: '9876543205' },
+            faculty2: { email: 'drgjnreddy@jntugv.edu.in', password: 'password' },
+            faculty3: { email: 'drrddv.prasad@jntugv.edu.in', password: 'password' },
+            student1: { email: '24131A0501', password: 'password' },
+            student2: { email: '23131A0501', password: 'password' },
+            student3: { email: '22131A0501', password: 'password' },
+            student4: { email: '21131A0501', password: 'password' },
         }
-        if (demos[role]) setCredentials(demos[role])
+        if (demos[role]) {
+            setCredentials(demos[role])
+            // Auto Login
+            setLoading(true)
+            setError('')
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(demos[role])
+                })
+                const data = await res.json()
+                if (!res.ok) {
+                    setError(data.message || 'Authentication failed. Please check your credentials.')
+                    setLoading(false)
+                    return
+                }
+                finalizeLogin(data)
+            } catch (err) {
+                console.error(err)
+                setError('Network error. Unable to connect to the academic portal.')
+                setLoading(false)
+            }
+        }
     }
 
     return (
@@ -159,12 +187,21 @@ function Login() {
                     </div>
 
                     <div className="login-v2-demos">
-                        <p>One-Click Access for Evaluation</p>
-                        <div className="demo-grid">
-                            <button onClick={() => fillDemo('admin')} className="demo-btn admin">Admin Login</button>
-                            <button onClick={() => fillDemo('principal')} className="demo-btn">Principal</button>
-                            <button onClick={() => fillDemo('hod')} className="demo-btn">HOD</button>
-                            <button onClick={() => fillDemo('student1')} className="demo-btn">Student</button>
+                        <p style={{ fontWeight: 600, color: '#444' }}>Select Demo Role for Instant Login</p>
+                        <div className="demo-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                            <button onClick={() => fillDemoAndLogin('admin')} className="demo-btn admin">Admin</button>
+                            <button onClick={() => fillDemoAndLogin('principal')} className="demo-btn admin">Principal</button>
+                            <button onClick={() => fillDemoAndLogin('vice_principal')} className="demo-btn admin">Vice Principal</button>
+                            
+                            <button onClick={() => fillDemoAndLogin('hod')} className="demo-btn admin">HOD</button>
+                            <button onClick={() => fillDemoAndLogin('faculty1')} className="demo-btn fac">Faculty 1</button>
+                            <button onClick={() => fillDemoAndLogin('faculty2')} className="demo-btn fac">Faculty 2</button>
+                            <button onClick={() => fillDemoAndLogin('faculty3')} className="demo-btn fac">Faculty 3</button>
+
+                            <button onClick={() => fillDemoAndLogin('student1')} className="demo-btn stu">1st Yr Stu</button>
+                            <button onClick={() => fillDemoAndLogin('student2')} className="demo-btn stu">2nd Yr Stu</button>
+                            <button onClick={() => fillDemoAndLogin('student3')} className="demo-btn stu">3rd Yr Stu</button>
+                            <button onClick={() => fillDemoAndLogin('student4')} className="demo-btn stu">4th Yr Stu</button>
                         </div>
                     </div>
 
@@ -187,8 +224,8 @@ function Login() {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-family: 'Outfit', sans-serif;
-                    background: #0f172a;
+                    font-family: 'Inter', sans-serif;
+                    background: #f4f6f9;
                 }
 
                 .login-v2-bg {
@@ -197,32 +234,32 @@ function Login() {
                     background-size: cover;
                     background-position: center;
                     transition: background 1s ease-in-out;
-                    filter: saturate(1.2) contrast(1.1);
+                    filter: saturate(1) contrast(1);
+                    opacity: 0.8;
                 }
 
                 .login-v2-overlay {
                     position: absolute;
                     inset: 0;
-                    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.8) 50%, rgba(15, 23, 42, 0.95) 100%);
+                    background: rgba(255, 255, 255, 0.85);
                 }
 
                 .login-v2-content {
                     position: relative;
                     z-index: 10;
                     width: 100%;
-                    max-width: 440px;
+                    max-width: 500px;
                     padding: 20px;
                 }
 
                 .login-v2-card {
-                    background: rgba(30, 41, 59, 0.45);
-                    backdrop-filter: blur(25px) saturate(180%);
-                    -webkit-backdrop-filter: blur(25px) saturate(180%);
-                    border: 1px solid rgba(255, 255, 255, 0.12);
-                    border-radius: 32px;
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 12px;
                     padding: 3rem;
-                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+                    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
                     text-align: center;
+                    color: #1e293b;
                 }
 
                 .login-v2-header {
@@ -232,16 +269,20 @@ function Login() {
                 .login-v2-logo {
                     height: 80px;
                     margin-bottom: 1rem;
-                    filter: drop-shadow(0 0 20px rgba(255,255,255,0.15));
                 }
 
                 .login-v2-subtitle {
-                    color: #94a3b8;
+                    color: #64748b;
                     font-size: 0.85rem;
                     letter-spacing: 2px;
                     text-transform: uppercase;
                     margin-top: 0.5rem;
                     font-weight: 700;
+                }
+
+                .title-gradient {
+                    color: #0f172a;
+                    font-family: 'Outfit', sans-serif;
                 }
 
                 .login-v2-form {
@@ -251,11 +292,11 @@ function Login() {
                 }
 
                 .login-v2-error {
-                    background: rgba(239, 68, 68, 0.15);
-                    border: 1px solid rgba(239, 68, 68, 0.2);
-                    color: #fca5a5;
+                    background: #fef2f2;
+                    border: 1px solid #fecaca;
+                    color: #ef4444;
                     padding: 0.75rem;
-                    border-radius: 12px;
+                    border-radius: 8px;
                     font-size: 0.85rem;
                     display: flex;
                     align-items: center;
@@ -272,28 +313,28 @@ function Login() {
                 }
 
                 .login-v2-input-wrapper label {
-                    color: #f8fafc;
+                    color: #475569;
                     font-size: 0.85rem;
                     font-weight: 700;
-                    margin-left: 0.5rem;
+                    margin-left: 0.2rem;
                     letter-spacing: 0.3px;
                 }
 
                 .login-v2-input-wrapper input {
-                    background: rgba(15, 23, 42, 0.7);
-                    border: 1.5px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 16px;
+                    background: #f8fafc;
+                    border: 1.5px solid #cbd5e1;
+                    border-radius: 8px;
                     padding: 1rem 1.25rem;
-                    color: white;
+                    color: #0f172a;
                     font-size: 1rem;
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                     outline: none;
                 }
 
                 .login-v2-input-wrapper.active input {
-                    border-color: #7c3aed;
-                    background: rgba(15, 23, 42, 0.9);
-                    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.2);
+                    border-color: #0047AB;
+                    background: #ffffff;
+                    box-shadow: 0 0 0 4px rgba(0, 71, 171, 0.1);
                     transform: translateY(-1px);
                 }
 
@@ -307,43 +348,43 @@ function Login() {
                 }
 
                 .password-toggle {
-                    background: rgba(255, 255, 255, 0.05);
-                    border: 1.5px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 16px;
+                    background: #f8fafc;
+                    border: 1.5px solid #cbd5e1;
+                    border-radius: 8px;
                     width: 54px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    color: white;
+                    color: #475569;
                     cursor: pointer;
                     transition: all 0.3s ease;
                 }
 
                 .password-toggle:hover {
-                    background: rgba(255, 255, 255, 0.15);
-                    border-color: rgba(255, 255, 255, 0.2);
+                    background: #e2e8f0;
+                    border-color: #94a3b8;
                 }
 
                 .login-v2-btn {
-                    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+                    background: #0047AB;
                     color: white;
                     border: none;
                     padding: 1.1rem;
-                    border-radius: 16px;
+                    border-radius: 8px;
                     font-size: 1.05rem;
-                    font-weight: 800;
+                    font-weight: 700;
                     cursor: pointer;
                     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                     margin-top: 0.8rem;
-                    box-shadow: 0 12px 24px -6px rgba(124, 58, 237, 0.4);
+                    box-shadow: 0 4px 10px rgba(0, 71, 171, 0.2);
                     text-transform: uppercase;
                     letter-spacing: 1px;
                 }
 
                 .login-v2-btn:hover:not(:disabled) {
-                    transform: translateY(-2px) scale(1.01);
-                    box-shadow: 0 20px 30px -8px rgba(124, 58, 237, 0.5);
-                    filter: brightness(1.1);
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 15px rgba(0, 71, 171, 0.3);
+                    background: #003380;
                 }
 
                 .login-v2-btn:disabled {
@@ -364,15 +405,15 @@ function Login() {
                     left: 0;
                     width: 100%;
                     height: 1px;
-                    background: rgba(255, 255, 255, 0.1);
+                    background: #e2e8f0;
                 }
 
                 .login-v2-divider span {
                     position: relative;
                     z-index: 1;
-                    background: #1e293b;
+                    background: #ffffff;
                     padding: 0 1rem;
-                    color: #64748b;
+                    color: #94a3b8;
                     font-size: 0.75rem;
                     font-weight: 700;
                 }
@@ -383,22 +424,22 @@ function Login() {
 
                 .login-v2-demos p {
                     font-size: 0.8rem;
-                    color: #94a3b8;
+                    color: #64748b;
                     margin-bottom: 1rem;
                 }
 
                 .demo-grid {
                     display: grid;
-                    grid-template-columns: repeat(2, 1fr);
+                    grid-template-columns: auto;
                     gap: 8px;
                 }
 
                 .demo-btn {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.08);
-                    color: #cbd5e1;
+                    background: #f8fafc;
+                    border: 1px solid #e2e8f0;
+                    color: #475569;
                     padding: 0.5rem;
-                    border-radius: 10px;
+                    border-radius: 6px;
                     font-size: 0.75rem;
                     font-weight: 600;
                     cursor: pointer;
@@ -406,19 +447,44 @@ function Login() {
                 }
 
                 .demo-btn:hover {
-                    background: rgba(255, 255, 255, 0.1);
-                    border-color: rgba(255, 255, 255, 0.2);
+                    background: #0047AB;
+                    border-color: #0047AB;
                     color: white;
                 }
 
                 .demo-btn.admin {
-                   border-color: rgba(255, 184, 0, 0.3);
-                   color: var(--brand-gold);
+                   border-color: #fbbf24;
+                   color: #b45309;
+                   background: #fffbeb;
+                }
+                .demo-btn.admin:hover {
+                   background: #fbbf24;
+                   color: #fff;
+                }
+
+                .demo-btn.fac {
+                   border-color: #cfdbf3;
+                   color: #0047AB;
+                   background: #eff6ff;
+                }
+                .demo-btn.fac:hover {
+                   background: #0047AB;
+                   color: #fff;
+                }
+
+                .demo-btn.stu {
+                   border-color: #d1fae5;
+                   color: #059669;
+                   background: #ecfdf5;
+                }
+                .demo-btn.stu:hover {
+                   background: #10b981;
+                   color: #fff;
                 }
 
                 .login-v2-footer {
                     margin-top: 1rem;
-                    border-top: 1px solid rgba(255, 255, 255, 0.05);
+                    border-top: 1px solid #e2e8f0;
                     padding-top: 1.5rem;
                 }
 
