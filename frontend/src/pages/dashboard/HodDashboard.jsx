@@ -92,6 +92,7 @@ function HodDashboard() {
             case 'timetable': return <TimetableManager showToast={showToast} allFaculty={allFaculty} allRooms={allRooms} />;
             case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} />;
             case 'infrastructure': return <InfrastructureManager user={user} showToast={showToast} />;
+            case 'leaves': return <LeaveApprovals user={user} showToast={showToast} allFaculty={allFaculty} />;
             case 'attendance': return (
                 <AttendanceManager 
                     showToast={showToast} 
@@ -132,6 +133,7 @@ function HodDashboard() {
                 <nav className="nav-menu">
                     <NavItem icon={<Icons.Home />} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
                     <NavItem icon={<Icons.Calendar />} label="Timetable Mgr" active={activeTab === 'timetable'} onClick={() => setActiveTab('timetable')} />
+                    <NavItem icon={<Icons.Calendar />} label="Leave Approvals" active={activeTab === 'leaves'} onClick={() => setActiveTab('leaves')} />
                     <NavItem icon={<Icons.Users />} label="Faculty Mgmt" active={activeTab === 'faculty'} onClick={() => setActiveTab('faculty')} />
                     <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
@@ -219,6 +221,133 @@ function NavItem({ icon, label, active, onClick }) {
 
 // Removed mid-file import to prevent SyntaxError
 
+
+// --- OVERVIEW COMPONENT ---
+
+function LeaveApprovals({ user, showToast, allFaculty }) {
+    const [leaves, setLeaves] = useState([]);
+    const [processingId, setProcessingId] = useState(null);
+    const [substitutes, setSubstitutes] = useState({});
+
+    const fetchLeaves = () => {
+        if (!user.department) return;
+        fetch(`${API_BASE_URL}/api/leaves/department/${encodeURIComponent(user.department)}`)
+            .then(res => res.json())
+            .then(data => setLeaves(Array.isArray(data) ? data : []))
+            .catch(console.error);
+    };
+
+    useEffect(() => {
+        fetchLeaves();
+    }, [user.department]);
+
+    const handleAction = async (id, status) => {
+        if (status === 'Approved' && !substitutes[id]) {
+            showToast('Please select a substitute faculty for approval', 'error');
+            return;
+        }
+
+        setProcessingId(id);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/leaves/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    status,
+                    substituteFaculty: status === 'Approved' ? substitutes[id] : null
+                })
+            });
+
+            if (res.ok) {
+                showToast(`Leave request ${status.toLowerCase()} successfully!`);
+                fetchLeaves();
+            } else {
+                showToast('Failed to process request', 'error');
+            }
+        } catch (err) {
+            showToast('Error connecting to server', 'error');
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
+    return (
+        <div className="glass-table-container">
+            <div className="table-header-premium">
+                <h3>Leave Approvals ({user.department})</h3>
+            </div>
+            
+            <table className="premium-table">
+                <thead>
+                    <tr>
+                        <th>Faculty Name</th>
+                        <th>Dates</th>
+                        <th>Reason</th>
+                        <th>Assign Substitute</th>
+                        <th>Action/Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {leaves.length === 0 ? (
+                        <tr><td colSpan="5" style={{ textAlign: 'center', color: '#94a3b8' }}>No pending leave requests.</td></tr>
+                    ) : (
+                        leaves.map(leave => (
+                            <tr key={leave._id}>
+                                <td style={{ fontWeight: '600' }}>{leave.facultyName}</td>
+                                <td style={{ fontSize: '0.85rem' }}>{new Date(leave.fromDate).toLocaleDateString()} - <br/>{new Date(leave.toDate).toLocaleDateString()}</td>
+                                <td style={{ maxWidth: '200px' }}>{leave.reason}</td>
+                                <td>
+                                    {leave.status === 'Pending' ? (
+                                        <select 
+                                            className="search-input-premium" 
+                                            style={{ width: '100%', padding: '0.4rem', fontSize: '0.8rem' }}
+                                            value={substitutes[leave._id] || ''}
+                                            onChange={(e) => setSubstitutes({ ...substitutes, [leave._id]: e.target.value })}
+                                        >
+                                            <option value="">Select Leisure Faculty</option>
+                                            {allFaculty
+                                                .filter(f => f.department === user.department && f.name !== leave.facultyName)
+                                                .map(f => <option key={f._id} value={f.name}>{f.name}</option>)
+                                            }
+                                        </select>
+                                    ) : (
+                                        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{leave.substituteFaculty || '-'}</span>
+                                    )}
+                                </td>
+                                <td>
+                                    {leave.status === 'Pending' ? (
+                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <button 
+                                                className="btn-action primary" 
+                                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
+                                                disabled={processingId === leave._id}
+                                                onClick={() => handleAction(leave._id, 'Approved')}
+                                            >Approve</button>
+                                            <button 
+                                                className="btn-action" 
+                                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: '#ef4444' }}
+                                                disabled={processingId === leave._id}
+                                                onClick={() => handleAction(leave._id, 'Rejected')}
+                                            >Reject</button>
+                                        </div>
+                                    ) : (
+                                        <span style={{ 
+                                            padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', 
+                                            background: leave.status === 'Approved' ? '#dcfce7' : '#fee2e2', 
+                                            color: leave.status === 'Approved' ? '#166534' : '#991b1b' 
+                                        }}>
+                                            {leave.status}
+                                        </span>
+                                    )}
+                                </td>
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
+}
 
 // --- OVERVIEW COMPONENT ---
 function HodOverview({ onNavigate, onQuickAttendance, user }) {

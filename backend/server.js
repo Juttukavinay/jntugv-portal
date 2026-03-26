@@ -41,6 +41,8 @@ app.use('/api/chat', require('./routes/chatRoutes'));
 
 const sseRoutes = require('./routes/sseRoutes');
 app.use('/api/sse', sseRoutes);
+const leaveRoutes = require('./routes/leaveRoutes');
+app.use('/api/leaves', leaveRoutes);
 
 app.get('/', (req, res) => {
     res.send('API is running...');

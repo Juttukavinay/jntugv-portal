@@ -59,14 +59,42 @@ function FacultyDashboard() {
                     else if (desig.includes('professor') && !desig.includes('asst') && !desig.includes('assistant')) limit = 10;
 
                     // Fetch Active Workload
-                    fetch(`${API_BASE_URL}/api/timetables/workload`)
-                        .then(res => res.json())
-                        .then(wlData => {
-                            const myWork = wlData.find(w => w.facultyName === profile.name || w.facultyName === user.name);
-                            const currentHours = myWork ? myWork.totalHours : 0;
-                            const percentage = Math.round((currentHours / limit) * 100);
-                            setWorkload({ currentHours, targetHours: limit, percentage });
-                        }).catch(console.error);
+                    Promise.all([
+                        fetch(`${API_BASE_URL}/api/timetables/workload`).then(res => res.json()),
+                        fetch(`${API_BASE_URL}/api/leaves/faculty/${encodeURIComponent(user.email || user.name)}`).then(res => res.json())
+                    ]).then(([wlData, leavesData]) => {
+                        const myWork = wlData.find(w => w.facultyName === profile.name || w.facultyName === user.name);
+                        let currentHours = myWork ? myWork.totalHours : 0;
+                        
+                        // Calculate leave deductions for current week (assuming 4 hours per approved leave day in current week)
+                        if (Array.isArray(leavesData)) {
+                            const now = new Date();
+                            const currentWeekStart = new Date(now.setDate(now.getDate() - now.getDay())); // Sunday
+                            const currentWeekEnd = new Date(now.setDate(now.getDate() - now.getDay() + 6)); // Saturday
+                            
+                            leavesData.forEach(leave => {
+                                if (leave.status === 'Approved') {
+                                    const lStart = new Date(leave.fromDate);
+                                    const lEnd = new Date(leave.toDate);
+                                    // simplified check if leave overlaps current week
+                                    if (lStart <= currentWeekEnd && lEnd >= currentWeekStart) {
+                                        // Count overlapping weekdays (1 day = 4 hrs deduction)
+                                        let tempDate = new Date(Math.max(lStart, currentWeekStart));
+                                        let endDate = new Date(Math.min(lEnd, currentWeekEnd));
+                                        while (tempDate <= endDate) {
+                                            if (tempDate.getDay() !== 0) { // Not Sunday
+                                                currentHours = Math.max(0, currentHours - 4);
+                                            }
+                                            tempDate.setDate(tempDate.getDate() + 1);
+                                        }
+                                    }
+                                }
+                            });
+                        }
+
+                        const percentage = Math.round((currentHours / limit) * 100);
+                        setWorkload({ currentHours, targetHours: limit, percentage });
+                    }).catch(console.error);
                 } else {
                     setFacultyProfile({ designation: 'Assistant Professor' });
                 }
@@ -91,6 +119,7 @@ function FacultyDashboard() {
                 <nav className="nav-menu">
                     <NavItem icon={<Icons.Home />} label="Overview" active={activeTab === 'overview'} onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Calendar />} label="My Timetable" active={activeTab === 'timetable'} onClick={() => { setActiveTab('timetable'); setMobileMenuOpen(false); }} />
+                    <NavItem icon={<Icons.Calendar />} label="Leaves" active={activeTab === 'leaves'} onClick={() => { setActiveTab('leaves'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Users />} label="My Students" active={activeTab === 'students'} onClick={() => { setActiveTab('students'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Check />} label="Attendance" active={activeTab === 'attendance'} onClick={() => { setActiveTab('attendance'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => { setActiveTab('notices'); setMobileMenuOpen(false); }} />
@@ -158,6 +187,7 @@ function FacultyDashboard() {
                     {activeTab === 'overview' && <FacultyOverview currentUser={currentUser} onNavigate={setActiveTab} workload={workload} facultyProfile={facultyProfile} />}
                     {activeTab === 'timetable' && <FacultyTimetable currentUser={currentUser} showToast={showToast} />}
                     {activeTab === 'students' && <SectionStudentList />}
+                    {activeTab === 'leaves' && <LeaveManager currentUser={currentUser} showToast={showToast} facultyProfile={facultyProfile} />}
                     {activeTab === 'attendance' && <AttendanceManager />}
                     {activeTab === 'notices' && <CommunicationCenter user={currentUser} showToast={showToast} />}
                 </div>
@@ -196,6 +226,116 @@ function NavItem({ icon, label, active, onClick }) {
             <span>{label}</span>
         </div>
     )
+}
+
+// --- SUB COMPONENTS ---
+
+function LeaveManager({ currentUser, showToast, facultyProfile }) {
+    const [leaves, setLeaves] = useState([]);
+    const [isApplying, setIsApplying] = useState(false);
+    const [formData, setFormData] = useState({ fromDate: '', toDate: '', reason: '' });
+
+    const fetchLeaves = () => {
+        fetch(`${API_BASE_URL}/api/leaves/faculty/${encodeURIComponent(currentUser?.email || currentUser?.name)}`)
+            .then(res => res.json())
+            .then(data => setLeaves(Array.isArray(data) ? data : []))
+            .catch(console.error);
+    };
+
+    useEffect(() => {
+        if (currentUser) fetchLeaves();
+    }, [currentUser]);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/leaves`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    facultyName: currentUser.name,
+                    facultyEmail: currentUser.email || currentUser.name,
+                    department: facultyProfile?.department || 'IT', // Fallback if no profile
+                    ...formData
+                })
+            });
+            if (res.ok) {
+                showToast('Leave applied successfully!', 'success');
+                setIsApplying(false);
+                setFormData({ fromDate: '', toDate: '', reason: '' });
+                fetchLeaves();
+            } else {
+                showToast('Failed to apply for leave', 'error');
+            }
+        } catch (err) {
+            showToast('Error applying for leave', 'error');
+        }
+    };
+
+    return (
+        <div className="glass-table-container">
+            <div className="table-header-premium">
+                <h3>My Leave Requests</h3>
+                <button className="btn-action primary" onClick={() => setIsApplying(true)}>+ Apply Leave</button>
+            </div>
+            
+            {isApplying && (
+                <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>From Date</label>
+                            <input type="date" className="search-input-premium" value={formData.fromDate} onChange={e => setFormData({ ...formData, fromDate: e.target.value })} required />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>To Date</label>
+                            <input type="date" className="search-input-premium" value={formData.toDate} onChange={e => setFormData({ ...formData, toDate: e.target.value })} required />
+                        </div>
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>Reason</label>
+                            <input type="text" className="search-input-premium" style={{ width: '100%' }} value={formData.reason} onChange={e => setFormData({ ...formData, reason: e.target.value })} required placeholder="Enter reason for leave..." />
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button type="button" className="btn-action" onClick={() => setIsApplying(false)}>Cancel</button>
+                            <button type="submit" className="btn-action primary">Submit Request</button>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            <table className="premium-table">
+                <thead>
+                    <tr>
+                        <th>Date Range</th>
+                        <th>Reason</th>
+                        <th>Substitute Faculty</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {leaves.length === 0 ? (
+                        <tr><td colSpan="4" style={{ textAlign: 'center', color: '#94a3b8' }}>No leave requests found.</td></tr>
+                    ) : (
+                        leaves.map(leave => (
+                            <tr key={leave._id}>
+                                <td>{leave.fromDate} to {leave.toDate}</td>
+                                <td>{leave.reason}</td>
+                                <td>{leave.substituteFaculty || '-'}</td>
+                                <td>
+                                    <span style={{ 
+                                        padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', 
+                                        background: leave.status === 'Approved' ? '#dcfce7' : (leave.status === 'Rejected' ? '#fee2e2' : '#fef9c3'), 
+                                        color: leave.status === 'Approved' ? '#166534' : (leave.status === 'Rejected' ? '#991b1b' : '#a16207') 
+                                    }}>
+                                        {leave.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 // --- SUB COMPONENTS ---
