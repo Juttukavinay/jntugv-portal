@@ -87,10 +87,10 @@ function HodDashboard() {
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'students': return <StudentManager showToast={showToast} />;
-            case 'faculty': return <FacultyManager showToast={showToast} />;
-            case 'timetable': return <TimetableManager showToast={showToast} allFaculty={allFaculty} allRooms={allRooms} />;
-            case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} />;
+            case 'students': return <StudentManager showToast={showToast} user={user} />;
+            case 'faculty': return <FacultyManager showToast={showToast} user={user} />;
+            case 'timetable': return <TimetableManager showToast={showToast} allFaculty={allFaculty} allRooms={allRooms} user={user} />;
+            case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} user={user} />;
             case 'infrastructure': return <InfrastructureManager user={user} showToast={showToast} />;
             case 'leaves': return <LeaveApprovals user={user} showToast={showToast} allFaculty={allFaculty} />;
             case 'attendance': return (
@@ -503,7 +503,7 @@ function HodOverview({ onNavigate, onQuickAttendance, user }) {
 }
 
 // --- PLACEHOLDER COMPONENTS (To be filled) ---
-function StudentManager({ showToast }) {
+function StudentManager({ showToast, user }) {
     const [students, setStudents] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState('');
@@ -646,7 +646,7 @@ function StudentManager({ showToast }) {
         </>
     );
 }
-function FacultyManager({ showToast }) {
+function FacultyManager({ showToast, user }) {
     const [faculty, setFaculty] = useState([]);
     const [workloads, setWorkloads] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -799,7 +799,7 @@ function FacultyManager({ showToast }) {
         </>
     );
 }
-function TimetableManager({ showToast, allFaculty, allRooms }) {
+function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     const [timetable, setTimetable] = useState(null)
     const [loading, setLoading] = useState(false)
     const [selectedSemester, setSelectedSemester] = useState('I-B.Tech I Sem')
@@ -1094,7 +1094,7 @@ function TimetableManager({ showToast, allFaculty, allRooms }) {
         </>
     );
 }
-function SubjectsManager({ facultyList, showToast }) {
+function SubjectsManager({ facultyList, showToast, user }) {
     const [subjects, setSubjects] = useState([]);
     const [regulation, setRegulation] = useState('R23');
     const [activeCourse, setActiveCourse] = useState('B.Tech');
@@ -1119,7 +1119,7 @@ function SubjectsManager({ facultyList, showToast }) {
     const saveSubjects = async () => {
         const validRows = editRows.filter(r => r.courseName);
         if (validRows.length === 0) return showToast("Please fill at least one subject", 'error');
-        const res = await fetch(`${API_BASE_URL}/api/courses/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regulation, activeCourse, courseName, department: 'IT', subjects: validRows.map(r => ({ ...r, semester: semesterName })) }) });
+        const res = await fetch(`${API_BASE_URL}/api/courses/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regulation, activeCourse, courseName, department: user.department || 'IT', subjects: validRows.map(r => ({ ...r, semester: semesterName })) }) });
         if ((await res.json()).success) { showToast('Saved Successfully!'); fetchSubjects(); }
         else showToast('Failed to save', 'error');
     }
