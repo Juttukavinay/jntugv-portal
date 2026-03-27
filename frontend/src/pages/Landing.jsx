@@ -58,12 +58,11 @@ function Landing({ user }) {
                     <Link to="/" className="active">HOME</Link>
                     <Link to="/about">ABOUT</Link>
                     <Link to="/departments">DEPARTMENTS</Link>
-                    {/* Simplified Navbar */}
-                    <Link to="/login" className="edu-btn primary" style={{ padding: '0.5rem 1.5rem', marginLeft: '1rem', color: 'white' }}>Login</Link>
-                    <Link to="/login" className="edu-btn secondary" style={{ padding: '0.5rem 1.5rem', color: '#0b1f38' }}>Sign In</Link>
                 </div>
                 <div className="edu-actions desktop-only">
-                    <span className="search-icon">🔍</span>
+                    <Link to="/login" className="edu-btn primary">Login</Link>
+                    <Link to="/login" className="edu-btn secondary">Sign In</Link>
+                    <span className="search-icon" style={{ marginLeft: '1.5rem' }}>🔍</span>
                 </div>
                 {/* Mobile Toggle */}
                 <button
@@ -96,35 +95,7 @@ function Landing({ user }) {
                             <Link to="/login" className="edu-btn secondary">Get Started</Link>
                         </div>
                     </div>
-
-                    {/* Overlapping Feature Block */}
-                    <div className="edubin-features-overlap">
-                        <div className="feature-left-box">
-                            <h3>Best platform<br/>to learn<br/>everything</h3>
-                            <div className="feature-arrows">
-                                <span className="arrow-btn">❮</span>
-                                <span className="arrow-btn">❯</span>
-                            </div>
-                        </div>
-                        <div className="feature-right-boxes">
-                            <div className="feat-box blue">
-                                <div className="feat-icon">⚙️</div>
-                                <h4>Engineering</h4>
-                            </div>
-                            <div className="feat-box green">
-                                <div className="feat-icon">💻</div>
-                                <h4>Technology</h4>
-                            </div>
-                            <div className="feat-box red">
-                                <div className="feat-icon">🔬</div>
-                                <h4>Research</h4>
-                            </div>
-                        </div>
-                    </div>
                 </section>
-
-                {/* Adding spacing below hero due to overlap */}
-                <div style={{ height: '150px' }}></div>
 
                 {/* News & Events Section */}
                 <section className="news-events-grid" style={{ padding: '4rem 2rem', background: '#fff' }}>
@@ -137,7 +108,7 @@ function Landing({ user }) {
                         </div>
 
                         <div className="news-cards-grid" style={{ marginTop: '2rem', display: 'grid', gap: '2rem' }}>
-                            <div className="news-card-univ" style={{ border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden' }}>
+                            <div className="news-card-univ hover-lift fade-in-up" style={{ border: '1px solid #eee', borderRadius: '8px', overflow: 'hidden', animationDelay: '0.2s' }}>
                                 <div className="news-img-wrapper" style={{ height: '200px', background: '#ccc' }}>
                                     <img src="/jntugv-first-year-block.jpg" style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="News 2" />
                                 </div>
@@ -157,7 +128,7 @@ function Landing({ user }) {
                                 { date: 'NOV 12', title: 'Inter-College Hackathon 2.0', loc: 'Innovation Center' },
                                 { date: 'NOV 28', title: 'Green Campus Marathon', loc: 'Sports Complex' }
                             ].map((event, idx) => (
-                                <div key={idx} className="event-item-univ" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>
+                                <div key={idx} className="event-item-univ hover-lift fade-in-right" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', background: '#fff', padding: '1rem', borderRadius: '8px', boxShadow: '0 2px 10px rgba(0,0,0,0.05)', animationDelay: `${0.1 * idx}s` }}>
                                     <div className="event-date-badge" style={{ background: '#3b82f6', color: 'white', padding: '0.5rem 1rem', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold' }}>
                                         <span style={{ display: 'block', fontSize: '0.8rem' }}>{event.date.split(' ')[0]}</span>
                                         <span style={{ display: 'block', fontSize: '1.2rem' }}>{event.date.split(' ')[1]}</span>
