@@ -810,6 +810,7 @@ function TimetableManager({ showToast, allFaculty, allRooms }) {
     const [activeCourse, setActiveCourse] = useState('B.Tech');
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [bookingSlot, setBookingSlot] = useState(null);
+    const [aiReport, setAiReport] = useState(null);
 
     useEffect(() => {
         if (activeCourse === 'B.Tech') setSelectedSemester('I-B.Tech I Sem');
@@ -851,6 +852,33 @@ function TimetableManager({ showToast, allFaculty, allRooms }) {
             }
             else showToast("Error: " + data.message, 'error')
         } catch (err) { showToast("Failed to connect", 'error'); } finally { setLoading(false) }
+    }
+
+    const generateTimetableAI = async () => {
+        setLoading(true);
+        setAiReport(null);
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/timetables/generate-ai`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    semester: selectedSemester,
+                    department: user.department
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast("Timetable Optimized by Gemini AI!");
+                setAiReport(data.report);
+                fetchTimetable();
+            } else {
+                showToast("AI Error: " + data.message, 'error');
+            }
+        } catch (err) {
+            showToast("Failed to connect to AI service", 'error');
+        } finally {
+            setLoading(false);
+        }
     }
     const updateCell = (dayIndex, periodIndex) => {
         const day = timetable.schedule[dayIndex];
@@ -984,6 +1012,7 @@ function TimetableManager({ showToast, allFaculty, allRooms }) {
                             <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">📕 PDF</button>
                             <button className="btn-action" onClick={() => setShowSettings(true)}>⚙️ Settings</button>
                             <button className="btn-action primary" onClick={generateTimetable} disabled={loading}>{loading ? 'Generating...' : '⚡ Auto-Generate'}</button>
+                            <button className="btn-action" style={{ background: 'linear-gradient(135deg, #8b5cf6, #d946ef)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }} onClick={generateTimetableAI} disabled={loading}>{loading ? 'Optimizing...' : '✨ AI Generate'}</button>
                             <button className="btn-action" style={{ background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' }} onClick={createBlankTimetable} disabled={loading}>📝 Create Blank</button>
                             {timetable && (
                                 <button className="btn-action" style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={async () => { if (confirm('Delete ENTIRE timetable for this semester?')) { await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`, { method: 'DELETE' }); fetchTimetable(); } }}>
@@ -995,6 +1024,7 @@ function TimetableManager({ showToast, allFaculty, allRooms }) {
                 </div>
 
                 <div style={{ overflowX: 'auto', marginTop: '1rem' }}>
+                    <AIReportCard report={aiReport} onClear={() => setAiReport(null)} />
                     {timetable ? (
                         <table className="premium-table" style={{ textAlign: 'center', minWidth: '1200px' }}>
                             <thead><tr><th>Day</th><th>09:30-10:30</th><th>10:30-11:30</th><th>11:30-12:30</th><th style={{ background: '#f8fafc' }}>Lunch</th><th>02:00-03:00</th><th>03:00-04:00</th><th>04:00-05:00</th></tr></thead>
@@ -2253,3 +2283,43 @@ function InfrastructureManager({ user, showToast }) {
 
 
 export default HodDashboard;
+
+function AIReportCard({ report, onClear }) {
+    if (!report) return null;
+    return (
+        <div className="glass-panel fade-in-up" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderLeft: '6px solid #8b5cf6', background: '#f5f3ff', borderRadius: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ padding: '8px', background: '#ede9fe', color: '#8b5cf6', borderRadius: '8px', fontSize: '1.2rem' }}>✨</div>
+                    <h3 style={{ margin: 0, color: '#5b21b6', fontSize: '1.1rem' }}>Gemini AI Optimization Report</h3>
+                </div>
+                <button onClick={onClear} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '1.2rem' }}>✕</button>
+            </div>
+            
+            <p style={{ fontSize: '0.9rem', color: '#4c1d95', marginBottom: '1.25rem', fontWeight: '600', lineHeight: '1.5' }}>{report.summary}</p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
+                    <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#7c3aed', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>Clashes Resolved</h4>
+                    <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#1e1b4b', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {report.clashesResolved?.map((c, i) => <li key={i}>{c}</li>)}
+                        {(!report.clashesResolved || report.clashesResolved.length === 0) && <li style={{ listStyle: 'none', marginLeft: '-1.2rem', color: '#94a3b8' }}>No clashes detected.</li>}
+                    </ul>
+                </div>
+                <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
+                    <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#7c3aed', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>AI Suggestions & Warnings</h4>
+                    <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#1e1b4b', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {report.warnings?.map((w, i) => <li key={i}>{w}</li>)}
+                        {(!report.warnings || report.warnings.length === 0) && <li style={{ listStyle: 'none', marginLeft: '-1.2rem', color: '#94a3b8' }}>All subjects fully allocated.</li>}
+                    </ul>
+                </div>
+            </div>
+            
+            {report.optimizationNotes && (
+                <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dotted #ddd6fe', fontSize: '0.8rem', fontStyle: 'italic', color: '#6d28d9', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold' }}>Intelligence Note:</span> {report.optimizationNotes}
+                </div>
+            )}
+        </div>
+    );
+}
