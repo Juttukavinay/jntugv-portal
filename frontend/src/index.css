@@ -902,26 +902,6 @@ a:hover {
   overflow-x: hidden;
 }
 
-/* TOP BAR */
-.edubin-topbar {
-  background: #0b1f38;
-  color: #d1d5db;
-  display: flex;
-  justify-content: space-between;
-  padding: 0.8rem 4rem;
-  font-size: 0.85rem;
-}
-.topbar-left span, .topbar-right span {
-  margin-right: 1.5rem;
-}
-.social-icons { letter-spacing: 5px; cursor: pointer; }
-.topbar-login {
-  color: #3b82f6; /* Blue instead of yellow as per guidelines */
-  font-weight: 700;
-  text-decoration: none;
-}
-.topbar-login:hover { color: #60a5fa; }
-
 /* NAVBAR */
 .edubin-navbar {
   background: #fff;
@@ -969,16 +949,6 @@ a:hover {
 .edu-actions .edu-btn {
   padding: 0.6rem 1.5rem;
   font-size: 0.9rem;
-}
-
-.search-icon { 
-  font-size: 1.2rem; 
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-.search-icon:hover {
-  transform: scale(1.1);
 }
 
 /* HERO */
@@ -1049,7 +1019,7 @@ a:hover {
   .feature-right-boxes { width: 100%; flex-wrap: wrap; }
   .feat-box { padding: 2rem; min-width: 33.33%; }
   .desktop-only { display: none; }
-  .edubin-topbar, .edubin-navbar { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .edubin-navbar { padding-left: 1.5rem; padding-right: 1.5rem; }
   .hero-heading { font-size: 3rem; }
   .hero-content-container { padding: 0 2rem; }
 }
