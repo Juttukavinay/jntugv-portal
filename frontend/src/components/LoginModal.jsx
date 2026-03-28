@@ -91,7 +91,6 @@ function LoginModal({ isOpen, onClose }) {
         }
         if (demos[role]) {
             setCredentials(demos[role])
-            // Manual login trigger with demo data
             setLoading(true)
             try {
                 const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -118,15 +117,15 @@ function LoginModal({ isOpen, onClose }) {
                 <button className="close-btn" onClick={onClose}>&times;</button>
                 <div className="login-header">
                     <img src="/jntugv-logo.png" alt="Logo" className="modal-logo" />
-                    <h2>Institutional Login</h2>
-                    <p>Enter your credentials to access the portal</p>
+                    <h2>Secure Login</h2>
+                    <p>Access JNTU-GV Academic Portal</p>
                 </div>
 
                 <form onSubmit={handleLogin} className="login-form">
                     {error && <div className="login-error">{error}</div>}
                     
                     <div className={`input-group ${activeField === 'email' ? 'active' : ''}`}>
-                        <label>Email / Roll Number</label>
+                        <label>ID / Email</label>
                         <input
                             type="text"
                             name="email"
@@ -157,18 +156,47 @@ function LoginModal({ isOpen, onClose }) {
                     </div>
 
                     <button type="submit" className="login-btn" disabled={loading}>
-                        {loading ? 'Authenticating...' : 'Sign In'}
+                        {loading ? 'Authenticating...' : 'Sign In to Portal'}
                     </button>
                 </form>
 
                 <div className="demo-section">
-                    <p>Select Demo Role for Instant Access</p>
-                    <div className="demo-grid">
-                        <button onClick={() => fillDemoAndLogin('admin')}>Admin</button>
-                        <button onClick={() => fillDemoAndLogin('principal')}>Principal</button>
-                        <button onClick={() => fillDemoAndLogin('hod')}>HOD</button>
-                        <button onClick={() => fillDemoAndLogin('fac_sri')}>Faculty</button>
-                        <button onClick={() => fillDemoAndLogin('student1')}>Student</button>
+                    <p style={{ fontWeight: 800, color: '#0f172a', marginBottom: '1.2rem' }}>Quick Demo Access</p>
+                    
+                    <div className="demo-category">
+                        <span>ADMINISTRATION</span>
+                        <div className="demo-grid">
+                            <button onClick={() => fillDemoAndLogin('admin')}>Admin</button>
+                            <button onClick={() => fillDemoAndLogin('principal')}>Principal</button>
+                            <button onClick={() => fillDemoAndLogin('vice_principal')}>Vice Principal</button>
+                            <button onClick={() => fillDemoAndLogin('hod')}>Dr. Bindu (HOD)</button>
+                        </div>
+                    </div>
+
+                    <div className="demo-category">
+                        <span>FACULTY SUITE</span>
+                        <div className="demo-grid fac">
+                            <button onClick={() => fillDemoAndLogin('fac_sri')}>Sri</button>
+                            <button onClick={() => fillDemoAndLogin('fac_kiran')}>Kiran</button>
+                            <button onClick={() => fillDemoAndLogin('fac_jaya')}>Dr. Jaya</button>
+                            <button onClick={() => fillDemoAndLogin('fac_madhavi')}>Dr. Madhavi</button>
+                            <button onClick={() => fillDemoAndLogin('fac_tirimula')}>Dr. Tirimula</button>
+                            <button onClick={() => fillDemoAndLogin('fac_anil')}>Mr. Anil</button>
+                            <button onClick={() => fillDemoAndLogin('fac_srikanth')}>K. Srikanth</button>
+                            <button onClick={() => fillDemoAndLogin('fac_roje')}>R. Roje</button>
+                            <button onClick={() => fillDemoAndLogin('fac_manasa')}>B. Manasa</button>
+                            <button onClick={() => fillDemoAndLogin('fac_madhumita')}>Madhumita</button>
+                        </div>
+                    </div>
+
+                    <div className="demo-category">
+                        <span>STUDENTS (4 YEARS)</span>
+                        <div className="demo-grid stu">
+                            <button onClick={() => fillDemoAndLogin('student1')}>1st Yr</button>
+                            <button onClick={() => fillDemoAndLogin('student2')}>2nd Yr</button>
+                            <button onClick={() => fillDemoAndLogin('student3')}>3rd Yr</button>
+                            <button onClick={() => fillDemoAndLogin('student4')}>4th Yr</button>
+                        </div>
                     </div>
                 </div>
 
@@ -179,8 +207,8 @@ function LoginModal({ isOpen, onClose }) {
                         left: 0;
                         right: 0;
                         bottom: 0;
-                        background: rgba(15, 23, 42, 0.7);
-                        backdrop-filter: blur(8px);
+                        background: rgba(15, 23, 42, 0.85);
+                        backdrop-filter: blur(12px);
                         display: flex;
                         align-items: center;
                         justify-content: center;
@@ -190,11 +218,13 @@ function LoginModal({ isOpen, onClose }) {
 
                     .modal-card {
                         background: white;
-                        width: 100%;
-                        max-width: 450px;
-                        padding: 3rem;
-                        border-radius: 24px;
-                        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                        width: 95%;
+                        max-width: 580px;
+                        max-height: 90vh;
+                        overflow-y: auto;
+                        padding: 3.5rem;
+                        border-radius: 28px;
+                        box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.5);
                         position: relative;
                         animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
                     }
@@ -212,135 +242,141 @@ function LoginModal({ isOpen, onClose }) {
 
                     .login-header {
                         text-align: center;
-                        margin-bottom: 2rem;
+                        margin-bottom: 2.5rem;
                     }
 
                     .modal-logo {
-                        height: 60px;
-                        margin-bottom: 1rem;
+                        height: 70px;
+                        margin-bottom: 1.2rem;
                     }
 
                     .login-header h2 {
                         margin: 0;
-                        font-size: 1.75rem;
-                        color: #0f172a;
+                        font-size: 2rem;
+                        color: #0c1e3a;
+                        font-weight: 800;
                     }
 
                     .login-header p {
                         margin: 0.5rem 0 0;
                         color: #64748b;
-                        font-size: 0.95rem;
+                        font-size: 1rem;
                     }
 
                     .login-form {
                         display: flex;
                         flex-direction: column;
-                        gap: 1.25rem;
-                    }
-
-                    .input-group {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 0.5rem;
+                        gap: 1.5rem;
                     }
 
                     .input-group label {
-                        font-weight: 700;
+                        font-weight: 800;
                         font-size: 0.85rem;
-                        color: #475569;
+                        color: #0c1e3a;
+                        display: block;
+                        margin-bottom: 0.6rem;
                     }
 
                     .input-group input {
-                        padding: 0.8rem 1rem;
-                        border: 1.5px solid #e2e8f0;
+                        width: 100%;
+                        padding: 1.1rem 1.4rem;
+                        border: 2px solid #e2e8f0;
                         border-radius: 12px;
                         font-size: 1rem;
                         outline: none;
-                        transition: all 0.2s;
+                        transition: all 0.3s;
                     }
 
                     .input-group.active input {
                         border-color: #3b82f6;
-                        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+                        box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.1);
                     }
 
                     .pass-row {
                         display: flex;
-                        gap: 10px;
-                    }
-
-                    .pass-row input {
-                        flex: 1;
+                        gap: 12px;
                     }
 
                     .pass-row button {
-                        width: 50px;
+                        width: 60px;
                         border-radius: 12px;
-                        border: 1.5px solid #e2e8f0;
+                        border: 2px solid #e2e8f0;
                         background: #f8fafc;
                         cursor: pointer;
+                        font-size: 1.2rem;
                     }
 
                     .login-btn {
-                        background: #3b82f6;
+                        background: #0c1e3a;
                         color: white;
                         border: none;
-                        padding: 1rem;
+                        padding: 1.2rem;
                         border-radius: 12px;
-                        font-weight: 700;
-                        font-size: 1rem;
+                        font-weight: 800;
+                        font-size: 1.1rem;
                         cursor: pointer;
-                        transition: all 0.2s;
-                        margin-top: 0.5rem;
+                        transition: all 0.3s;
+                        margin-top: 1rem;
+                        box-shadow: 0 8px 20px rgba(12, 30, 58, 0.2);
                     }
 
                     .login-btn:hover {
-                        background: #2563eb;
-                        transform: translateY(-2px);
-                    }
-
-                    .login-error {
-                        background: #fef2f2;
-                        color: #ef4444;
-                        padding: 0.75rem;
-                        border-radius: 8px;
-                        font-size: 0.85rem;
-                        text-align: center;
+                        background: #3b82f6;
+                        transform: translateY(-3px);
+                        box-shadow: 0 12px 25px rgba(59, 130, 246, 0.3);
                     }
 
                     .demo-section {
-                        margin-top: 2rem;
-                        padding-top: 2rem;
-                        border-top: 1px solid #e2e8f0;
+                        margin-top: 3rem;
+                        padding-top: 2.5rem;
+                        border-top: 2px solid #f1f5f9;
                     }
 
-                    .demo-section p {
-                        font-size: 0.85rem;
+                    .demo-category {
+                        margin-bottom: 2rem;
+                    }
+
+                    .demo-category span {
+                        font-size: 0.75rem;
+                        font-weight: 800;
                         color: #64748b;
+                        letter-spacing: 1.5px;
+                        display: block;
                         margin-bottom: 1rem;
-                        text-align: center;
                     }
 
                     .demo-grid {
                         display: grid;
+                        grid-template-columns: repeat(2, 1fr);
+                        gap: 12px;
+                    }
+
+                    .demo-grid.fac {
                         grid-template-columns: repeat(3, 1fr);
-                        gap: 8px;
+                    }
+
+                    .demo-grid.stu {
+                        grid-template-columns: repeat(4, 1fr);
                     }
 
                     .demo-grid button {
-                        padding: 0.5rem;
-                        font-size: 0.75rem;
-                        border-radius: 6px;
-                        border: 1px solid #e2e8f0;
+                        padding: 0.8rem;
+                        font-size: 0.85rem;
+                        font-weight: 700;
+                        border-radius: 10px;
+                        border: 1.5px solid #e2e8f0;
                         background: #f8fafc;
                         cursor: pointer;
                         transition: all 0.2s;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
                     }
 
                     .demo-grid button:hover {
-                        background: #eff6ff;
-                        border-color: #3b82f6;
-                        color: #3b82f6;
+                        background: #0c1e3a;
+                        border-color: #0c1e3a;
+                        color: white;
                     }
 
                     @keyframes fadeIn {
@@ -349,8 +385,14 @@ function LoginModal({ isOpen, onClose }) {
                     }
 
                     @keyframes slideUp {
-                        from { transform: translateY(20px); opacity: 0; }
+                        from { transform: translateY(30px); opacity: 0; }
                         to { transform: translateY(0); opacity: 1; }
+                    }
+
+                    @media (max-width: 600px) {
+                        .modal-card { padding: 2rem; }
+                        .demo-grid.fac { grid-template-columns: repeat(2, 1fr); }
+                        .demo-grid.stu { grid-template-columns: repeat(2, 1fr); }
                     }
                 `}</style>
             </div>

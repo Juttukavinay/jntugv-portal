@@ -11,7 +11,7 @@ function Landing() {
 
     useEffect(() => {
         const handleScroll = () => {
-            setScrolled(window.scrollY > 50)
+            setScrolled(window.scrollY > 40)
         }
         window.addEventListener('scroll', handleScroll)
         fetch(`${API_BASE_URL}/api/departments`).catch(() => null)
@@ -19,156 +19,202 @@ function Landing() {
     }, [])
 
     return (
-        <div className="landing-premium">
-            {/* Navbar */}
-            <nav className={`nav-glass ${scrolled ? 'scrolled' : ''}`}>
+        <div className="landing-classic">
+            {/* Professional Top Bar */}
+            <div className="top-utility-bar desktop-only">
+                <div className="utility-container">
+                    <span>Official Academic Portal - JNTU-GV, Vizianagaram</span>
+                    <div className="utility-links">
+                        <a href="https://jntugv.edu.in" target="_blank" rel="noreferrer">University Website</a>
+                        <span className="separator">|</span>
+                        <span>Support: support@jntugv.edu.in</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Navbar */}
+            <nav className={`main-nav ${scrolled ? 'nav-scrolled' : ''}`}>
                 <div className="nav-container">
-                    <div className="nav-logo">
-                        <img src="/jntugv-logo.png" alt="JNTU-GV" />
-                        <div className="logo-text">
-                            <span className="logo-title">JNTU-GV</span>
-                            <span className="logo-sub">VIZIANAGARAM</span>
+                    <div className="brand-stack">
+                        <img src="/jntugv-logo.png" alt="JNTU-GV" className="nav-logo-img" />
+                        <div className="brand-text-group">
+                            <h1 className="brand-main">JNTU-GV</h1>
+                            <p className="brand-location">VIZIANAGARAM, AP</p>
                         </div>
                     </div>
 
-                    <div className="nav-links desktop-only">
-                        <Link to="/" className="active">Home</Link>
-                        <Link to="/departments">Departments</Link>
-                        <a href="#about">About</a>
-                        <a href="#contact">Contact</a>
+                    <div className="nav-links-wrapper desktop-only">
+                        <Link to="/" className="nav-item active">HOME</Link>
+                        <Link to="/departments" className="nav-item">DEPARTMENTS</Link>
+                        <a href="#about" className="nav-item">ACADEMICS</a>
+                        <a href="#contact" className="nav-item">CONTACT</a>
                     </div>
 
-                    <div className="nav-actions desktop-only">
+                    <div className="nav-action-buttons desktop-only">
                         <button 
-                            className="btn-login-modern"
+                            className="btn-portal-classic"
                             onClick={() => setIsLoginModalOpen(true)}
                         >
-                            Sign In to Portal
+                            Log In to Portal
                         </button>
                     </div>
 
                     <button
-                        className="mobile-toggle"
+                        className="mobile-hamburger"
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
                         {isMobileMenuOpen ? '✕' : '☰'}
                     </button>
                 </div>
 
-                {/* Mobile Menu */}
+                {/* Mobile Drawer */}
                 {isMobileMenuOpen && (
-                    <div className="mobile-drawer slide-in">
-                        <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-                        <Link to="/departments" onClick={() => setIsMobileMenuOpen(false)}>Departments</Link>
+                    <div className="mobile-drawer-modern">
+                        <Link to="/" onClick={() => setIsMobileMenuOpen(false)}>HOME</Link>
+                        <Link to="/departments" onClick={() => setIsMobileMenuOpen(false)}>DEPARTMENTS</Link>
                         <button 
-                            className="mobile-login-btn"
+                            className="mobile-login-full"
                             onClick={() => {
                                 setIsLoginModalOpen(true)
                                 setIsMobileMenuOpen(false)
                             }}
                         >
-                            Login
+                            SIGN IN
                         </button>
                     </div>
                 )}
             </nav>
 
             <main>
-                {/* Hero Section */}
-                <section className="hero-section">
-                    <div className="hero-overlay"></div>
-                    <div className="hero-content fade-in-up">
-                        <div className="univ-badge">PREMIER TECHNOLOGICAL UNIVERSITY</div>
-                        <h1 className="hero-title">
-                            Inspiring Innovation,<br />
-                            <span>Empowering Future.</span>
-                        </h1>
-                        <p className="hero-desc">
-                            Welcome to JNTU-GV Academic Portal. A unified platform for students and faculty 
-                            to manage academics, research, and campus life with ease.
+                {/* High Contrast Hero */}
+                <section className="hero-classic">
+                    <div className="hero-bg-overlay"></div>
+                    <div className="hero-content-stack fade-in-up">
+                        <div className="hero-badge-classic">ESTD. 2021 | STATE UNIVERSITY</div>
+                        <h2 className="hero-headline">
+                            Excellence in <strong>Technology</strong> & <br />Research Innovation.
+                        </h2>
+                        <p className="hero-summary">
+                            Jawaharlal Nehru Technological University - Gurajada Vizianagaram. 
+                            Empowering students through quality technical education and fostering 
+                            pioneering research for global impact.
                         </p>
-                        <div className="hero-btns">
-                            <button className="btn-primary-glow" onClick={() => setIsLoginModalOpen(true)}>
-                                Get Started
+                        <div className="hero-action-group">
+                            <button className="btn-solid-primary" onClick={() => setIsLoginModalOpen(true)}>
+                                GET STARTED
                             </button>
-                            <Link to="/departments" className="btn-outline-white">
-                                Explore Courses
+                            <Link to="/departments" className="btn-outline-bold">
+                                VIEW DEPARTMENTS
                             </Link>
                         </div>
                     </div>
                 </section>
 
-                {/* Features Section */}
-                <section className="features-section" id="about">
-                    <div className="section-head">
-                        <h2>Academic Excellence</h2>
-                        <div className="underline"></div>
+                {/* Solid Feature Section */}
+                <section className="highlights-section" id="about">
+                    <div className="highlights-header">
+                        <span className="pre-title">OUR CAMPUS</span>
+                        <h2>Institutional Highlights</h2>
+                        <div className="title-bar"></div>
                     </div>
-                    <div className="features-grid">
-                        <div className="feat-card fade-in">
-                            <div className="feat-icon">🎓</div>
-                            <h3>Expert Faculty</h3>
-                            <p>Learn from industry experts and researchers dedicated to your growth.</p>
+                    
+                    <div className="highlights-grid">
+                        <div className="highlight-block">
+                            <div className="block-icon">🏛️</div>
+                            <h3>Academic Rigor</h3>
+                            <p>Rigorous curriculum designed to meet global industrial standards and technological advancements.</p>
                         </div>
-                        <div className="feat-card fade-in" style={{ animationDelay: '0.2s' }}>
-                            <div className="feat-icon">🔬</div>
-                            <h3>Advanced Labs</h3>
-                            <p>State-of-the-art infrastructure for hands-on technical learning.</p>
+                        <div className="highlight-block">
+                            <div className="block-icon">🧪</div>
+                            <h3>Modern R&D</h3>
+                            <p>Comprehensive research facilities supporting innovation in engineering and applied sciences.</p>
                         </div>
-                        <div className="feat-card fade-in" style={{ animationDelay: '0.4s' }}>
-                            <div className="feat-icon">🌐</div>
-                            <h3>Innovation Hub</h3>
-                            <p>Fostering entrepreneurship and groundbreaking technological research.</p>
+                        <div className="highlight-block">
+                            <div className="block-icon">🎖️</div>
+                            <h3>Placement Success</h3>
+                            <p>Strong industry connect and dedicated career support for graduating engineers.</p>
                         </div>
                     </div>
                 </section>
             </main>
 
-            <footer className="footer-elegant">
-                <div className="footer-top">
-                    <div className="footer-brand">
-                        <img src="/jntugv-logo.png" alt="Logo" />
-                        <div>
-                            <h3>JNTU-GV</h3>
-                            <p>Towards Excellence in Engineering</p>
+            <footer className="footer-professional">
+                <div className="footer-main-row">
+                    <div className="footer-info">
+                        <img src="/jntugv-logo.png" alt="Logo" className="footer-logo" />
+                        <div className="footer-text">
+                            <h3>JNTU-GV University</h3>
+                            <p>Vizianagaram, Andhra Pradesh - 535003</p>
                         </div>
                     </div>
+                    <div className="footer-quick-links">
+                        <Link to="/departments">Departments</Link>
+                        <button onClick={() => setIsLoginModalOpen(true)}>PORTAL LOGIN</button>
+                    </div>
                 </div>
-                <div className="footer-bottom">
-                    <p>&copy; {new Date().getFullYear()} JNTU-GV University. All Rights Reserved.</p>
+                <div className="footer-copyright">
+                    <p>&copy; {new Date().getFullYear()} JNTU-GV University Portal. Built for Academic Excellence.</p>
                 </div>
             </footer>
 
-            {/* Login Modal Integration */}
+            {/* Login Modal */}
             <LoginModal 
                 isOpen={isLoginModalOpen} 
                 onClose={() => setIsLoginModalOpen(false)} 
             />
 
             <style>{`
-                .landing-premium {
-                    font-family: 'Outfit', sans-serif;
+                .landing-classic {
+                    font-family: 'Outfit', 'Inter', sans-serif;
+                    color: #0c1e3a;
                     background: #fff;
-                    color: #1e293b;
+                    overflow-x: hidden;
                 }
 
-                /* Navbar */
-                .nav-glass {
-                    position: fixed;
+                /* Utility Bar */
+                .top-utility-bar {
+                    background: #0c1e3a;
+                    color: rgba(255,255,255,0.7);
+                    padding: 8px 5%;
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    letter-spacing: 0.5px;
+                    border-bottom: 1px solid rgba(255,255,255,0.1);
+                }
+
+                .utility-container {
+                    max-width: 1400px;
+                    margin: 0 auto;
+                    display: flex;
+                    justify-content: space-between;
+                }
+
+                .utility-links {
+                    display: flex;
+                    gap: 15px;
+                    align-items: center;
+                }
+
+                .utility-links a {
+                    color: white;
+                    text-decoration: none;
+                }
+
+                /* Navbar Redesign */
+                .main-nav {
+                    background: #ffffff;
+                    padding: 20px 5%;
+                    position: sticky;
                     top: 0;
-                    left: 0;
-                    right: 0;
-                    padding: 1.5rem 5%;
                     z-index: 1000;
-                    transition: all 0.4s ease;
-                    background: transparent;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    border-bottom: 1px solid #f1f5f9;
                 }
 
-                .nav-glass.scrolled {
-                    background: rgba(255, 255, 255, 0.9);
-                    backdrop-filter: blur(15px);
-                    padding: 1rem 5%;
-                    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+                .nav-scrolled {
+                    padding: 12px 5%;
+                    background: rgba(255,255,255,0.98);
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
                 }
 
                 .nav-container {
@@ -179,336 +225,343 @@ function Landing() {
                     justify-content: space-between;
                 }
 
-                .nav-logo {
+                .brand-stack {
                     display: flex;
                     align-items: center;
-                    gap: 12px;
+                    gap: 15px;
                 }
 
-                .nav-logo img {
-                    height: 48px;
+                .nav-logo-img {
+                    height: 54px;
                 }
 
-                .logo-text {
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .logo-title {
-                    font-weight: 800;
-                    font-size: 1.3rem;
+                .brand-main {
+                    margin: 0;
+                    font-size: 1.6rem;
+                    font-weight: 900;
                     color: #0c1e3a;
+                    line-height: 1;
                     letter-spacing: -0.5px;
                 }
 
-                .logo-sub {
+                .brand-location {
+                    margin: 2px 0 0;
                     font-size: 0.7rem;
-                    color: #475569;
-                    font-weight: 700;
+                    font-weight: 800;
+                    color: #3b82f6;
                     letter-spacing: 2px;
                 }
 
-                .nav-links {
+                .nav-links-wrapper {
                     display: flex;
-                    gap: 2.5rem;
+                    gap: 35px;
                 }
 
-                .nav-links a {
+                .nav-item {
                     text-decoration: none;
-                    color: #334155;
-                    font-weight: 600;
-                    font-size: 0.95rem;
-                    transition: 0.3s;
-                    position: relative;
+                    color: #475569;
+                    font-weight: 800;
+                    font-size: 0.9rem;
+                    transition: 0.2s;
                 }
 
-                .nav-links a::after {
-                    content: '';
-                    position: absolute;
-                    bottom: -5px;
-                    left: 0;
-                    width: 0;
-                    height: 2px;
-                    background: #3b82f6;
-                    transition: 0.3s;
+                .nav-item:hover, .nav-item.active {
+                    color: #0c1e3a;
                 }
 
-                .nav-links a:hover::after, .nav-links a.active::after {
-                    width: 100%;
-                }
-
-                .btn-login-modern {
+                .btn-portal-classic {
                     background: #0c1e3a;
                     color: white;
                     border: none;
-                    padding: 0.8rem 1.8rem;
-                    border-radius: 12px;
-                    font-weight: 700;
+                    padding: 0.9rem 2rem;
+                    border-radius: 8px;
+                    font-weight: 800;
+                    font-size: 0.9rem;
                     cursor: pointer;
                     transition: all 0.3s;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
                 }
 
-                .btn-login-modern:hover {
+                .btn-portal-classic:hover {
                     background: #3b82f6;
                     transform: translateY(-2px);
-                    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+                    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
                 }
 
-                /* Mobile Toggle */
-                .mobile-toggle {
-                    display: none;
-                    background: none;
-                    border: none;
-                    font-size: 1.8rem;
-                    cursor: pointer;
-                    color: #1e293b;
-                }
-
-                /* Hero Section */
-                .hero-section {
-                    height: 100vh;
-                    min-height: 700px;
+                /* Hero Redesign */
+                .hero-classic {
+                    position: relative;
+                    height: calc(100vh - 120px);
+                    min-height: 650px;
                     background: url("/jntugv-main-block.png") center/cover no-repeat;
                     display: flex;
                     align-items: center;
                     padding: 0 5%;
+                }
+
+                .hero-bg-overlay {
+                    position: absolute;
+                    inset: 0;
+                    background: linear-gradient(to right, rgba(12, 30, 58, 0.95) 20%, rgba(12, 30, 58, 0.6) 100%);
+                }
+
+                .hero-content-stack {
                     position: relative;
+                    z-index: 10;
+                    max-width: 800px;
                     color: white;
                 }
 
-                .hero-overlay {
-                    position: absolute;
-                    inset: 0;
-                    background: linear-gradient(135deg, rgba(12, 30, 58, 0.9) 0%, rgba(12, 30, 58, 0.4) 100%);
+                .hero-badge-classic {
+                    font-size: 0.8rem;
+                    font-weight: 900;
+                    letter-spacing: 3px;
+                    color: #3b82f6;
+                    margin-bottom: 25px;
                 }
 
-                .hero-content {
-                    position: relative;
-                    z-index: 10;
-                    max-width: 850px;
-                }
-
-                .univ-badge {
-                    display: inline-block;
-                    padding: 0.6rem 1.2rem;
-                    background: rgba(255,255,255,0.1);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255,255,255,0.2);
-                    border-radius: 99px;
-                    font-size: 0.75rem;
-                    font-weight: 800;
-                    letter-spacing: 2px;
-                    margin-bottom: 2rem;
-                }
-
-                .hero-title {
-                    font-size: 5rem;
+                .hero-headline {
+                    font-size: 4.8rem;
+                    font-weight: 300;
                     line-height: 1.1;
-                    font-weight: 800;
                     margin: 0;
                 }
 
-                .hero-title span {
-                    color: #60a5fa;
+                .hero-headline strong {
+                    font-weight: 900;
+                    color: white;
                 }
 
-                .hero-desc {
-                    font-size: 1.15rem;
+                .hero-summary {
+                    font-size: 1.2rem;
+                    line-height: 1.7;
                     color: rgba(255,255,255,0.85);
-                    max-width: 600px;
-                    margin: 2rem 0 3rem;
-                    line-height: 1.6;
+                    margin: 30px 0 45px;
+                    max-width: 650px;
                 }
 
-                .hero-btns {
+                .hero-action-group {
                     display: flex;
-                    gap: 1.5rem;
+                    gap: 20px;
                 }
 
-                .btn-primary-glow {
+                .btn-solid-primary {
                     background: #3b82f6;
                     color: white;
                     border: none;
-                    padding: 1.1rem 2.5rem;
-                    border-radius: 12px;
-                    font-size: 1.1rem;
-                    font-weight: 800;
+                    padding: 1.2rem 3rem;
+                    border-radius: 8px;
+                    font-weight: 900;
+                    font-size: 1rem;
                     cursor: pointer;
                     transition: 0.3s;
-                    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+                    box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
                 }
 
-                .btn-primary-glow:hover {
-                    box-shadow: 0 15px 40px rgba(59, 130, 246, 0.6);
-                    transform: translateY(-3px);
+                .btn-solid-primary:hover {
+                    background: #2563eb;
+                    transform: translateY(-4px);
                 }
 
-                .btn-outline-white {
-                    border: 2.5px solid white;
+                .btn-outline-bold {
+                    border: 2px solid white;
                     color: white;
                     text-decoration: none;
-                    padding: 1rem 2.5rem;
-                    border-radius: 12px;
-                    font-size: 1.1rem;
-                    font-weight: 800;
+                    padding: 1.1rem 3rem;
+                    border-radius: 8px;
+                    font-weight: 900;
+                    font-size: 1rem;
                     transition: 0.3s;
                 }
 
-                .btn-outline-white:hover {
+                .btn-outline-bold:hover {
                     background: white;
                     color: #0c1e3a;
                 }
 
-                /* Features */
-                .features-section {
-                    padding: 100px 5%;
-                    background: #f8fafc;
+                /* Highlights Section */
+                .highlights-section {
+                    padding: 120px 5%;
+                    background: #ffffff;
                 }
 
-                .section-head {
+                .highlights-header {
                     text-align: center;
-                    margin-bottom: 4rem;
+                    margin-bottom: 80px;
                 }
 
-                .section-head h2 {
-                    font-size: 2.5rem;
-                    color: #0f172a;
-                    margin-bottom: 1rem;
+                .pre-title {
+                    font-size: 0.85rem;
+                    font-weight: 900;
+                    color: #3b82f6;
+                    letter-spacing: 4px;
                 }
 
-                .underline {
-                    width: 60px;
-                    height: 4px;
-                    background: #3b82f6;
+                .highlights-header h2 {
+                    font-size: 3rem;
+                    font-weight: 800;
+                    margin: 15px 0;
+                }
+
+                .title-bar {
+                    width: 80px;
+                    height: 5px;
+                    background: #0c1e3a;
                     margin: 0 auto;
-                    border-radius: 2px;
                 }
 
-                .features-grid {
+                .highlights-grid {
                     display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-                    gap: 2.5rem;
+                    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                    gap: 40px;
                     max-width: 1400px;
                     margin: 0 auto;
                 }
 
-                .feat-card {
-                    background: white;
-                    padding: 3.5rem 2.5rem;
-                    border-radius: 24px;
+                .highlight-block {
+                    background: #f8fafc;
+                    padding: 50px 40px;
+                    border-radius: 20px;
                     transition: 0.4s;
                     border: 1px solid #e2e8f0;
                 }
 
-                .feat-card:hover {
-                    transform: translateY(-10px);
-                    box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+                .highlight-block:hover {
+                    background: white;
                     border-color: #3b82f6;
+                    transform: translateY(-10px);
+                    box-shadow: 0 25px 50px -10px rgba(0,0,0,0.06);
                 }
 
-                .feat-icon {
-                    font-size: 3rem;
-                    margin-bottom: 1.5rem;
+                .block-icon {
+                    font-size: 3.5rem;
+                    margin-bottom: 30px;
                 }
 
-                .feat-card h3 {
-                    font-size: 1.4rem;
-                    margin-bottom: 1rem;
+                .highlight-block h3 {
+                    font-size: 1.6rem;
+                    font-weight: 800;
+                    margin-bottom: 15px;
                 }
 
-                .feat-card p {
+                .highlight-block p {
                     color: #64748b;
-                    line-height: 1.6;
+                    line-height: 1.8;
                 }
 
                 /* Footer */
-                .footer-elegant {
-                    background: #0f172a;
+                .footer-professional {
+                    background: #0c1e3a;
                     color: white;
-                    padding: 4rem 5% 2rem;
+                    padding: 80px 5% 40px;
                 }
 
-                .footer-brand {
+                .footer-main-row {
+                    max-width: 1400px;
+                    margin: 0 auto 60px;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .footer-info {
                     display: flex;
                     align-items: center;
-                    gap: 1.5rem;
-                    margin-bottom: 3rem;
+                    gap: 25px;
                 }
 
-                .footer-brand img {
-                    height: 60px;
+                .footer-logo {
+                    height: 80px;
                 }
 
-                .footer-bottom {
+                .footer-text h3 { margin: 0; font-size: 1.8rem; }
+                .footer-text p { margin: 5px 0 0; color: rgba(255,255,255,0.6); }
+
+                .footer-quick-links {
+                    display: flex;
+                    gap: 40px;
+                }
+
+                .footer-quick-links a, .footer-quick-links button {
+                    color: white;
+                    text-decoration: none;
+                    background: none;
+                    border: none;
+                    font-weight: 700;
+                    font-size: 1rem;
+                    cursor: pointer;
+                    text-transform: uppercase;
+                }
+
+                .footer-copyright {
                     border-top: 1px solid rgba(255,255,255,0.1);
-                    padding-top: 2rem;
+                    padding-top: 40px;
                     text-align: center;
-                    color: #94a3b8;
+                    color: rgba(255,255,255,0.4);
                     font-size: 0.9rem;
                 }
 
-                /* Animations */
-                .fade-in-up {
-                    animation: fadeInUp 0.8s ease-out;
-                }
-
-                .fade-in {
-                    animation: fadeIn 1s ease-out backwards;
-                }
-
-                @keyframes fadeInUp {
-                    from { opacity: 0; transform: translateY(30px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                @keyframes fadeIn {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-
-                /* Mobile Menu Drawer */
-                .mobile-drawer {
+                /* Mobile Drawer */
+                .mobile-drawer-modern {
                     position: fixed;
-                    top: 80px;
+                    top: 94px;
                     left: 0;
                     right: 0;
                     background: white;
+                    padding: 40px;
                     display: flex;
                     flex-direction: column;
-                    padding: 2rem;
-                    gap: 1.5rem;
-                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-                    z-index: 1001;
+                    gap: 25px;
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+                    z-index: 999;
+                    animation: slideDown 0.4s ease;
                 }
 
-                .mobile-drawer a {
+                .mobile-drawer-modern a {
+                    font-size: 1.4rem;
+                    font-weight: 800;
                     text-decoration: none;
-                    color: #1e293b;
-                    font-weight: 700;
-                    font-size: 1.2rem;
+                    color: #0c1e3a;
                 }
 
-                .mobile-login-btn {
-                    padding: 1rem;
+                .mobile-login-full {
                     background: #3b82f6;
                     color: white;
                     border: none;
+                    padding: 1.2rem;
                     border-radius: 12px;
-                    font-weight: 800;
-                    font-size: 1.1rem;
+                    font-weight: 900;
                 }
 
-                /* Responsive */
+                .mobile-hamburger {
+                    display: none;
+                    background: none;
+                    border: none;
+                    font-size: 2rem;
+                    cursor: pointer;
+                }
+
+                /* Animations */
+                .fade-in-up { animation: fadeInUp 0.8s ease-out; }
+                @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+                /* Responsiveness */
                 @media (max-width: 1024px) {
-                    .hero-title { font-size: 3.5rem; }
+                    .hero-headline { font-size: 3.5rem; }
+                    .main-nav { padding: 15px 5%; }
+                    .top-utility-bar { display: none; }
                 }
 
                 @media (max-width: 768px) {
                     .desktop-only { display: none; }
-                    .mobile-toggle { display: block; }
-                    .hero-title { font-size: 2.8rem; }
-                    .hero-btns { flex-direction: column; }
-                    .nav-glass { padding: 1rem 5%; background: white; }
+                    .mobile-hamburger { display: block; }
+                    .hero-headline { font-size: 2.8rem; }
+                    .hero-summary { font-size: 1.1rem; }
+                    .hero-action-group { flex-direction: column; }
+                    .footer-main-row { flex-direction: column; gap: 40px; text-align: center; }
+                    .footer-info { flex-direction: column; gap: 15px; }
                 }
             `}</style>
         </div>
