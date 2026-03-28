@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
  * @param {Object} data - Contains subjects, faculty, rooms, department, and semester.
  */
 async function generateTimetableWithAI(data) {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `
         You are an expert Timetable Coordinator for an Engineering College (JNTU-GV). 

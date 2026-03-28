@@ -806,7 +806,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     const [showPreview, setShowPreview] = useState(false)
     const [previewData, setPreviewData] = useState({ theory: [], labs: [] })
     const [showSettings, setShowSettings] = useState(false)
-    const [genOptions, setGenOptions] = useState({ slotMode: 'dynamic', labPlacement: 'afternoon', lunchTime: '12:30' })
+    const [genOptions, setGenOptions] = useState({ slotMode: '1h', labPlacement: 'afternoon', lunchTime: '12:30' })
     const [activeCourse, setActiveCourse] = useState('B.Tech');
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [bookingSlot, setBookingSlot] = useState(null);
@@ -872,7 +872,9 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                 setAiReport(data.report);
                 fetchTimetable();
             } else {
-                showToast("AI Error: " + data.message, 'error');
+                                showToast("AI Error: " + data.message, 'error');
+                setAiReport({ summary: "AI Optimization Failed", warnings: [data.message], optimizationNotes: "Try adjusting subjects." });
+
             }
         } catch (err) {
             showToast("Failed to connect to AI service", 'error');
@@ -1082,9 +1084,9 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                     <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
                         <h3>Generation Settings</h3>
                         <div style={{ margin: '1rem 0' }}>
-                            <label>Slot Mode</label>
+                            <label style="font-weight: 800">Slot Mode: 1-Hour Fixed</label>
                             <select className="search-input-premium" value={genOptions.slotMode} onChange={e => setGenOptions({ ...genOptions, slotMode: e.target.value })}>
-                                <option value="dynamic">Dynamic</option><option value="1h">1 Hour Fixed</option>
+                                <option value="1h">1 Hour Fixed (Institutional Standard)</option>
                             </select>
                         </div>
                         <button className="btn-action primary" onClick={() => setShowSettings(false)}>Done</button>

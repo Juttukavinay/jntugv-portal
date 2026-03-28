@@ -113,8 +113,8 @@ router.post('/generate-ai', async (req, res) => {
 router.post('/generate', async (req, res) => {
     const { semester, options, department } = req.body;
 
-    // Defaults
-    const slotMode = options?.slotMode || 'dynamic';
+    // FORCED: 1h fixed slots as per user request ("keep 1hr fixed one no optuons")
+    const slotMode = '1h'; 
     const labPlacement = options?.labPlacement || 'afternoon';
 
     console.log(`Generating Custom Timetable for ${semester} [${slotMode}, ${labPlacement}]`);
@@ -157,50 +157,9 @@ router.post('/generate', async (req, res) => {
                 if (L === 0 && T === 0) return;
             }
 
-            // Mode Logic
+            // Fixed 1h Mode (Now the only mode)
             if (slotMode === '1h') {
-                for (let i = 0; i < L; i++) queue.small.push({ ...item, type: 'Lecture', duration: 1 });
-            }
-            else if (slotMode === '2h') {
-                if (L === 3) {
-                    queue.medium.push({ ...item, type: 'Lecture', duration: 2 });
-                    queue.small.push({ ...item, type: 'Lecture', duration: 1 });
-                }
-                else if (L === 2) {
-                    queue.medium.push({ ...item, type: 'Lecture', duration: 2 });
-                }
-                else if (L === 1) {
-                    queue.small.push({ ...item, type: 'Lecture', duration: 1 });
-                }
-                else if (L > 3) {
-                    for (let i = 0; i < L; i++) queue.small.push({ ...item, type: 'Lecture', duration: 1 });
-                }
-            }
-            else { // Dynamic (Default)
-                // STRICT USER RULES:
-                // L=1 -> 1h (1 session)
-                // L=2 -> 2h (1 session)
-                // L=3 -> 1.5h + 1.5h (2 sessions)
-
-                if (L === 3) {
-                    queue.large.push({ ...item, type: 'Lecture', duration: 1.5 });
-                    queue.large.push({ ...item, type: 'Lecture', duration: 1.5 });
-                }
-                else if (L === 2) {
-                    // "2 MEANS 2HR CLASSES"
-                    queue.medium.push({ ...item, type: 'Lecture', duration: 2 });
-                }
-                else if (L === 1) {
-                    // "L=1 MEANS 1 HR"
-                    queue.small.push({ ...item, type: 'Lecture', duration: 1 });
-                }
-                else if (L > 3) {
-                    if (L % 1.5 === 0) {
-                        for (let k = 0; k < L / 1.5; k++) queue.large.push({ ...item, type: 'Lecture', duration: 1.5 });
-                    } else {
-                        for (let k = 0; k < L; k++) queue.small.push({ ...item, type: 'Lecture', duration: 1 });
-                    }
-                }
+                for (let i = 0; i < L; i++) queue.small.push({ ...item, type: 'Lecture', duration: 1, credits: 1 });
             }
             // Tutorials 
             if (T > 0) queue.small.push({ ...item, type: 'Tutorial', duration: 1 });
