@@ -1334,15 +1334,17 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
 
 function AttendanceManager({ showToast, initialParams, onClearParams }) {
     const [user, setUser] = useState({});
-    const [attendanceScope, setAttendanceScope] = useState('personal');
+    const [attendanceTab, setAttendanceTab] = useState('department');
     const [selectedSemester, setSelectedSemester] = useState('');
     const [semesterSubjects, setSemesterSubjects] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState('');
     const [selectedTime, setSelectedTime] = useState('');
+    const [hodTodayClasses, setHodTodayClasses] = useState([]);
+    const [myAttendanceHistory, setMyAttendanceHistory] = useState([]);
 
     useEffect(() => {
         if (initialParams) {
-            setAttendanceScope('personal');
+            setAttendanceTab('today');
             setSelectedSemester(initialParams.semester);
             setSelectedSubject(initialParams.subject);
             setSelectedTime(initialParams.time);
@@ -1375,7 +1377,7 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
 
     const fetchHistory = useCallback(() => {
         setLoading(true);
-        const query = attendanceScope === 'department'
+        const query = attendanceTab === 'department'
             ? (user?.department ? `department=${encodeURIComponent(user.department)}` : '')
             : (user?.name ? `facultyName=${encodeURIComponent(user.name)}` : '');
         fetch(`${API_BASE_URL}/api/attendance?${query}`)
@@ -1383,7 +1385,23 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
             .then(data => { if (Array.isArray(data)) setHistory(data); })
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, [attendanceScope, user?.department, user?.name]);
+    }, [attendanceTab, user?.department, user?.name]);
+
+    const fetchMyAttendanceHistory = useCallback(() => {
+        if (!user?.name) return;
+        fetch(`${API_BASE_URL}/api/attendance?facultyName=${encodeURIComponent(user.name)}`)
+            .then(res => res.json())
+            .then(data => { if (Array.isArray(data)) setMyAttendanceHistory(data); })
+            .catch(console.error);
+    }, [user?.name]);
+
+    const fetchTodayClasses = useCallback(() => {
+        if (!user?.name) return;
+        fetch(`${API_BASE_URL}/api/timetables?facultyName=${encodeURIComponent(user.name)}`)
+            .then(res => res.json())
+            .then(data => setHodTodayClasses(Array.isArray(data) ? data : []))
+            .catch(console.error);
+    }, [user?.name]);
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user'));
@@ -1391,8 +1409,15 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
     }, []);
 
     useEffect(() => {
-        if (viewMode === 'history' || attendanceScope === 'department') fetchHistory();
-    }, [viewMode, attendanceScope, fetchHistory]);
+        if (attendanceTab === 'department') fetchHistory();
+        if (attendanceTab === 'my') fetchHistory();
+    }, [viewMode, attendanceTab, fetchHistory]);
+
+    useEffect(() => {
+        if (!user?.name) return;
+        fetchMyAttendanceHistory();
+        fetchTodayClasses();
+    }, [user?.name, fetchMyAttendanceHistory, fetchTodayClasses]);
 
     // When semester changes, fetch its subjects and today's timetable
     useEffect(() => {
@@ -1523,6 +1548,7 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                 alert('Attendance submitted successfully!');
                 setStudents([]);
                 fetchHistory(); // Sync
+                fetchMyAttendanceHistory();
             } else {
                 const error = await res.json();
                 alert('Failed to submit: ' + error.message);
@@ -1544,95 +1570,102 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
         setAttendanceData(updated);
     };
 
+    const isClassTakenToday = (cls) => myAttendanceHistory.some(r =>
+        r.date === attendanceDate &&
+        r.subject === cls.subject &&
+        r.semester === cls.semester &&
+        r.periodTime === cls.time
+    );
+
+    const handleTodayClassAttendance = (cls) => {
+        setSelectedSemester(cls.semester);
+        setSelectedSubject(cls.subject);
+        setSelectedTime(cls.time);
+        setStudents([]);
+    };
+
     return (
         <div className="fade-in-up">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
                     <h2 style={{ margin: 0, color: 'var(--accent-dark)' }}>Attendance Gateway</h2>
                     <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
-                        {attendanceScope === 'department'
+                        {attendanceTab === 'department'
                             ? `Overall attendance reports for ${user.department || 'your'} department.`
-                            : 'Manage and review your own attendance records like faculty.'}
+                            : attendanceTab === 'today'
+                                ? 'Use today\'s HOD classes to take attendance and see if a class is already taken.'
+                                : 'Review the attendance marked by you.'}
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', gap: '0.75rem', background: 'white', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
                         <button
-                            className={`btn-action ${attendanceScope === 'department' ? 'primary' : ''}`}
-                            onClick={() => setAttendanceScope('department')}
+                            className={`btn-action ${attendanceTab === 'department' ? 'primary' : ''}`}
+                            onClick={() => setAttendanceTab('department')}
                             style={{ padding: '8px 20px', fontSize: '0.85rem' }}
                         >
                             Department Overall
                         </button>
                         <button
-                            className={`btn-action ${attendanceScope === 'personal' ? 'primary' : ''}`}
-                            onClick={() => setAttendanceScope('personal')}
+                            className={`btn-action ${attendanceTab === 'today' ? 'primary' : ''}`}
+                            onClick={() => setAttendanceTab('today')}
                             style={{ padding: '8px 20px', fontSize: '0.85rem' }}
                         >
-                            My Attendance
+                            Today Classes
+                        </button>
+                        <button
+                            className={`btn-action ${attendanceTab === 'my' ? 'primary' : ''}`}
+                            onClick={() => setAttendanceTab('my')}
+                            style={{ padding: '8px 20px', fontSize: '0.85rem' }}
+                        >
+                            My Marked Attendance
                         </button>
                     </div>
-                    {attendanceScope === 'personal' && (
-                        <div style={{ display: 'flex', gap: '0.75rem', background: 'white', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
-                            <button 
-                                className={`btn-action ${viewMode === 'mark' ? 'primary' : ''}`} 
-                                onClick={() => { setViewMode('mark'); setStudents([]); }}
-                                style={{ padding: '8px 20px', fontSize: '0.85rem' }}
-                            >
-                                Mark Attendance
-                            </button>
-                            <button 
-                                className={`btn-action ${viewMode === 'history' ? 'primary' : ''}`} 
-                                onClick={() => setViewMode('history')}
-                                style={{ padding: '8px 20px', fontSize: '0.85rem' }}
-                            >
-                                Attendance History
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
 
-            {attendanceScope === 'personal' && viewMode === 'mark' ? (
+            {attendanceTab === 'today' ? (
                 <>
                 <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '20px', border: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
                         <div style={{ width: '40px', height: '40px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Icons.Check />
                         </div>
-                        <h3 style={{ margin: 0 }}>Strategic Filter Interface</h3>
+                        <h3 style={{ margin: 0 }}>Today's HOD Classes</h3>
                     </div>
-                    
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                        <div className="input-group">
-                            <label className="input-label">Academic Semester</label>
-                            <select 
-                                className="modern-input" 
-                                style={{ width: '100%', borderRadius: '12px' }}
-                                value={selectedSemester}
-                                onChange={e => { setSelectedSemester(e.target.value); setSelectedSubject(''); }}
-                            >
-                                <option value="">-- Select Semester --</option>
-                                {semesters.map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
+                    {hodTodayClasses.length > 0 ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                            {hodTodayClasses.map((cls, idx) => {
+                                const taken = isClassTakenToday(cls);
+                                const active = selectedSemester === cls.semester && selectedSubject === cls.subject && selectedTime === cls.time;
+                                return (
+                                    <div
+                                        key={`${cls.subject}-${cls.time}-${idx}`}
+                                        onClick={() => handleTodayClassAttendance(cls)}
+                                        style={{
+                                            cursor: 'pointer',
+                                            padding: '1.1rem',
+                                            borderRadius: '14px',
+                                            border: `2px solid ${taken ? '#86efac' : active ? '#3b82f6' : '#e2e8f0'}`,
+                                            background: taken ? '#f0fdf4' : active ? '#eff6ff' : '#fff'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.4rem' }}>
+                                            <div style={{ fontWeight: '800', color: '#0f172a' }}>{cls.subject}</div>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: taken ? '#166534' : '#475569' }}>
+                                                {taken ? 'Taken' : 'Pending'}
+                                            </span>
+                                        </div>
+                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.semester}</div>
+                                        <div style={{ fontSize: '0.82rem', color: '#334155', marginTop: '0.4rem', fontWeight: '600' }}>{cls.time}</div>
+                                        {cls.room && <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.35rem' }}>Room: {cls.room}</div>}
+                                    </div>
+                                );
+                            })}
                         </div>
-                        
-                        <div className="input-group">
-                            <label className="input-label">Subject / Laboratory</label>
-                            <select 
-                                className="modern-input" 
-                                style={{ width: '100%', borderRadius: '12px' }}
-                                value={selectedSubject}
-                                onChange={e => setSelectedSubject(e.target.value)}
-                                disabled={!selectedSemester}
-                            >
-                                <option value="">-- Select Subject --</option>
-                                {[...new Set(semesterSubjects.map(s => s.courseName))].map(courseName => (
-                                    <option key={courseName} value={courseName}>{courseName}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
+                    ) : (
+                        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '1rem 0 1.5rem' }}>No HOD classes found for today.</div>
+                    )}
 
                     {loading && (
                         <div style={{ textAlign: 'center', padding: '1.5rem' }}>
@@ -1743,8 +1776,10 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                     )
                 )}
                 </>
-            ) : (
+            ) : attendanceTab === 'department' ? (
                 <AttendanceCalendarView history={history} loading={loading} fetchHistory={fetchHistory} setViewingRecord={setViewingRecord} />
+            ) : (
+                <AttendanceCalendarView history={myAttendanceHistory} loading={loading} fetchHistory={fetchMyAttendanceHistory} setViewingRecord={setViewingRecord} />
             )}
 
             {viewingRecord && createPortal(
