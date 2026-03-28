@@ -9,9 +9,10 @@ const { generateTimetableWithAI } = require('../services/geminiService');
 // GET
 router.get('/', async (req, res) => {
     try {
-        const { semester, facultyName } = req.query;
+        const { semester, facultyName, department } = req.query;
         let query = {};
         if (semester) query.className = semester;
+        if (department) query.department = department;
 
         const timetables = await Timetable.find(query);
 
@@ -61,12 +62,14 @@ router.delete('/', async (req, res) => {
 
 // GENERATE WITH GEMINI AI
 router.post('/generate-ai', async (req, res) => {
-    const { semester, department } = req.body;
+    const { semester, department: reqDept } = req.body;
+    const department = reqDept || 'IT';
+    
     if (!semester) return res.status(400).json({ success: false, message: "Semester required" });
 
     try {
         // 1. Fetch data
-        const subjects = await Subject.find({ semester });
+        const subjects = await Subject.find({ semester, department });
         const faculty = await Faculty.find({ department });
         const rooms = await Room.find({ department });
 
@@ -85,13 +88,14 @@ router.post('/generate-ai', async (req, res) => {
         });
 
         // 3. Save to DB
-        let timetable = await Timetable.findOne({ className: semester });
+        let timetable = await Timetable.findOne({ className: semester, department });
         if (timetable) {
             timetable.schedule = aiResponse.schedule;
             await timetable.save();
         } else {
             timetable = new Timetable({
                 className: semester,
+                department,
                 schedule: aiResponse.schedule
             });
             await timetable.save();
@@ -117,12 +121,13 @@ router.post('/generate', async (req, res) => {
     const slotMode = '1h'; 
     const labPlacement = options?.labPlacement || 'afternoon';
 
-    console.log(`Generating Custom Timetable for ${semester} [${slotMode}, ${labPlacement}]`);
+    const dept = department || 'IT';
+    console.log(`Generating Custom Timetable for ${semester} in ${dept} [${slotMode}, ${labPlacement}]`);
     if (!semester) return res.status(400).json({ message: "Semester required" });
 
     try {
-        await Timetable.deleteOne({ className: semester });
-        const subjects = await Subject.find({ semester });
+        await Timetable.deleteOne({ className: semester, department: dept });
+        const subjects = await Subject.find({ semester, department: dept });
         if (subjects.length === 0) return res.status(400).json({ message: `No subjects found` });
 
         // --- 1. PRE-PROCESS DEMAND ---
@@ -856,10 +861,14 @@ router.get('/workload', async (req, res) => {
     try {
         const { department } = req.query;
         let facultyQuery = {};
-        if (department) facultyQuery.department = department;
+        let ttQuery = {};
+        if (department) {
+            facultyQuery.department = department;
+            ttQuery.department = department;
+        }
 
         const facultyList = await Faculty.find(facultyQuery);
-        const timetables = await Timetable.find({});
+        const timetables = await Timetable.find(ttQuery);
 
         const workloadResults = facultyList.map(f => {
             let theoryHours = 0;

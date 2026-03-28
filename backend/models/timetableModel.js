@@ -20,6 +20,7 @@ const daySchema = new mongoose.Schema({
 
 const timetableSchema = new mongoose.Schema({
     className: { type: String, default: 'I-B.Tech I Sem' },
+    department: { type: String, default: 'IT' },
     schedule: [daySchema]
 }, {
     timestamps: true

@@ -779,11 +779,16 @@ function AddStudentForm({ onSubmit, onCancel }) {
 }
 
 // --- FACULTY DIRECTORY ---
-function FacultyDirectory() {
+function FacultyDirectory({ showToast }) {
     const [faculty, setFaculty] = useState([]);
     const [showModal, setShowModal] = useState(false);
+    const [editingFaculty, setEditingFaculty] = useState(null);
 
-    useEffect(() => { fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(setFaculty); }, []);
+    const fetchFaculty = useCallback(() => {
+        fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()).then(data => setFaculty(Array.isArray(data) ? data : []));
+    }, []);
+
+    useEffect(() => { fetchFaculty(); }, [fetchFaculty]);
 
     const handleAddFaculty = async (newFaculty) => {
         try {
@@ -793,12 +798,48 @@ function FacultyDirectory() {
                 body: JSON.stringify(newFaculty)
             });
             if (res.ok) {
-                const saved = await res.json();
-                setFaculty([...faculty, saved]);
+                showToast('Faculty added successfully');
+                fetchFaculty();
                 setShowModal(false);
             }
         } catch (error) {
             console.error("Failed to add faculty", error);
+            showToast('Error adding faculty', 'error');
+        }
+    };
+
+    const handleUpdateFaculty = async (updatedData) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/faculty/${editingFaculty._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+            if (res.ok) {
+                showToast('Faculty updated successfully');
+                fetchFaculty();
+                setEditingFaculty(null);
+            } else {
+                showToast('Failed to update faculty', 'error');
+            }
+        } catch (error) {
+            console.error("Failed to update faculty", error);
+            showToast('Error updating faculty', 'error');
+        }
+    };
+
+    const handleDeleteFaculty = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this faculty member?")) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/faculty/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                showToast('Faculty record deleted');
+                fetchFaculty();
+            } else {
+                showToast('Failed to delete faculty', 'error');
+            }
+        } catch (error) {
+            console.error("Failed to delete faculty", error);
         }
     };
 
@@ -834,6 +875,7 @@ function FacultyDirectory() {
                         <th>Department</th>
                         <th>Mobile</th>
                         <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -842,7 +884,7 @@ function FacultyDirectory() {
                             <td style={{ fontWeight: '600' }}>{f.name}</td>
                             <td>{f.email}</td>
                             <td>{f.designation}</td>
-                            <td>{f.department}</td>
+                            <td style={{ fontWeight: '700', color: 'var(--primary)' }}>{f.department}</td>
                             <td>{f.mobileNumber}</td>
                             <td>
                                 <span style={{
@@ -855,6 +897,26 @@ function FacultyDirectory() {
                                 }}>
                                     {f.type}
                                 </span>
+                            </td>
+                            <td>
+                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button 
+                                        onClick={() => setEditingFaculty(f)}
+                                        className="btn-action" 
+                                        style={{ padding: '4px', background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#64748b' }}
+                                        title="Edit Faculty"
+                                    >
+                                        <Icons.Edit />
+                                    </button>
+                                    <button 
+                                        onClick={() => handleDeleteFaculty(f._id)}
+                                        className="btn-action" 
+                                        style={{ padding: '4px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#ef4444' }}
+                                        title="Delete Faculty"
+                                    >
+                                        <Icons.Trash />
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     ))}
@@ -872,21 +934,38 @@ function FacultyDirectory() {
                     </div>
                 </div>
             )}
+
+            {editingFaculty && (
+                <div className="modal-overlay">
+                    <div className="modal-content glass-panel">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h3 style={{ margin: 0 }}>Edit Faculty: {editingFaculty.name}</h3>
+                            <button onClick={() => setEditingFaculty(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                        </div>
+                        <AddFacultyForm 
+                            initialData={editingFaculty} 
+                            onSubmit={handleUpdateFaculty} 
+                            onCancel={() => setEditingFaculty(null)} 
+                            isEdit={true}
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
-function AddFacultyForm({ onSubmit, onCancel }) {
+function AddFacultyForm({ onSubmit, onCancel, initialData = null, isEdit = false }) {
     const [formData, setFormData] = useState({
-        name: '',
-        facultyId: '',
-        designation: 'Assistant Professor',
-        qualification: '',
-        email: '',
-        mobileNumber: '',
-        type: 'Regular',
-        experience: '',
-        department: ''
+        name: initialData?.name || '',
+        facultyId: initialData?.facultyId || '',
+        designation: initialData?.designation || 'Assistant Professor',
+        qualification: initialData?.qualification || '',
+        email: initialData?.email || '',
+        mobileNumber: initialData?.mobileNumber || '',
+        type: initialData?.type || 'Regular',
+        experience: initialData?.experience || '',
+        department: initialData?.department || ''
     });
     const [departments, setDepartments] = useState([]);
 
@@ -932,7 +1011,7 @@ function AddFacultyForm({ onSubmit, onCancel }) {
             </div>
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
                 <button type="button" onClick={onCancel} className="btn-action">Cancel</button>
-                <button type="submit" className="btn-action primary">Save Faculty</button>
+                <button type="submit" className="btn-action primary">{isEdit ? 'Update Faculty' : 'Save Faculty'}</button>
             </div>
         </form>
     );

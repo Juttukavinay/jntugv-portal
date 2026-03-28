@@ -352,6 +352,23 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
     const todayName = days[new Date().getDay()];
 
     const [pendingSubstitutions, setPendingSubstitutions] = useState([]);
+    const [futureSubstitutions, setFutureSubstitutions] = useState([]);
+
+    // Helper to check if current time is within a slot range
+    const isNowInSlot = (slotTime) => {
+        try {
+            const [start, end] = slotTime.split('-').map(t => {
+                const [h, m] = t.trim().split(':');
+                const d = new Date();
+                d.setHours(parseInt(h), parseInt(m), 0, 0);
+                return d.getTime();
+            });
+            const now = new Date().getTime();
+            return now >= start && now <= end;
+        } catch (e) { return false; }
+    };
+
+    const activeSubstitutionNow = todayClasses.find(c => c.isSubstitution && isNowInSlot(c.time));
 
     const fetchTodayClasses = useCallback(async () => {
         if (!currentUser?.name) return;
@@ -381,24 +398,33 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
             const leavesData = await leaveRes.json();
             
             if (Array.isArray(leavesData)) {
-                // Pending for Notification
+                // Pending for Notification - Show if in future or currently in leave period
                 const pending = leavesData.filter(l => 
                     l.substituteFaculty === currentUser.name && 
                     l.status === 'Approved' && 
                     !l.isAccepted &&
-                    l.fromDate <= todayStr && l.toDate >= todayStr
+                    l.toDate >= todayStr // Not yet past
                 );
                 setPendingSubstitutions(pending);
 
-                // Accepted to add to classes
-                const accepted = leavesData.filter(l => 
+                // Accepted to add to classes - Add if it's currently today
+                const acceptedToday = leavesData.filter(l => 
                     l.substituteFaculty === currentUser.name && 
                     l.status === 'Approved' && 
                     l.isAccepted &&
                     l.fromDate <= todayStr && l.toDate >= todayStr
                 );
 
-                for (const sub of accepted) {
+                // Accepted Future - To show in "Upcoming"
+                const upcoming = leavesData.filter(l => 
+                    l.substituteFaculty === currentUser.name && 
+                    l.status === 'Approved' && 
+                    l.isAccepted &&
+                    l.fromDate > todayStr
+                );
+                setFutureSubstitutions(upcoming);
+
+                for (const sub of acceptedToday) {
                     // Find the absent faculty's classes for today
                     allArray.forEach(tt => {
                         if (!tt?.schedule) return;
@@ -434,6 +460,51 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
 
     return (
         <div>
+            {/* STRONG PULSE NOTIFICATION FOR ACTIVE SUBSTITUTION */}
+            {activeSubstitutionNow && (
+                <div className="active-sub-pulse" style={{
+                    marginBottom: '1.5rem',
+                    padding: '1.5rem',
+                    background: 'linear-gradient(135deg, #ef4444, #f59e0b)',
+                    color: '#fff',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 8px 30px rgba(239, 68, 68, 0.4)',
+                    animation: 'pulseUrgent 2s infinite ease-in-out',
+                    border: '3px solid #fff'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
+                        <div style={{ fontSize: '2.5rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>🚨</div>
+                        <div>
+                            <div style={{ fontWeight: '900', fontSize: '1.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Active Substitution Now!</div>
+                            <div style={{ fontSize: '1.1rem', fontWeight: '600', opacity: 0.9 }}>
+                                Class: {activeSubstitutionNow.subject} | Time: {activeSubstitutionNow.time} | Room: {activeSubstitutionNow.room || 'N/A'}
+                            </div>
+                        </div>
+                    </div>
+                    <button 
+                        className="btn-action" 
+                        style={{ background: '#fff', color: '#ef4444', fontWeight: '800', padding: '0.8rem 1.5rem', borderRadius: '10px' }}
+                        onClick={() => {
+                            // Find the attendance element and scroll to it or switch tab
+                            document.querySelector('.attendance-manager-card')?.scrollIntoView({ behavior: 'smooth' });
+                            showToast('Go to Attendance Manager to mark attendance for this sub.', 'info');
+                        }}
+                    >
+                        GO TO CLASS →
+                    </button>
+                    <style>{`
+                        @keyframes pulseUrgent {
+                            0% { transform: scale(1); box-shadow: 0 8px 30px rgba(239, 68, 68, 0.4); }
+                            50% { transform: scale(1.02); box-shadow: 0 8px 45px rgba(239, 68, 68, 0.7); }
+                            100% { transform: scale(1); box-shadow: 0 8px 30px rgba(239, 68, 68, 0.4); }
+                        }
+                    `}</style>
+                </div>
+            )}
+
             <div style={{ marginBottom: '2rem' }}>
                 <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome, {currentUser?.name?.split(' ')[0]}! 👋</h1>
                 <p style={{ color: '#64748b' }}>Today is <strong>{todayName}</strong> — here is your daily summary.</p>
@@ -444,8 +515,8 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                         <div style={{ fontSize: '1.5rem' }}>📢</div>
                         <div>
-                            <h4 style={{ margin: 0, color: '#854d0e' }}>Substitution Assignment</h4>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#a16207' }}>You have been assigned as a substitute for an absent colleague today.</p>
+                            <h4 style={{ margin: 0, color: '#854d0e' }}>New Substitution Requests</h4>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#a16207' }}>Please review and accept these assignments to sync your schedule.</p>
                         </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -453,10 +524,13 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
                             <div key={sub._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '1rem', borderRadius: '12px', border: '1px solid #fef08a' }}>
                                 <div>
                                     <div style={{ fontWeight: '700', color: '#1e293b' }}>Substituting: {sub.facultyName}</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Reason: {sub.reason} • Period: Today</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#64748b', margin: '2px 0' }}>
+                                        🗓️ <strong>{sub.fromDate}</strong> to <strong>{sub.toDate}</strong>
+                                    </div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Reason: {sub.reason}</div>
                                 </div>
                                 <button className="btn-action primary" style={{ background: '#ca8a04' }} onClick={() => handleAcceptSubstitution(sub._id)}>
-                                    ✅ Accept & View Class
+                                    ✅ Accept Substitution
                                 </button>
                             </div>
                         ))}
@@ -517,23 +591,45 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
                     )}
                 </div>
 
-                <div className="glass-table-container" style={{ padding: '1.5rem' }}>
-                    <h3 style={{ marginTop: 0 }}>Quick Actions</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <button
-                            className="btn-action primary"
-                            style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            onClick={() => onNavigate('attendance')}
-                        >
-                            <Icons.Check /> Mark Attendance
-                        </button>
-                        <button
-                            className="btn-action"
-                            style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            onClick={() => onNavigate('timetable')}
-                        >
-                            <Icons.Calendar /> My Timetable
-                        </button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div className="glass-table-container" style={{ padding: '1.5rem' }}>
+                        <h3 style={{ marginTop: 0 }}>Upcoming Substitutions</h3>
+                        {futureSubstitutions.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                                <div style={{ fontSize: '1.2rem' }}>📅</div>
+                                <div style={{ fontSize: '0.85rem' }}>No upcoming assignments.</div>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                                {futureSubstitutions.map(sub => (
+                                    <div key={sub._id} style={{ padding: '0.8rem 1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                        <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.9rem' }}>{sub.facultyName}'s Class</div>
+                                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Scheduled: <strong>{sub.fromDate} to {sub.toDate}</strong></div>
+                                        <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 'bold', marginTop: '4px' }}>✓ Accepted</div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="glass-table-container" style={{ padding: '1.5rem' }}>
+                        <h3 style={{ marginTop: 0 }}>Quick Actions</h3>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <button
+                                className="btn-action primary"
+                                style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', borderRadius: '16px' }}
+                                onClick={() => onNavigate('attendance')}
+                            >
+                                <Icons.Check /> Mark Attendance
+                            </button>
+                            <button
+                                className="btn-action"
+                                style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', borderRadius: '16px' }}
+                                onClick={() => onNavigate('timetable')}
+                            >
+                                <Icons.Calendar /> My Timetable
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

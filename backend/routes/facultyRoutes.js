@@ -8,10 +8,11 @@ const fs = require('fs');
 
 const upload = multer({ dest: 'uploads/' });
 
-// Get all
+// Get all (with optional department filter)
 router.get('/', async (req, res) => {
     try {
-        const faculty = await Faculty.find({}).sort({ sNo: 1 });
+        const filter = req.query.department ? { department: req.query.department } : {};
+        const faculty = await Faculty.find(filter).sort({ sNo: 1 });
         res.json(faculty);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -21,8 +22,12 @@ router.get('/', async (req, res) => {
 // Calculate workloads
 router.get('/workload', async (req, res) => {
     try {
-        const faculties = await Faculty.find({});
-        const timetables = await Timetable.find({});
+        const dept = req.query.department;
+        const facultyFilter = dept ? { department: dept } : {};
+        const ttFilter = dept ? { department: dept } : {}; // Assuming Timetable has department
+
+        const faculties = await Faculty.find(facultyFilter);
+        const timetables = await Timetable.find(ttFilter);
 
         const workloadData = faculties.map(f => {
             let currentHours = 0;

@@ -657,9 +657,10 @@ function FacultyManager({ showToast, user }) {
 
     const fetchFacultyData = useCallback(() => {
         setLoading(true);
+        const deptParam = user.department ? `?department=${encodeURIComponent(user.department)}` : '';
         Promise.all([
-            fetch(`${API_BASE_URL}/api/faculty`).then(res => res.json()),
-            fetch(`${API_BASE_URL}/api/timetables/workload`).then(res => res.json())
+            fetch(`${API_BASE_URL}/api/faculty${deptParam}`).then(res => res.json()),
+            fetch(`${API_BASE_URL}/api/timetables/workload${deptParam}`).then(res => res.json())
         ]).then(([facultyData, workloadData]) => {
             setFaculty(Array.isArray(facultyData) ? facultyData : []);
             setWorkloads(Array.isArray(workloadData) ? workloadData : []);
@@ -668,7 +669,7 @@ function FacultyManager({ showToast, user }) {
             console.error(err);
             setLoading(false);
         });
-    }, []);
+    }, [user.department]);
 
     useEffect(() => {
         fetchFacultyData();
@@ -820,7 +821,8 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
 
     const fetchTimetable = useCallback(() => {
         setTimetable(null)
-        fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`)
+        const deptParam = user.department ? `&department=${encodeURIComponent(user.department)}` : '';
+        fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}${deptParam}`)
             .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data) && data.length > 0) setTimetable(data[0])
@@ -828,7 +830,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                 else setTimetable(null)
             })
             .catch(console.error)
-    }, [selectedSemester])
+    }, [selectedSemester, user.department])
 
     useEffect(() => { fetchTimetable() }, [fetchTimetable]);
 
@@ -905,7 +907,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
             const res = await fetch(`${API_BASE_URL}/api/timetables/manual`, { 
                 method: 'POST', 
                 headers: { 'Content-Type': 'application/json' }, 
-                body: JSON.stringify({ semester: selectedSemester }) 
+                body: JSON.stringify({ semester: selectedSemester, department: user.department }) 
             })
             const data = await res.json()
             if (res.ok) {
@@ -1105,7 +1107,13 @@ function SubjectsManager({ facultyList, showToast, user }) {
     const [editRows, setEditRows] = useState([]);
     const [isUploading, setIsUploading] = useState(false);
 
-    const fetchSubjects = useCallback(() => { fetch(`${API_BASE_URL}/api/subjects?t=${Date.now()}`).then(res => res.json()).then(setSubjects).catch(console.error); }, []);
+    const fetchSubjects = useCallback(() => { 
+        const deptParam = user.department ? `?department=${encodeURIComponent(user.department)}` : '';
+        fetch(`${API_BASE_URL}/api/subjects${deptParam}${deptParam ? '&' : '?'}t=${Date.now()}`)
+            .then(res => res.json())
+            .then(setSubjects)
+            .catch(console.error); 
+    }, [user.department]);
     useEffect(() => { fetchSubjects(); }, [fetchSubjects]);
 
     useEffect(() => {

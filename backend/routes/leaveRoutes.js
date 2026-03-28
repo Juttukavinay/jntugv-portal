@@ -76,6 +76,10 @@ router.put('/:id/status', async (req, res) => {
         res.json(leave);
     } catch (error) {
         console.error(error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 // PUT /api/leaves/:id/accept - Substitute faculty accepts the assignment
 router.put('/:id/accept', async (req, res) => {
     try {
