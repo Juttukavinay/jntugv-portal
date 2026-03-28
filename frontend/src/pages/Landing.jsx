@@ -97,6 +97,189 @@ function Landing() {
                     <p>&copy; {new Date().getFullYear()} JNTU-GV University. All Rights Reserved. Crafted for Excellence.</p>
                 </div>
             </footer>
+
+            <style>{`
+                .edubin-layout {
+                    min-height: 100vh;
+                    background: #ffffff;
+                }
+
+                .edubin-navbar {
+                    height: 82px;
+                    background: #ffffff;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 4rem;
+                    box-sizing: border-box;
+                }
+
+                .edu-logo {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+
+                .edu-logo img {
+                    width: 40px;
+                    height: 40px;
+                    object-fit: contain;
+                }
+
+                .edu-logo h2 {
+                    margin: 0;
+                    font-size: 1.25rem;
+                    font-weight: 800;
+                    color: #13294b;
+                    letter-spacing: 0.02em;
+                }
+
+                .edu-links {
+                    display: flex;
+                    align-items: center;
+                    gap: 2rem;
+                }
+
+                .edu-links a {
+                    text-decoration: none;
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    color: #1e2f49;
+                }
+
+                .edu-links a.active {
+                    color: #3b82f6;
+                }
+
+                .edu-actions {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+
+                .edu-btn {
+                    text-decoration: none;
+                    font-size: 0.95rem;
+                    font-weight: 700;
+                    padding: 0.9rem 1.8rem;
+                    border-radius: 12px;
+                    transition: background 0.2s ease, color 0.2s ease;
+                }
+
+                .edu-btn.primary {
+                    background: #3b82f6;
+                    color: #ffffff;
+                }
+
+                .edu-btn.secondary {
+                    background: #ffffff;
+                    color: #1e2f49;
+                }
+
+                .mobile-toggle {
+                    display: none;
+                    border: none;
+                    background: transparent;
+                    font-size: 1.5rem;
+                    color: #1e2f49;
+                    cursor: pointer;
+                }
+
+                .mobile-menu {
+                    display: none;
+                }
+
+                .edubin-hero {
+                    min-height: 810px;
+                    background-size: cover;
+                    background-position: center;
+                    position: relative;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .hero-content-container {
+                    width: 100%;
+                    max-width: 720px;
+                    padding: 0 0 0 4rem;
+                    box-sizing: border-box;
+                }
+
+                .hero-heading {
+                    margin: 0;
+                    color: #ffffff;
+                    font-size: 4.8rem;
+                    line-height: 0.98;
+                    font-weight: 800;
+                    letter-spacing: -0.04em;
+                }
+
+                .hero-paragraph {
+                    margin: 2rem 0 2.5rem;
+                    max-width: 640px;
+                    color: rgba(255, 255, 255, 0.9);
+                    font-size: 1rem;
+                    line-height: 1.55;
+                }
+
+                .hero-buttons {
+                    display: flex;
+                    align-items: center;
+                    gap: 1rem;
+                }
+
+                @media (max-width: 1024px) {
+                    .edubin-navbar {
+                        padding: 0 1.5rem;
+                    }
+
+                    .hero-content-container {
+                        padding-left: 1.5rem;
+                        padding-right: 1.5rem;
+                    }
+
+                    .hero-heading {
+                        font-size: 3.8rem;
+                    }
+                }
+
+                @media (max-width: 768px) {
+                    .desktop-only {
+                        display: none;
+                    }
+
+                    .mobile-toggle {
+                        display: block;
+                    }
+
+                    .mobile-menu {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                        padding: 1rem 1.5rem;
+                        background: #ffffff;
+                        border-top: 1px solid #e5e7eb;
+                    }
+
+                    .mobile-menu a {
+                        text-decoration: none;
+                        color: #1e2f49;
+                        font-weight: 700;
+                    }
+
+                    .edubin-hero {
+                        min-height: 620px;
+                    }
+
+                    .hero-heading {
+                        font-size: 3rem;
+                    }
+
+                    .hero-buttons {
+                        flex-wrap: wrap;
+                    }
+                }
+            `}</style>
         </div>
     )
 }
