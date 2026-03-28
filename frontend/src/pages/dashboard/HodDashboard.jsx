@@ -138,7 +138,7 @@ function HodDashboard() {
                     <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
                     <NavItem icon={<Icons.Book />} label="Curriculum" active={activeTab === 'subjects'} onClick={() => setActiveTab('subjects')} />
                     <NavItem icon={<Icons.Building />} label="Campus Infra" active={activeTab === 'infrastructure'} onClick={() => setActiveTab('infrastructure')} />
-                    <NavItem icon={<Icons.Check />} label="My Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
+                    <NavItem icon={<Icons.Check />} label="Attendance" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
                     <NavItem icon={<Icons.Mail />} label="Communications" active={activeTab === 'notices'} onClick={() => setActiveTab('notices')} />
                 </nav>
 
@@ -1334,6 +1334,7 @@ function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
 
 function AttendanceManager({ showToast, initialParams, onClearParams }) {
     const [user, setUser] = useState({});
+    const [attendanceScope, setAttendanceScope] = useState('personal');
     const [selectedSemester, setSelectedSemester] = useState('');
     const [semesterSubjects, setSemesterSubjects] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState('');
@@ -1341,6 +1342,7 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
 
     useEffect(() => {
         if (initialParams) {
+            setAttendanceScope('personal');
             setSelectedSemester(initialParams.semester);
             setSelectedSubject(initialParams.subject);
             setSelectedTime(initialParams.time);
@@ -1373,13 +1375,15 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
 
     const fetchHistory = useCallback(() => {
         setLoading(true);
-        const deptParam = user?.department ? `department=${encodeURIComponent(user.department)}` : '';
-        fetch(`${API_BASE_URL}/api/attendance?${deptParam}`)
+        const query = attendanceScope === 'department'
+            ? (user?.department ? `department=${encodeURIComponent(user.department)}` : '')
+            : (user?.name ? `facultyName=${encodeURIComponent(user.name)}` : '');
+        fetch(`${API_BASE_URL}/api/attendance?${query}`)
             .then(res => res.json())
             .then(data => { if (Array.isArray(data)) setHistory(data); })
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, [user?.department]);
+    }, [attendanceScope, user?.department, user?.name]);
 
     useEffect(() => {
         const u = JSON.parse(localStorage.getItem('user'));
@@ -1387,8 +1391,8 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
     }, []);
 
     useEffect(() => {
-        if (viewMode === 'history') fetchHistory();
-    }, [viewMode, fetchHistory]);
+        if (viewMode === 'history' || attendanceScope === 'department') fetchHistory();
+    }, [viewMode, attendanceScope, fetchHistory]);
 
     // When semester changes, fetch its subjects and today's timetable
     useEffect(() => {
@@ -1545,27 +1549,51 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
                     <h2 style={{ margin: 0, color: 'var(--accent-dark)' }}>Attendance Gateway</h2>
-                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>Strategic academic tracking for {user.department} department.</p>
+                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+                        {attendanceScope === 'department'
+                            ? `Overall attendance reports for ${user.department || 'your'} department.`
+                            : 'Manage and review your own attendance records like faculty.'}
+                    </p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.75rem', background: 'white', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
-                    <button 
-                        className={`btn-action ${viewMode === 'mark' ? 'primary' : ''}`} 
-                        onClick={() => { setViewMode('mark'); setStudents([]); }}
-                        style={{ padding: '8px 20px', fontSize: '0.85rem' }}
-                    >
-                        Mark Attendance
-                    </button>
-                    <button 
-                        className={`btn-action ${viewMode === 'history' ? 'primary' : ''}`} 
-                        onClick={() => setViewMode('history')}
-                        style={{ padding: '8px 20px', fontSize: '0.85rem' }}
-                    >
-                        View Reports
-                    </button>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', background: 'white', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                        <button
+                            className={`btn-action ${attendanceScope === 'department' ? 'primary' : ''}`}
+                            onClick={() => setAttendanceScope('department')}
+                            style={{ padding: '8px 20px', fontSize: '0.85rem' }}
+                        >
+                            Department Overall
+                        </button>
+                        <button
+                            className={`btn-action ${attendanceScope === 'personal' ? 'primary' : ''}`}
+                            onClick={() => setAttendanceScope('personal')}
+                            style={{ padding: '8px 20px', fontSize: '0.85rem' }}
+                        >
+                            My Attendance
+                        </button>
+                    </div>
+                    {attendanceScope === 'personal' && (
+                        <div style={{ display: 'flex', gap: '0.75rem', background: 'white', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                            <button 
+                                className={`btn-action ${viewMode === 'mark' ? 'primary' : ''}`} 
+                                onClick={() => { setViewMode('mark'); setStudents([]); }}
+                                style={{ padding: '8px 20px', fontSize: '0.85rem' }}
+                            >
+                                Mark Attendance
+                            </button>
+                            <button 
+                                className={`btn-action ${viewMode === 'history' ? 'primary' : ''}`} 
+                                onClick={() => setViewMode('history')}
+                                style={{ padding: '8px 20px', fontSize: '0.85rem' }}
+                            >
+                                Attendance History
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {viewMode === 'mark' ? (
+            {attendanceScope === 'personal' && viewMode === 'mark' ? (
                 <>
                 <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '20px', border: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '1.5rem' }}>
