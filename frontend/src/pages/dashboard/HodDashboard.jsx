@@ -1245,14 +1245,22 @@ function SubjectsManager({ facultyList, showToast, user }) {
         </div >
     );
 }
-function BookingForm({ initialData, facultyList, onSubmit, onCancel }) {
-    const [subject, setSubject] = useState(initialData.currentSubject);
-    const [mainFaculty, setMainFaculty] = useState(initialData.faculty);
+function BookingForm({ initialData, facultyList = [], roomList = [], onSubmit, onCancel }) {
+    const [subject, setSubject] = useState(initialData.currentSubject || '');
+    const [mainFaculty, setMainFaculty] = useState(initialData.faculty || '');
     const [assistants, setAssistants] = useState(initialData.assistants || []);
     const [room, setRoom] = useState(initialData.room || '');
     const [wing, setWing] = useState(initialData.wing || '');
     const [updateAll, setUpdateAll] = useState(true);
     const isLab = (subject || '').toLowerCase().includes('lab') || (subject || '').toLowerCase().includes('project');
+
+    useEffect(() => {
+        setSubject(initialData.currentSubject || '');
+        setMainFaculty(initialData.faculty || '');
+        setAssistants(initialData.assistants || []);
+        setRoom(initialData.room || '');
+        setWing(initialData.wing || '');
+    }, [initialData]);
 
     const contractFaculty = facultyList.filter(f => f.type === 'Contract');
     const regularFaculty = facultyList.filter(f => f.type !== 'Contract');
