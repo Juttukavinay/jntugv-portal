@@ -34,6 +34,7 @@ function AdminDashboard() {
     // Real Data States
     const [departments, setDepartments] = useState([]);
     const [faculty, setFaculty] = useState([]);
+    const [notices, setNotices] = useState([]);
     const [stats, setStats] = useState({ users: 0, depts: 0, healthy: '100%' });
 
     const showToast = useCallback((message, type = 'success') => {
@@ -44,14 +45,17 @@ function AdminDashboard() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const [deptRes, facRes] = await Promise.all([
+            const [deptRes, facRes, noticeRes] = await Promise.all([
                 fetch(`${API_BASE_URL}/api/departments`),
-                fetch(`${API_BASE_URL}/api/faculty`)
+                fetch(`${API_BASE_URL}/api/faculty`),
+                fetch(`${API_BASE_URL}/api/notices?role=admin`)
             ]);
             const depts = await deptRes.json();
             const facs = await facRes.json();
+            const notifs = await noticeRes.json();
             setDepartments(depts);
             setFaculty(facs);
+            setNotices(notifs.slice(0, 10)); // Keep only recent 10
             setStats({ 
                 users: facs.length + 500, // Estimating students for context
                 depts: depts.length,
@@ -81,7 +85,7 @@ function AdminDashboard() {
             case 'system': return <SystemSettings showToast={showToast} />;
             case 'database': return <DatabaseTools showToast={showToast} />;
             case 'notices': return <CommunicationCenter user={user} showToast={showToast} />;
-            default: return <AdminOverview stats={stats} onNavigate={setActiveTab} />;
+            default: return <AdminOverview stats={stats} notices={notices} onNavigate={setActiveTab} />;
         }
     };
 
@@ -174,7 +178,7 @@ function NavItem({ icon, label, active, onClick }) {
 
 // --- SUB-COMPONENTS ---
 
-function AdminOverview({ stats, onNavigate }) {
+function AdminOverview({ stats, notices, onNavigate }) {
     return (
         <div className="admin-overview-wrapper">
             <div style={{ marginBottom: '3rem' }}>
@@ -232,6 +236,34 @@ function AdminOverview({ stats, onNavigate }) {
                 <div className="premium-stat-card">
                     <div className="stat-icon-wrapper" style={{ background: '#fee2e2', color: '#ef4444' }}><Icons.Shield /></div>
                     <div className="stat-content"><h5>Registry Health</h5><h3>{stats.healthy}</h3><span className="stat-trend trend-up">All nodes synced</span></div>
+                </div>
+            </div>
+
+            {/* Tracking Section */}
+            <div className="glass-panel" style={{ padding: '2rem', marginTop: '3rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Recent Notifications & Tracking</h2>
+                    <button className="btn-action" onClick={() => onNavigate('notices')} style={{ fontSize: '0.8rem' }}>View History</button>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                    {notices.length === 0 ? (
+                        <div style={{ padding: '1rem', textAlign: 'center', color: '#64748b' }}>No recent activity to track.</div>
+                    ) : (
+                        notices.map((n, idx) => (
+                            <div key={n._id} className="log-entry" style={{ padding: '1rem', borderBottom: idx !== notices.length-1 ? '1px solid #f1f5f9' : 'none', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div style={{ fontSize: '1.2rem' }}>{n.type === 'poll' ? '🗳️' : (n.priority === 'urgent' ? '🚨' : '📩')}</div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: '700', color: '#1e293b' }}>{n.title}</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{n.content?.substring(0, 100)}...</div>
+                                </div>
+                                <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#94a3b8' }}>
+                                    <div style={{ fontWeight: '700' }}>{n.senderName}</div>
+                                    <div>{new Date(n.createdAt).toLocaleDateString()}</div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
         </div>
