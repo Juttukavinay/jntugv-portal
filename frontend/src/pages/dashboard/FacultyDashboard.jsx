@@ -351,28 +351,86 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
     const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
     const todayName = days[new Date().getDay()];
 
-    useEffect(() => {
-        if (!currentUser?.name) return;
+    const [pendingSubstitutions, setPendingSubstitutions] = useState([]);
 
-        // Fetch all timetables and find today's classes for this faculty
-        fetch(`${API_BASE_URL}/api/timetables`)
-            .then(res => res.json())
-            .then(data => {
-                const allArray = Array.isArray(data) ? data : [data];
-                const classes = [];
-                allArray.forEach(tt => {
-                    if (!tt?.schedule) return;
-                    const todayDay = tt.schedule.find(d => d.day === todayName);
-                    if (!todayDay) return;
-                    todayDay.periods.forEach(p => {
-                        if (p.faculty === currentUser.name || p.assistants?.includes(currentUser.name)) {
-                            classes.push({ ...p, semester: tt.className || tt.semester });
-                        }
-                    });
+    const fetchTodayClasses = useCallback(async () => {
+        if (!currentUser?.name) return;
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        
+        try {
+            // 1. Fetch Timetable Classes
+            const ttRes = await fetch(`${API_BASE_URL}/api/timetables`);
+            const ttData = await ttRes.json();
+            const allArray = Array.isArray(ttData) ? ttData : [ttData];
+            const classes = [];
+            
+            allArray.forEach(tt => {
+                if (!tt?.schedule) return;
+                const todayDay = tt.schedule.find(d => d.day === todayName);
+                if (!todayDay) return;
+                todayDay.periods.forEach(p => {
+                    if (p.faculty === currentUser.name || p.assistants?.includes(currentUser.name)) {
+                        classes.push({ ...p, semester: tt.className || tt.semester });
+                    }
                 });
-                setTodayClasses(classes);
-            }).catch(console.error);
+            });
+
+            // 2. Fetch Accepted Substitutions for Today
+            const leaveRes = await fetch(`${API_BASE_URL}/api/leaves/department/${encodeURIComponent(currentUser.department || 'IT')}`);
+            const leavesData = await leaveRes.json();
+            
+            if (Array.isArray(leavesData)) {
+                // Pending for Notification
+                const pending = leavesData.filter(l => 
+                    l.substituteFaculty === currentUser.name && 
+                    l.status === 'Approved' && 
+                    !l.isAccepted &&
+                    l.fromDate <= todayStr && l.toDate >= todayStr
+                );
+                setPendingSubstitutions(pending);
+
+                // Accepted to add to classes
+                const accepted = leavesData.filter(l => 
+                    l.substituteFaculty === currentUser.name && 
+                    l.status === 'Approved' && 
+                    l.isAccepted &&
+                    l.fromDate <= todayStr && l.toDate >= todayStr
+                );
+
+                for (const sub of accepted) {
+                    // Find the absent faculty's classes for today
+                    allArray.forEach(tt => {
+                        if (!tt?.schedule) return;
+                        const todayDay = tt.schedule.find(d => d.day === todayName);
+                        if (!todayDay) return;
+                        todayDay.periods.forEach(p => {
+                            if (p.faculty === sub.facultyName) {
+                                classes.push({ ...p, semester: tt.className || tt.semester, isSubstitution: true, originalFaculty: p.faculty });
+                            }
+                        });
+                    });
+                }
+            }
+            setTodayClasses(classes);
+        } catch (err) {
+            console.error(err);
+        }
     }, [currentUser, todayName]);
+
+    useEffect(() => {
+        fetchTodayClasses();
+    }, [fetchTodayClasses]);
+
+    const handleAcceptSubstitution = async (leaveId) => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/leaves/${leaveId}/accept`, { method: 'PUT' });
+            if (res.ok) {
+                alert('Substitution accepted! The class is now in your schedule.');
+                fetchTodayClasses();
+            }
+        } catch (err) { alert('Failed to accept substitution'); }
+    }
 
     return (
         <div>
@@ -380,6 +438,31 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
                 <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome, {currentUser?.name?.split(' ')[0]}! 👋</h1>
                 <p style={{ color: '#64748b' }}>Today is <strong>{todayName}</strong> — here is your daily summary.</p>
             </div>
+
+            {pendingSubstitutions.length > 0 && (
+                <div className="fade-in-up" style={{ marginBottom: '2rem', background: 'linear-gradient(135deg, #fefce8, #fef9c3)', padding: '1.5rem', borderRadius: '16px', border: '1px solid #fde047', boxShadow: '0 4px 15px rgba(253, 224, 71, 0.2)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                        <div style={{ fontSize: '1.5rem' }}>📢</div>
+                        <div>
+                            <h4 style={{ margin: 0, color: '#854d0e' }}>Substitution Assignment</h4>
+                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#a16207' }}>You have been assigned as a substitute for an absent colleague today.</p>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        {pendingSubstitutions.map(sub => (
+                            <div key={sub._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '1rem', borderRadius: '12px', border: '1px solid #fef08a' }}>
+                                <div>
+                                    <div style={{ fontWeight: '700', color: '#1e293b' }}>Substituting: {sub.facultyName}</div>
+                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Reason: {sub.reason} • Period: Today</div>
+                                </div>
+                                <button className="btn-action primary" style={{ background: '#ca8a04' }} onClick={() => handleAcceptSubstitution(sub._id)}>
+                                    ✅ Accept & View Class
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div className="modern-stats-grid">
                 <div className="premium-stat-card">
@@ -415,14 +498,18 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {todayClasses.map((cls, i) => (
-                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#f8fafc', borderRadius: '12px', borderLeft: `4px solid ${cls.type === 'Lab' ? '#3b82f6' : '#10b981'}` }}>
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: cls.isSubstitution ? '#f0fdf4' : '#f8fafc', borderRadius: '12px', borderLeft: `4px solid ${cls.isSubstitution ? '#22c55e' : (cls.type === 'Lab' ? '#3b82f6' : '#10b981')}` }}>
                                     <div>
-                                        <div style={{ fontWeight: '700', color: '#0f172a' }}>{cls.subject}</div>
+                                        <div style={{ fontWeight: '700', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            {cls.subject}
+                                            {cls.isSubstitution && <span style={{ fontSize: '0.65rem', background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: '10px' }}>SUBSTITUTION</span>}
+                                        </div>
                                         <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.room || 'N/A'} • {cls.type || 'Theory'} • {cls.semester}</div>
+                                        {cls.isSubstitution && <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 'bold' }}>For: {cls.originalFaculty}</div>}
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
                                         <div style={{ fontWeight: '600', color: '#334155' }}>{cls.time}</div>
-                                        {cls.faculty !== currentUser?.name && <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>Assisting</div>}
+                                        {cls.faculty !== currentUser?.name && !cls.isSubstitution && <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>Assisting</div>}
                                     </div>
                                 </div>
                             ))}
@@ -985,17 +1072,32 @@ function AttendanceManager() {
         fetchTodayAttendance(user);
 
         // Fetch all timetables and extract today's classes for this faculty
-        fetch(`${API_BASE_URL}/api/timetables`)
-            .then(res => res.json())
-            .then(data => {
-                const allArray = Array.isArray(data) ? data : [data];
+        const fetchClasses = async () => {
+            try {
+                const now = new Date();
+                const todayStr = now.toISOString().split('T')[0];
+                
+                const ttRes = await fetch(`${API_BASE_URL}/api/timetables`);
+                const ttData = await ttRes.json();
+                const allArray = Array.isArray(ttData) ? ttData : [ttData];
                 const classes = [];
+
+                // 2. Fetch Accepted Substitutions for Today
+                const leaveRes = await fetch(`${API_BASE_URL}/api/leaves/department/${encodeURIComponent(user.department || 'IT')}`);
+                const leavesData = await leaveRes.json();
+                const acceptedSubstitutions = Array.isArray(leavesData) ? leavesData.filter(l => 
+                    l.substituteFaculty === user.name && 
+                    l.status === 'Approved' && 
+                    l.isAccepted &&
+                    l.fromDate <= todayStr && l.toDate >= todayStr
+                ) : [];
+
                 allArray.forEach(tt => {
                     if (!tt?.schedule) return;
                     const todayDay = tt.schedule.find(d => d.day === todayName);
                     if (!todayDay) return;
                     todayDay.periods.forEach(p => {
-                        // Only main faculty can mark attendance (not assistants for labs)
+                        // Regular classes
                         if (p.faculty === user.name || (!p.faculty && p.subject && p.subject !== '-')) {
                             classes.push({
                                 subject: p.subject,
@@ -1007,12 +1109,30 @@ function AttendanceManager() {
                                 isLab: p.type === 'Lab'
                             });
                         }
+                        // Substituted classes
+                        else if (acceptedSubstitutions.some(sub => sub.facultyName === p.faculty)) {
+                             classes.push({
+                                subject: p.subject,
+                                semester: tt.className || tt.semester,
+                                time: p.time,
+                                room: p.room || '',
+                                type: p.type || 'Theory',
+                                faculty: p.faculty,
+                                isLab: p.type === 'Lab',
+                                isSubstitution: true
+                            });
+                        }
                     });
                 });
                 setTodayClasses(classes);
-            })
-            .catch(console.error)
-            .finally(() => setLoadingClasses(false));
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoadingClasses(false);
+            }
+        };
+
+        fetchClasses();
         if (viewMode === 'history') fetchHistory(user);
     }, [todayName, fetchTodayAttendance, fetchHistory, viewMode]);
 

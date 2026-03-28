@@ -76,6 +76,17 @@ router.put('/:id/status', async (req, res) => {
         res.json(leave);
     } catch (error) {
         console.error(error);
+// PUT /api/leaves/:id/accept - Substitute faculty accepts the assignment
+router.put('/:id/accept', async (req, res) => {
+    try {
+        const leave = await Leave.findById(req.params.id);
+        if (!leave) return res.status(404).json({ message: 'Leave not found' });
+        
+        leave.isAccepted = true;
+        await leave.save();
+        res.json(leave);
+    } catch (error) {
+        console.error(error);
         res.status(500).json({ message: 'Server Error' });
     }
 });
