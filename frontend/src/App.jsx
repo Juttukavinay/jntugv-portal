@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Landing from './pages/Landing'
-import Login from './pages/Login'
 import PrincipalDashboard from './pages/dashboard/PrincipalDashboard'
 import VicePrincipalDashboard from './pages/dashboard/VicePrincipalDashboard'
 import FacultyDashboard from './pages/dashboard/FacultyDashboard'
@@ -69,7 +68,7 @@ function App() {
         <Routes key={user ? 'auth-true' : 'auth-false'}>
           <Route path="/" element={<Landing user={user} />} />
           <Route path="/departments" element={<Departments />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Navigate to="/" replace />} />
 
           <Route path="/dashboard/admin" element={
             <ProtectedRoute>
