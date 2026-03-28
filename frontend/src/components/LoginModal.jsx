@@ -169,7 +169,7 @@ function LoginModal({ isOpen, onClose }) {
                             <button onClick={() => fillDemoAndLogin('admin')}>Admin</button>
                             <button onClick={() => fillDemoAndLogin('principal')}>Principal</button>
                             <button onClick={() => fillDemoAndLogin('vice_principal')}>Vice Principal</button>
-                            <button onClick={() => fillDemoAndLogin('hod')}>Dr. Bindu (HOD)</button>
+                            <button onClick={() => fillDemoAndLogin('fac_tirimula')}>Dr. Tirimula Rao (HOD)</button>
                         </div>
                     </div>
 
@@ -180,7 +180,7 @@ function LoginModal({ isOpen, onClose }) {
                             <button onClick={() => fillDemoAndLogin('fac_kiran')}>Kiran</button>
                             <button onClick={() => fillDemoAndLogin('fac_jaya')}>Dr. Jaya</button>
                             <button onClick={() => fillDemoAndLogin('fac_madhavi')}>Dr. Madhavi</button>
-                            <button onClick={() => fillDemoAndLogin('fac_tirimula')}>Dr. Tirimula</button>
+                            <button onClick={() => fillDemoAndLogin('hod')}>Dr. Bindu</button>
                             <button onClick={() => fillDemoAndLogin('fac_anil')}>Mr. Anil</button>
                             <button onClick={() => fillDemoAndLogin('fac_srikanth')}>K. Srikanth</button>
                             <button onClick={() => fillDemoAndLogin('fac_roje')}>R. Roje</button>
