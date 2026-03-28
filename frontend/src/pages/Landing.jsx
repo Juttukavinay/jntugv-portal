@@ -63,11 +63,11 @@ function Landing() {
                 </section>
             </main>
 
-            <footer className="footer-university glass-footer">
-                <div className="footer-grid-univ glass-footer-grid">
+            <footer className="footer-university" style={{ background: '#0b1f38', color: 'white', padding: '4rem 2rem 2rem' }}>
+                <div className="footer-grid-univ" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '3rem', maxWidth: '1200px', margin: '0 auto' }}>
                     <div className="footer-col">
-                        <div className="footer-brand">
-                            <img src="/jntugv-logo.png" alt="Logo" />
+                        <div className="logo-container" style={{ padding: 0, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <img src="/jntugv-logo.png" alt="Logo" style={{ height: '50px' }} />
                             <div className="logo-text-group">
                                 <div className="logo-main" style={{ color: 'white', fontSize: '1.5rem', fontWeight: 800 }}>JNTU-GV</div>
                             </div>
@@ -78,10 +78,10 @@ function Landing() {
                     </div>
                     <div className="footer-col">
                         <h3 style={{ marginBottom: '1.5rem', fontSize: '1.2rem' }}>Quick Navigation</h3>
-                        <ul className="footer-links-univ footer-link-list">
-                            <li><Link to="/login">Student Portal</Link></li>
-                            <li><Link to="/login">Faculty Dashboard</Link></li>
-                            <li><Link to="/departments">Academic Programs</Link></li>
+                        <ul className="footer-links-univ" style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                            <li><Link to="/login" style={{ color: '#aaa', textDecoration: 'none' }}>Student Portal</Link></li>
+                            <li><Link to="/login" style={{ color: '#aaa', textDecoration: 'none' }}>Faculty Dashboard</Link></li>
+                            <li><Link to="/departments" style={{ color: '#aaa', textDecoration: 'none' }}>Academic Programs</Link></li>
                         </ul>
                     </div>
                     <div className="footer-col">
@@ -89,11 +89,11 @@ function Landing() {
                         <p style={{ opacity: 0.7, fontSize: '0.9rem', lineHeight: '1.8' }}>
                             College of Engineering,<br />
                             Vizianagaram, AP - 535003<br />
-                            <span className="footer-email">support@jntugv.edu.in</span>
+                            <span style={{ color: '#3b82f6' }}>support@jntugv.edu.in</span>
                         </p>
                     </div>
                 </div>
-                <div className="footer-bottom-univ" style={{ textAlign: 'center', marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.5)' }}>
+                <div className="footer-bottom-univ" style={{ textAlign: 'center', marginTop: '4rem', paddingTop: '2rem', borderTop: '1px solid rgba(255,255,255,0.1)', color: '#888' }}>
                     <p>&copy; {new Date().getFullYear()} JNTU-GV University. All Rights Reserved. Crafted for Excellence.</p>
                 </div>
             </footer>
