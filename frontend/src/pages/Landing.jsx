@@ -125,14 +125,39 @@ function Landing() {
                             <p>Rigorous curriculum designed to meet global industrial standards and technological advancements.</p>
                         </div>
                         <div className="highlight-block">
+                            <div className="block-icon">🏢</div>
+                            <h3>Modern Infrastructure</h3>
+                            <p>State-of-the-art classrooms, smart theaters, and specialized labs for advanced engineering studies.</p>
+                        </div>
+                        <div className="highlight-block">
                             <div className="block-icon">🧪</div>
-                            <h3>Modern R&D</h3>
-                            <p>Comprehensive research facilities supporting innovation in engineering and applied sciences.</p>
+                            <h3>Innovation Hub</h3>
+                            <p>Foster creativity and entrepreneurship through our dedicated R&D centers and incubation labs.</p>
                         </div>
                         <div className="highlight-block">
                             <div className="block-icon">🎖️</div>
                             <h3>Placement Success</h3>
-                            <p>Strong industry connect and dedicated career support for graduating engineers.</p>
+                            <p>Strong industry connect and dedicated career support for graduating engineers at top global firms.</p>
+                        </div>
+                        <div className="highlight-block">
+                            <div className="block-icon">📚</div>
+                            <h3>Central Library</h3>
+                            <p>Extensive collection of digital and physical resources, journals, and a 24/7 dedicated reading hall.</p>
+                        </div>
+                        <div className="highlight-block">
+                            <div className="block-icon">💡</div>
+                            <h3>Research excellence</h3>
+                            <p>Comprehensive research facilities supporting innovation in engineering and applied sciences.</p>
+                        </div>
+                        <div className="highlight-block">
+                            <div className="block-icon">⚽</div>
+                            <h3>Sports & Wellness</h3>
+                            <p>Full-size athletic facilities, multi-gym, and wellness programs for all-round development.</p>
+                        </div>
+                        <div className="highlight-block">
+                            <div className="block-icon">🌐</div>
+                            <h3>Global Outreach</h3>
+                            <p>Active collaborations with international universities and industries for global exposure.</p>
                         </div>
                     </div>
                 </section>
