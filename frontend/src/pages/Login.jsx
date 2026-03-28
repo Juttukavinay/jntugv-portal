@@ -231,7 +231,7 @@ function Login() {
                             <button onClick={() => fillDemoAndLogin('principal')} className="demo-btn admin">Principal</button>
                             <button onClick={() => fillDemoAndLogin('vice_principal')} className="demo-btn admin">Vice Principal</button>
                             
-                            <button onClick={() => fillDemoAndLogin('hod')} className="demo-btn admin">HOD (Tirumala Rao)</button>
+                            <button onClick={() => fillDemoAndLogin('hod')} className="demo-btn admin">HOD (Dr. Bindu)</button>
                             <button onClick={() => fillDemoAndLogin('fac_sri')} className="demo-btn fac">Sri</button>
                             <button onClick={() => fillDemoAndLogin('fac_kiran')} className="demo-btn fac">Kiran</button>
                             <button onClick={() => fillDemoAndLogin('fac_jaya')} className="demo-btn fac">Dr. Jaya Suma</button>
