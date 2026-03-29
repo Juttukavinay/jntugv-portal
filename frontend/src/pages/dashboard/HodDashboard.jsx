@@ -888,7 +888,12 @@ function AcademicCalendarManager({ showToast, user }) {
                 const deptParam = dept ? `&department=${encodeURIComponent(dept)}` : '';
                 const res = await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(semester)}${deptParam}`);
                 const data = await res.json();
-                const tt = Array.isArray(data) ? data[0] : data;
+                let tt = Array.isArray(data) ? data[0] : data;
+                if (!tt || !Array.isArray(tt.schedule)) {
+                    const fallbackRes = await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(semester)}`);
+                    const fallbackData = await fallbackRes.json();
+                    tt = Array.isArray(fallbackData) ? fallbackData[0] : fallbackData;
+                }
                 if (!tt || !Array.isArray(tt.schedule)) {
                     setTimetableByDay({});
                     return;
@@ -1163,9 +1168,11 @@ function AcademicCalendarManager({ showToast, user }) {
                                 {blocking && !holiday && <div style={{ fontSize: '0.66rem', color: 'var(--primary)', fontWeight: '700' }}>{blocking.description}</div>}
                                 {instruction && !holiday && !blocking && (
                                     <>
-                                        <div style={{ fontSize: '0.66rem', color: 'var(--univ-green)', fontWeight: '700' }}>
-                                            Classes: {classes.length}
-                                        </div>
+                                        {classes.length > 0 && (
+                                            <div style={{ fontSize: '0.66rem', color: 'var(--univ-green)', fontWeight: '700' }}>
+                                                Classes: {classes.length}
+                                            </div>
+                                        )}
                                         {classes.slice(0, 2).map((p, i) => (
                                             <div key={`${p.time}-${i}`} style={{ fontSize: '0.64rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {p.time} {p.subject}
@@ -1274,6 +1281,64 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
         };
         fetchLoad();
     }, [selectedSemester, user.department, timetable?.updatedAt]);
+
+    const slotWindows = [
+        { label: '09:30 - 10:30', start: 570, end: 630 },
+        { label: '10:30 - 11:30', start: 630, end: 690 },
+        { label: '11:30 - 12:30', start: 690, end: 750 },
+        { label: '02:00 - 03:00', start: 840, end: 900 },
+        { label: '03:00 - 04:00', start: 900, end: 960 },
+        { label: '04:00 - 05:00', start: 960, end: 1020 }
+    ];
+
+    const timeToMins = (value) => {
+        const [h, m] = (value || '00:00').trim().split(':').map(Number);
+        return (h || 0) * 60 + (m || 0);
+    };
+
+    const parseRange = (value) => {
+        if (!value) return null;
+        const parts = value.replace(/\s+/g, '').split('-');
+        if (parts.length !== 2) return null;
+        return { start: timeToMins(parts[0]), end: timeToMins(parts[1]) };
+    };
+
+    const getSlotPeriod = (periods, slot) => (
+        (periods || []).find((p) => {
+            if (!p?.time) return false;
+            const range = parseRange(p.time);
+            if (!range) return false;
+            return range.start <= slot.start && range.end >= slot.end;
+        })
+    );
+
+    const renderSlotCell = (day, dayIndex, slot) => {
+        const period = getSlotPeriod(day.periods, slot);
+        if (!period || period.subject === '-' || period.type === 'Free' || period.type === 'Break' || period.type === 'Activity') {
+            return (
+                <div style={{ minHeight: '54px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                    -
+                </div>
+            );
+        }
+        const periodIndex = (day.periods || []).findIndex((p) => p === period);
+        return (
+            <div
+                onClick={() => periodIndex >= 0 && updateCell(dayIndex, periodIndex)}
+                style={{
+                    minHeight: '54px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--border-light)',
+                    padding: '0.4rem 0.45rem',
+                    cursor: 'pointer',
+                    background: period.type === 'Lab' ? 'var(--primary-light)' : 'var(--bg-card)'
+                }}
+            >
+                <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.82rem', lineHeight: 1.2 }}>{period.subject}</div>
+                <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', marginTop: '3px' }}>{period.faculty || 'N/A'}</div>
+            </div>
+        );
+    };
 
     const generateTimetable = async () => {
         setLoading(true)
@@ -1478,15 +1543,39 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                             <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
                                 Instruction days: {semesterLoad.instructionDatesCount}
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.5rem' }}>
-                                {(semesterLoad.subjectStats || []).slice(0, 8).map((s, idx) => (
-                                    <div key={`${s.subject}-${idx}`} style={{ padding: '0.6rem', borderRadius: '10px', background: 'var(--bg-subtle)', border: '1px solid var(--border-light)' }}>
-                                        <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.85rem' }}>{s.subject}</div>
-                                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                                            Weekly: {s.weeklySessions} | Semester: {s.semesterSessions}
-                                        </div>
-                                    </div>
-                                ))}
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="premium-table" style={{ minWidth: '720px' }}>
+                                    <thead>
+                                        <tr>
+                                            <th style={{ textAlign: 'left' }}>Subject</th>
+                                            <th>Weekly</th>
+                                            <th>Semester</th>
+                                            <th>Required</th>
+                                            <th>Gap</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(semesterLoad.subjectStats || []).length > 0 ? (
+                                            (semesterLoad.subjectStats || []).map((s, idx) => (
+                                                <tr key={`${s.subject}-${idx}`}>
+                                                    <td style={{ textAlign: 'left', fontWeight: '700' }}>{s.subject}</td>
+                                                    <td>{s.weeklySessions || 0}</td>
+                                                    <td>{s.semesterSessions || 0}</td>
+                                                    <td>{s.requiredTotalPeriods || 0}</td>
+                                                    <td style={{ fontWeight: '700', color: (s.gapToRequired || 0) === 0 ? 'var(--univ-green)' : 'var(--univ-red)' }}>
+                                                        {s.gapToRequired || 0}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                    No subject analytics available.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     )}
