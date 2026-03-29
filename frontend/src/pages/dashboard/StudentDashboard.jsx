@@ -22,6 +22,8 @@ function StudentDashboard() {
     const navigate = useNavigate()
     const [currentUser, setCurrentUser] = useState(null)
     const [myTimetable, setMyTimetable] = useState([])
+    const [mySubjects, setMySubjects] = useState([])
+    const [attendanceSummary, setAttendanceSummary] = useState({ percentage: 0, total: 0, attended: 0 })
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('overview')
     const [currentClass, setCurrentClass] = useState(null)
@@ -32,10 +34,35 @@ function StudentDashboard() {
         const user = JSON.parse(localStorage.getItem('user')) || { name: 'Student', role: 'student', email: '21131A0501', semester: 'III-B.Tech I Sem' }
         setCurrentUser(user)
         fetchMySchedule(user.semester || 'III-B.Tech I Sem')
+        fetchMySubjects(user.semester || 'III-B.Tech I Sem')
+        fetchMyAttendance(user.email || '21131A0501')
 
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         return () => clearInterval(timer);
     }, [])
+
+    const fetchMySubjects = (semester) => {
+        fetch(`${API_BASE_URL}/api/subjects?semester=${encodeURIComponent(semester)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) setMySubjects(data);
+            })
+            .catch(err => console.error('Error fetching subjects:', err));
+    }
+
+    const fetchMyAttendance = (rollNumber) => {
+        fetch(`${API_BASE_URL}/api/attendance/student/${rollNumber}`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data)) {
+                    const total = data.length;
+                    const attended = data.filter(a => a.status === 'Present').length;
+                    const percentage = total > 0 ? Math.round((attended / total) * 100) : 0;
+                    setAttendanceSummary({ percentage, total, attended });
+                }
+            })
+            .catch(err => console.error('Error fetching attendance:', err));
+    }
 
     useEffect(() => {
         if (myTimetable.length > 0) determineCurrentClass();
@@ -87,16 +114,18 @@ function StudentDashboard() {
         <div className="fade-in-up">
             {loading && <GlobalLoader />}
             <div className="modern-stats-grid" style={{ marginBottom: '2rem' }}>
-                <div className="premium-stat-card" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white' }}>
+                <div className="premium-stat-card" style={{ background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)', color: 'white' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                            <div style={{ opacity: 0.8, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Average Attendance</div>
-                            <div style={{ fontSize: '2.5rem', fontWeight: '800' }}>85%</div>
-                            <div style={{ fontSize: '0.8rem', color: '#4ade80' }}>On Track</div>
+                            <div style={{ opacity: 0.9, fontSize: '0.9rem', marginBottom: '0.5rem' }}>Average Attendance</div>
+                            <div style={{ fontSize: '2.5rem', fontWeight: '800' }}>{attendanceSummary.percentage}%</div>
+                            <div style={{ fontSize: '0.8rem', color: attendanceSummary.percentage >= 75 ? '#ccfbf1' : '#fecaca' }}>
+                                {attendanceSummary.attended} of {attendanceSummary.total} Sessions
+                            </div>
                         </div>
-                        <div style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '50%', background: 'conic-gradient(#3b82f6 85%, rgba(255,255,255,0.1) 0)' }}>
-                            <div style={{ position: 'absolute', inset: '6px', background: '#0f172a', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Icons.Award />
+                        <div style={{ position: 'relative', width: '60px', height: '60px', borderRadius: '50%', background: `conic-gradient(#fff ${attendanceSummary.percentage}%, rgba(255,255,255,0.2) 0)` }}>
+                            <div style={{ position: 'absolute', inset: '6px', background: 'rgba(5, 150, 105, 0.8)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Icons.Check />
                             </div>
                         </div>
                     </div>
@@ -106,14 +135,14 @@ function StudentDashboard() {
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <div className="stat-icon-wrapper stat-blue"><Icons.Clock /></div>
                         <div>
-                            <h5 style={{ margin: 0, color: '#64748b' }}>Current Session</h5>
+                            <h5 style={{ margin: 0, color: '#64748b' }}>Current Class</h5>
                             {currentClass ? (
                                 <div>
                                     <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#0f172a' }}>{currentClass.subject}</div>
-                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{currentClass.room || 'Room 304'}</div>
+                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{currentClass.room || 'Room Assigned'}</div>
                                 </div>
                             ) : (
-                                <div style={{ fontSize: '1rem', fontWeight: '600', color: '#94a3b8' }}>No active class</div>
+                                <div style={{ fontSize: '1rem', fontWeight: '600', color: '#94a3b8' }}>No active session</div>
                             )}
                         </div>
                     </div>
@@ -121,11 +150,11 @@ function StudentDashboard() {
 
                 <div className="premium-stat-card">
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                        <div className="stat-icon-wrapper stat-green"><Icons.Award /></div>
+                        <div className="stat-icon-wrapper stat-purple"><Icons.Award /></div>
                         <div>
-                            <h5 style={{ margin: 0, color: '#64748b' }}>Overall CGPA</h5>
-                            <div style={{ fontSize: '1.8rem', fontWeight: '800', color: '#0f172a' }}>8.4</div>
-                            <span className="badge-role">Good Standing</span>
+                            <h5 style={{ margin: 0, color: '#64748b' }}>Registration No.</h5>
+                            <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>{currentUser?.email || 'N/A'}</div>
+                            <span className="badge-role" style={{ background: '#f3e8ff', color: '#9333ea' }}>{currentUser?.semester || 'Active'}</span>
                         </div>
                     </div>
                 </div>
@@ -133,37 +162,31 @@ function StudentDashboard() {
 
             <div className="glass-table-container">
                 <div className="table-header-premium">
-                    <h3>My Subjects (Current Sem)</h3>
+                    <h3>Registered Subjects ({currentUser?.semester})</h3>
                     <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                        <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
-                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            📤 Upload CSV
-                        </label>
                         <button className="btn-action csv-dl" onClick={() => {
-                            const headers = ['Subject Name', 'Credits'];
-                            const data = [['Data Structures', '3'], ['Cloud Computing', '3'], ['Machine Learning', '3'], ['English', '3']];
-                            exportToCSV(headers, data, 'My_Subjects.csv');
+                            const headers = ['Subject Name', 'Credits', 'Type'];
+                            const data = mySubjects.map(s => [s.courseName, s.credits, s.category]);
+                            exportToCSV(headers, data, 'My_Curriculum.csv');
                         }} title="Export CSV">📄 CSV</button>
-                        <button className="btn-action excel" onClick={() => {
-                            const headers = ['Subject Name', 'Credits'];
-                            const data = [['Data Structures', '3'], ['Cloud Computing', '3'], ['Machine Learning', '3'], ['English', '3']];
-                            exportToCSV(headers, data, 'My_Subjects.csv');
-                        }} title="Export Excel">📊 Excel</button>
-                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
                     </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', padding: '1rem' }}>
-                    {['Data Structures', 'Cloud Computing', 'Machine Learning', 'English'].map((s, i) => (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', padding: '1rem' }}>
+                    {mySubjects.length > 0 ? mySubjects.map((s, i) => (
                         <div key={i} style={{ padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: ['#eff6ff', '#f0fdf4', '#fff7ed', '#f3e8ff'][i], color: ['#3b82f6', '#16a34a', '#ea580c', '#9333ea'][i], display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                                {s.charAt(0)}
+                            <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                {s.courseName?.charAt(0)}
                             </div>
                             <div>
-                                <div style={{ fontWeight: '600', color: '#1e293b' }}>{s}</div>
-                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>3 Credits</div>
+                                <div style={{ fontWeight: '600', color: '#1e293b' }}>{s.courseName}</div>
+                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{s.credits} Credits • {s.category}</div>
                             </div>
                         </div>
-                    ))}
+                    )) : (
+                        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>
+                            No subjects registered for this semester yet.
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -177,10 +200,6 @@ function StudentDashboard() {
                     <span className="badge-role" style={{ background: '#eff6ff', color: '#3b82f6' }}>{currentUser?.semester}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
-                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            📤 Upload CSV
-                        </label>
                         <button className="btn-action csv-dl" onClick={() => {
                         if (!myTimetable.length) return;
                         const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
@@ -232,63 +251,6 @@ function StudentDashboard() {
         </div>
     )
 
-    const ResultsTab = () => (
-        <div className="glass-table-container fade-in-up">
-            <div className="table-header-premium">
-                <h3>Exam Results</h3>
-            </div>
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📊</div>
-                <p>No results have been published for the current semester yet.</p>
-                <button className="btn-action primary" style={{ marginTop: '1rem' }}>View History</button>
-            </div>
-        </div>
-    )
-
-    const LibraryTab = () => (
-        <div className="glass-table-container fade-in-up">
-            <div className="table-header-premium">
-                <h3>Library Books</h3>
-                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
-                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            📤 Upload CSV
-                        </label>
-                        <button className="btn-action csv-dl" onClick={() => {
-                        const headers = ['Book Title', 'Author', 'Due Date', 'Status'];
-                        const data = [['Intro to Algorithms', 'Cormen', '25 Jan 2026', 'Due Soon'], ['Clean Code', 'Uncle Bob', '02 Feb 2026', 'Borrowed']];
-                        exportToCSV(headers, data, 'Library_Records.csv');
-                    }} title="Export CSV">📄 CSV</button>
-                        <button className="btn-action excel" onClick={() => {
-                        const headers = ['Book Title', 'Author', 'Due Date', 'Status'];
-                        const data = [['Intro to Algorithms', 'Cormen', '25 Jan 2026', 'Due Soon'], ['Clean Code', 'Uncle Bob', '02 Feb 2026', 'Borrowed']];
-                        exportToCSV(headers, data, 'Library_Records.csv');
-                    }} title="Export Excel">📊 Excel</button>
-                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
-                    <button className="btn-action primary">+ Request Book</button>
-                </div>
-            </div>
-            <div style={{ overflowX: 'auto' }}>
-                <table className="premium-table">
-                    <thead><tr><th>Book Title</th><th>Author</th><th>Due Date</th><th>Status</th></tr></thead>
-                    <tbody>
-                        <tr>
-                            <td style={{ fontWeight: '600' }}>Into to Algorithms</td>
-                            <td>Cormen</td>
-                            <td>25 Jan 2026</td>
-                            <td><span className="badge-role" style={{ background: '#fef3c7', color: '#d97706' }}>Due Soon</span></td>
-                        </tr>
-                        <tr>
-                            <td>Clean Code</td>
-                            <td>Uncle Bob</td>
-                            <td>02 Feb 2026</td>
-                            <td><span className="badge-role" style={{ background: '#dcfce7', color: '#16a34a' }}>Borrowed</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    )
 
     const AttendanceTab = () => {
         const [attendanceData, setAttendanceData] = useState([]);
@@ -403,10 +365,7 @@ function StudentDashboard() {
 
     const renderContent = () => {
         switch (activeTab) {
-            case 'timetable': return <TimetableTab />;
             case 'attendance': return <AttendanceTab />;
-            case 'results': return <ResultsTab />;
-            case 'library': return <LibraryTab />;
             case 'notices': return <CommunicationCenter user={currentUser} showToast={showToast} />;
             default: return <OverviewTab />;
         }
@@ -428,8 +387,6 @@ function StudentDashboard() {
                     <NavItem icon={<Icons.Home />} label="Overview" active={activeTab === 'overview'} onClick={() => { setActiveTab('overview'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Calendar />} label="My Timetable" active={activeTab === 'timetable'} onClick={() => { setActiveTab('timetable'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Check />} label="Attendance" active={activeTab === 'attendance'} onClick={() => { setActiveTab('attendance'); setMobileMenuOpen(false); }} />
-                    <NavItem icon={<Icons.Award />} label="Exam Results" active={activeTab === 'results'} onClick={() => { setActiveTab('results'); setMobileMenuOpen(false); }} />
-                    <NavItem icon={<Icons.Book />} label="Library Books" active={activeTab === 'library'} onClick={() => { setActiveTab('library'); setMobileMenuOpen(false); }} />
                     <NavItem icon={<Icons.Mail />} label="Notices" active={activeTab === 'notices'} onClick={() => { setActiveTab('notices'); setMobileMenuOpen(false); }} />
                 </nav>
 
@@ -465,8 +422,7 @@ function StudentDashboard() {
                             <h1 className="title-gradient" style={{ fontSize: '1.8rem', margin: '0 0 0.5rem 0' }}>
                                 {activeTab === 'overview' ? 'Hello, Student 👋' :
                                     activeTab === 'timetable' ? 'Your Schedule' :
-                                        activeTab === 'attendance' ? 'Attendance Overview' :
-                                            activeTab === 'results' ? 'Your Results' : 'Library'}
+                                        activeTab === 'attendance' ? 'Attendance Overview' : 'Notices'}
                             </h1>
                             <p style={{ color: '#64748b', margin: 0 }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                         </div>
