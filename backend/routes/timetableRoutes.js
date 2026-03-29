@@ -4,6 +4,7 @@ const Timetable = require('../models/timetableModel');
 const Subject = require('../models/subjectModel');
 const Faculty = require('../models/facultyModel');
 const Room = require('../models/roomModel');
+const AcademicCalendar = require('../models/academicCalendarModel');
 const { generateTimetableWithAI } = require('../services/geminiService');
 
 // GET
@@ -911,6 +912,156 @@ router.get('/workload', async (req, res) => {
 
         res.json(workloadResults);
     } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// GET SUBJECT LOAD ANALYTICS (semester period count based on academic calendar dates)
+router.get('/analytics/subject-load', async (req, res) => {
+    try {
+        const { semester, department } = req.query;
+        if (!semester) return res.status(400).json({ message: 'semester is required' });
+
+        const ttQuery = { className: semester };
+        if (department) ttQuery.department = department;
+
+        let timetable = await Timetable.findOne(ttQuery);
+        if (!timetable) timetable = await Timetable.findOne({ className: semester });
+        if (!timetable) return res.status(404).json({ message: `No timetable found for ${semester}` });
+
+        let calendar = await AcademicCalendar.findOne({
+            semester,
+            ...(department ? { department } : {})
+        });
+        if (!calendar && department) {
+            calendar = await AcademicCalendar.findOne({ semester });
+        }
+        if (!calendar) {
+            return res.status(404).json({ message: `No academic calendar found for ${semester}` });
+        }
+
+        const instructionEntries = (calendar.entries || [])
+            .filter((e) => {
+                const category = (e.category || '').toLowerCase();
+                const desc = (e.description || '').toLowerCase();
+                return category === 'instruction' || desc.includes('instruction period') || desc.includes('spell of instruction');
+            })
+            .sort((a, b) => new Date(a.fromDate) - new Date(b.fromDate));
+
+        if (instructionEntries.length === 0) {
+            return res.status(400).json({ message: 'Calendar has no instruction periods to compute load.' });
+        }
+
+        const holidayRanges = (calendar.holidays || []).map((h) => ({
+            from: new Date(h.fromDate),
+            to: new Date(h.toDate)
+        }));
+
+        const scheduleByDay = {};
+        (timetable.schedule || []).forEach((d) => {
+            scheduleByDay[d.day] = d.periods || [];
+        });
+
+        const weekdayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        const isWithinAnyRange = (date, ranges) =>
+            ranges.some((r) => date >= r.from && date <= r.to);
+
+        const subjectMap = {};
+        let instructionDatesCount = 0;
+
+        instructionEntries.forEach((entry) => {
+            const start = new Date(entry.fromDate);
+            const end = new Date(entry.toDate);
+            start.setHours(0, 0, 0, 0);
+            end.setHours(0, 0, 0, 0);
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const dayClone = new Date(d);
+                dayClone.setHours(0, 0, 0, 0);
+
+                if (isWithinAnyRange(dayClone, holidayRanges)) continue;
+
+                const dayLabel = weekdayName[dayClone.getDay()];
+                const periods = scheduleByDay[dayLabel] || [];
+                instructionDatesCount += 1;
+
+                periods.forEach((p) => {
+                    const subject = (p.subject || '').trim();
+                    const type = (p.type || '').toLowerCase();
+                    if (!subject || subject === '-' || subject === 'LUNCH BREAK') return;
+                    if (type === 'free' || type === 'break' || type === 'activity') return;
+
+                    const key = subject;
+                    if (!subjectMap[key]) {
+                        subjectMap[key] = {
+                            subject,
+                            semesterSessions: 0,
+                            semesterHours: 0,
+                            weeklySessions: 0,
+                            weeklyHours: 0
+                        };
+                    }
+
+                    subjectMap[key].semesterSessions += 1;
+                    subjectMap[key].semesterHours += Number(p.credits) || 1;
+                });
+            }
+        });
+
+        // Weekly summary from a single timetable week
+        Object.values(scheduleByDay).forEach((periods) => {
+            (periods || []).forEach((p) => {
+                const subject = (p.subject || '').trim();
+                const type = (p.type || '').toLowerCase();
+                if (!subject || subject === '-' || subject === 'LUNCH BREAK') return;
+                if (type === 'free' || type === 'break' || type === 'activity') return;
+                if (!subjectMap[subject]) {
+                    subjectMap[subject] = {
+                        subject,
+                        semesterSessions: 0,
+                        semesterHours: 0,
+                        weeklySessions: 0,
+                        weeklyHours: 0
+                    };
+                }
+                subjectMap[subject].weeklySessions += 1;
+                subjectMap[subject].weeklyHours += Number(p.credits) || 1;
+            });
+        });
+
+        const dbSubjects = await Subject.find({ semester });
+        const expectedByName = {};
+        dbSubjects.forEach((s) => {
+            expectedByName[s.courseName] = {
+                expectedWeeklyHours: (Number(s.L) || 0) + (Number(s.T) || 0) + (Number(s.P) || 0),
+                l: Number(s.L) || 0,
+                t: Number(s.T) || 0,
+                p: Number(s.P) || 0
+            };
+        });
+
+        const subjectStats = Object.values(subjectMap)
+            .map((row) => ({
+                ...row,
+                ...(expectedByName[row.subject] || { expectedWeeklyHours: null, l: null, t: null, p: null })
+            }))
+            .sort((a, b) => b.semesterSessions - a.semesterSessions);
+
+        res.json({
+            semester,
+            department: timetable.department,
+            instructionRanges: instructionEntries.map((e) => ({
+                description: e.description,
+                fromDate: e.fromDate,
+                toDate: e.toDate
+            })),
+            instructionDatesCount,
+            holidayCount: holidayRanges.length,
+            subjectStats
+        });
+    } catch (e) {
+        console.error(e);
         res.status(500).json({ message: e.message });
     }
 });

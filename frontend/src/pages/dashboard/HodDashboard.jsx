@@ -91,6 +91,7 @@ function HodDashboard() {
             case 'students': return <StudentManager showToast={showToast} user={user} />;
             case 'faculty': return <FacultyManager showToast={showToast} user={user} />;
             case 'timetable': return <TimetableManager showToast={showToast} allFaculty={allFaculty} allRooms={allRooms} user={user} />;
+            case 'academicCalendar': return <AcademicCalendarManager showToast={showToast} user={user} />;
             case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} user={user} />;
             case 'infrastructure': return <InfrastructureManager user={user} showToast={showToast} />;
             case 'leaves': return <LeaveApprovals user={user} showToast={showToast} allFaculty={allFaculty} />;
@@ -134,6 +135,7 @@ function HodDashboard() {
                 <nav className="nav-menu">
                     <NavItem icon={<Icons.Home />} label="Overview" active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} />
                     <NavItem icon={<Icons.Calendar />} label="Timetable Mgr" active={activeTab === 'timetable'} onClick={() => setActiveTab('timetable')} />
+                    <NavItem icon={<Icons.Calendar />} label="Academic Calendar" active={activeTab === 'academicCalendar'} onClick={() => setActiveTab('academicCalendar')} />
                     <NavItem icon={<Icons.Calendar />} label="Leave Approvals" active={activeTab === 'leaves'} onClick={() => setActiveTab('leaves')} />
                     <NavItem icon={<Icons.Users />} label="Faculty Mgmt" active={activeTab === 'faculty'} onClick={() => setActiveTab('faculty')} />
                     <NavItem icon={<Icons.GradCap />} label="Students" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
@@ -803,6 +805,254 @@ function FacultyManager({ showToast, user }) {
         </>
     );
 }
+function AcademicCalendarManager({ showToast, user }) {
+    const semesterOptions = [
+        'I-B.Tech I Sem', 'I-B.Tech II Sem', 'II-B.Tech I Sem', 'II-B.Tech II Sem',
+        'III-B.Tech I Sem', 'III-B.Tech II Sem', 'IV-B.Tech I Sem', 'IV-B.Tech II Sem',
+        'I-M.Tech I Sem', 'I-M.Tech II Sem', 'I-MCA I Sem', 'I-MCA II Sem', 'II-MCA I Sem', 'II-MCA II Sem'
+    ];
+
+    const [semester, setSemester] = useState('I-B.Tech I Sem');
+    const [academicYear, setAcademicYear] = useState('2025-26');
+    const [title, setTitle] = useState('Academic Calendar');
+    const [notes, setNotes] = useState('');
+    const [entries, setEntries] = useState([
+        { description: 'Induction Programme (Zero Semester)', fromDate: '', toDate: '', weeksLabel: '', category: 'induction' },
+        { description: 'Instruction Period', fromDate: '', toDate: '', weeksLabel: '18W', category: 'instruction' },
+        { description: 'I Mid Examination', fromDate: '', toDate: '', weeksLabel: '3 days', category: 'exam' },
+        { description: 'II Mid Examination', fromDate: '', toDate: '', weeksLabel: '3 days', category: 'exam' },
+        { description: 'Preparation & Practicals', fromDate: '', toDate: '', weeksLabel: '1W', category: 'practicals' },
+        { description: 'End Examination', fromDate: '', toDate: '', weeksLabel: '2W', category: 'exam' }
+    ]);
+    const [holidays, setHolidays] = useState([
+        { description: 'Dussehra Holidays', fromDate: '', toDate: '' },
+        { description: 'Pongal Holidays', fromDate: '', toDate: '' }
+    ]);
+    const [loading, setLoading] = useState(false);
+    const [analytics, setAnalytics] = useState(null);
+    const dept = user?.department || 'IT';
+
+    const updateEntry = (idx, field, value) => {
+        setEntries(prev => prev.map((row, i) => i === idx ? { ...row, [field]: value } : row));
+    };
+
+    const updateHoliday = (idx, field, value) => {
+        setHolidays(prev => prev.map((row, i) => i === idx ? { ...row, [field]: value } : row));
+    };
+
+    const loadCalendar = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await fetch(`${API_BASE_URL}/api/academic-calendar?semester=${encodeURIComponent(semester)}&department=${encodeURIComponent(dept)}`);
+            if (!res.ok) {
+                setLoading(false);
+                return;
+            }
+            const data = await res.json();
+            setTitle(data.title || 'Academic Calendar');
+            setAcademicYear(data.academicYear || '2025-26');
+            setNotes(data.notes || '');
+            setEntries((data.entries || []).map(e => ({
+                description: e.description || '',
+                fromDate: (e.fromDate || '').toString().slice(0, 10),
+                toDate: (e.toDate || '').toString().slice(0, 10),
+                weeksLabel: e.weeksLabel || '',
+                category: e.category || 'other'
+            })));
+            setHolidays((data.holidays || []).map(h => ({
+                description: h.description || '',
+                fromDate: (h.fromDate || '').toString().slice(0, 10),
+                toDate: (h.toDate || '').toString().slice(0, 10)
+            })));
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setLoading(false);
+        }
+    }, [semester, dept]);
+
+    useEffect(() => {
+        loadCalendar();
+        setAnalytics(null);
+    }, [loadCalendar]);
+
+    const saveCalendar = async () => {
+        try {
+            const validEntries = entries.filter(e => e.description && e.fromDate && e.toDate);
+            if (validEntries.length === 0) {
+                showToast('Please add at least one valid calendar row', 'error');
+                return;
+            }
+
+            const res = await fetch(`${API_BASE_URL}/api/academic-calendar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    semester,
+                    department: dept,
+                    title,
+                    academicYear,
+                    notes,
+                    entries: validEntries,
+                    holidays: holidays.filter(h => h.description && h.fromDate && h.toDate)
+                })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                showToast('Academic calendar saved successfully');
+                loadCalendar();
+            } else {
+                showToast(data.message || 'Failed to save calendar', 'error');
+            }
+        } catch (e) {
+            console.error(e);
+            showToast('Failed to save calendar', 'error');
+        }
+    };
+
+    const calculatePeriodLoads = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/timetables/analytics/subject-load?semester=${encodeURIComponent(semester)}&department=${encodeURIComponent(dept)}`);
+            const data = await res.json();
+            if (!res.ok) {
+                showToast(data.message || 'Unable to calculate period load', 'error');
+                return;
+            }
+            setAnalytics(data);
+            showToast('Semester period count calculated from calendar');
+        } catch (e) {
+            console.error(e);
+            showToast('Unable to calculate period load', 'error');
+        }
+    };
+
+    return (
+        <div className="glass-table-container">
+            <div className="table-header-premium" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <div>
+                    <h3 style={{ margin: 0 }}>Academic Calendar</h3>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>Configure semester date ranges and drive timetable period analytics.</div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <button className="btn-action" onClick={loadCalendar}>{loading ? 'Loading...' : 'Reload'}</button>
+                    <button className="btn-action primary" onClick={saveCalendar}>Save Calendar</button>
+                    <button className="btn-action" onClick={calculatePeriodLoads}>Calculate Subject Loads</button>
+                </div>
+            </div>
+
+            <div style={{ padding: '1.25rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                <div>
+                    <label className="input-label">Semester</label>
+                    <select className="search-input-premium" value={semester} onChange={(e) => setSemester(e.target.value)} style={{ width: '100%' }}>
+                        {semesterOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <label className="input-label">Academic Year</label>
+                    <input className="search-input-premium" value={academicYear} onChange={(e) => setAcademicYear(e.target.value)} />
+                </div>
+                <div>
+                    <label className="input-label">Title</label>
+                    <input className="search-input-premium" value={title} onChange={(e) => setTitle(e.target.value)} />
+                </div>
+            </div>
+
+            <div style={{ padding: '0 1.25rem 1.25rem 1.25rem' }}>
+                <h4 style={{ margin: '0 0 0.75rem 0' }}>Main Calendar Rows</h4>
+                <table className="premium-table">
+                    <thead>
+                        <tr>
+                            <th>Description</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Weeks/Days</th>
+                            <th>Category</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {entries.map((row, idx) => (
+                            <tr key={idx}>
+                                <td><input className="search-input-premium" value={row.description} onChange={(e) => updateEntry(idx, 'description', e.target.value)} /></td>
+                                <td><input type="date" className="search-input-premium" value={row.fromDate} onChange={(e) => updateEntry(idx, 'fromDate', e.target.value)} /></td>
+                                <td><input type="date" className="search-input-premium" value={row.toDate} onChange={(e) => updateEntry(idx, 'toDate', e.target.value)} /></td>
+                                <td><input className="search-input-premium" value={row.weeksLabel} onChange={(e) => updateEntry(idx, 'weeksLabel', e.target.value)} /></td>
+                                <td>
+                                    <select className="search-input-premium" value={row.category} onChange={(e) => updateEntry(idx, 'category', e.target.value)}>
+                                        <option value="instruction">Instruction</option>
+                                        <option value="exam">Exam</option>
+                                        <option value="practicals">Practicals</option>
+                                        <option value="vacation">Vacation</option>
+                                        <option value="induction">Induction</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <div style={{ marginTop: '0.75rem' }}>
+                    <button className="btn-action" onClick={() => setEntries(prev => [...prev, { description: '', fromDate: '', toDate: '', weeksLabel: '', category: 'other' }])}>+ Add Row</button>
+                </div>
+            </div>
+
+            <div style={{ padding: '0 1.25rem 1.25rem 1.25rem' }}>
+                <h4 style={{ margin: '0 0 0.75rem 0' }}>Holiday Ranges</h4>
+                <table className="premium-table">
+                    <thead><tr><th>Description</th><th>From</th><th>To</th></tr></thead>
+                    <tbody>
+                        {holidays.map((h, idx) => (
+                            <tr key={idx}>
+                                <td><input className="search-input-premium" value={h.description} onChange={(e) => updateHoliday(idx, 'description', e.target.value)} /></td>
+                                <td><input type="date" className="search-input-premium" value={h.fromDate} onChange={(e) => updateHoliday(idx, 'fromDate', e.target.value)} /></td>
+                                <td><input type="date" className="search-input-premium" value={h.toDate} onChange={(e) => updateHoliday(idx, 'toDate', e.target.value)} /></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <div style={{ marginTop: '0.75rem' }}>
+                    <button className="btn-action" onClick={() => setHolidays(prev => [...prev, { description: '', fromDate: '', toDate: '' }])}>+ Add Holiday</button>
+                </div>
+            </div>
+
+            <div style={{ padding: '0 1.25rem 1.25rem 1.25rem' }}>
+                <label className="input-label">Notes</label>
+                <textarea className="search-input-premium" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} style={{ width: '100%' }} />
+            </div>
+
+            {analytics && (
+                <div style={{ padding: '0 1.25rem 1.25rem 1.25rem' }}>
+                    <h4 style={{ margin: '0 0 0.75rem 0' }}>Computed Subject Period Counts ({analytics.semester})</h4>
+                    <div style={{ marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>
+                        Instruction Days Counted: <strong>{analytics.instructionDatesCount}</strong>
+                    </div>
+                    <table className="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Weekly Sessions</th>
+                                <th>Semester Sessions</th>
+                                <th>Weekly Hours</th>
+                                <th>Semester Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(analytics.subjectStats || []).map((s, i) => (
+                                <tr key={`${s.subject}-${i}`}>
+                                    <td>{s.subject}</td>
+                                    <td>{s.weeklySessions}</td>
+                                    <td>{s.semesterSessions}</td>
+                                    <td>{s.weeklyHours}</td>
+                                    <td>{s.semesterHours}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </div>
+    );
+}
+
 function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     const [timetable, setTimetable] = useState(null)
     const [loading, setLoading] = useState(false)
@@ -815,6 +1065,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [bookingSlot, setBookingSlot] = useState(null);
     const [aiReport, setAiReport] = useState(null);
+    const [semesterLoad, setSemesterLoad] = useState(null);
 
     useEffect(() => {
         if (activeCourse === 'B.Tech') setSelectedSemester('I-B.Tech I Sem');
@@ -836,6 +1087,25 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     }, [selectedSemester, user.department])
 
     useEffect(() => { fetchTimetable() }, [fetchTimetable]);
+
+    useEffect(() => {
+        const fetchLoad = async () => {
+            try {
+                const deptParam = user.department ? `&department=${encodeURIComponent(user.department)}` : '';
+                const res = await fetch(`${API_BASE_URL}/api/timetables/analytics/subject-load?semester=${encodeURIComponent(selectedSemester)}${deptParam}`);
+                if (!res.ok) {
+                    setSemesterLoad(null);
+                    return;
+                }
+                const data = await res.json();
+                setSemesterLoad(data);
+            } catch (e) {
+                console.error(e);
+                setSemesterLoad(null);
+            }
+        };
+        fetchLoad();
+    }, [selectedSemester, user.department, timetable?.updatedAt]);
 
     const generateTimetable = async () => {
         setLoading(true)
@@ -1032,6 +1302,26 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
 
                 <div style={{ overflowX: 'auto', marginTop: '1rem' }}>
                     <AIReportCard report={aiReport} onClear={() => setAiReport(null)} />
+                    {semesterLoad && (
+                        <div className="glass-panel" style={{ margin: '0 1rem 1rem 1rem', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-card)' }}>
+                            <div style={{ fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                                Calendar-Aligned Subject Period Counts
+                            </div>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                                Instruction days: {semesterLoad.instructionDatesCount}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.5rem' }}>
+                                {(semesterLoad.subjectStats || []).slice(0, 8).map((s, idx) => (
+                                    <div key={`${s.subject}-${idx}`} style={{ padding: '0.6rem', borderRadius: '10px', background: 'var(--bg-subtle)', border: '1px solid var(--border-light)' }}>
+                                        <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.85rem' }}>{s.subject}</div>
+                                        <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+                                            Weekly: {s.weeklySessions} | Semester: {s.semesterSessions}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                     {timetable ? (
                         <table className="premium-table" style={{ textAlign: 'center', minWidth: '1200px' }}>
                             <thead><tr><th>Day</th><th>09:30-10:30</th><th>10:30-11:30</th><th>11:30-12:30</th><th style={{ background: '#f8fafc' }}>Lunch</th><th>02:00-03:00</th><th>03:00-04:00</th><th>04:00-05:00</th></tr></thead>
