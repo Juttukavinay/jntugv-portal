@@ -377,7 +377,7 @@ function DashboardOverview({ onNavigate }) {
                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>2 HOD positions pending review</div>
                                 </div>
                             </div>
-                            <button className="btn-action" style={{ fontSize: '0.75rem', padding: '4px 12px' }}>Check Now</button>
+                            <button className="btn-action" style={{ fontSize: '0.75rem', padding: '4px 12px' }} onClick={() => onNavigate('departments')}>Check Now</button>
                         </div>
                     </div>
                 </div>
@@ -581,7 +581,7 @@ function DepartmentPanel({ showToast }) {
                     <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Add Department</h3>
-                            <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
+                            <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>X</button>
                         </div>
                         <form onSubmit={handleAddDept}>
                             <div className="input-group">
@@ -741,7 +741,7 @@ function StudentDirectory({ showToast }) {
                     <div className="modal-content glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Add New Student</h3>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
+                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>X</button>
                         </div>
                         <AddStudentForm onSubmit={handleAddStudent} onCancel={() => setShowModal(false)} />
                     </div>
@@ -951,7 +951,7 @@ function FacultyDirectory({ showToast }) {
                     <div className="modal-content glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Add New Faculty</h3>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
+                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>X</button>
                         </div>
                         <AddFacultyForm onSubmit={handleAddFaculty} onCancel={() => setShowModal(false)} />
                     </div>
@@ -963,7 +963,7 @@ function FacultyDirectory({ showToast }) {
                     <div className="modal-content glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Edit Faculty: {editingFaculty.name}</h3>
-                            <button onClick={() => setEditingFaculty(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
+                            <button onClick={() => setEditingFaculty(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>X</button>
                         </div>
                         <AddFacultyForm 
                             initialData={editingFaculty} 
@@ -1382,7 +1382,21 @@ function TimetableView() {
                         {viewMode === 'class' ? 'Select a different semester or course.' : `This advanced cross-section view is generating based on active ${viewMode} allocations.`}
                     </p>
                     {viewMode !== 'class' && (
-                        <button className="btn-action primary" style={{ marginTop: '1.5rem' }}>Download Global XLS</button>
+                        <button
+                            className="btn-action primary"
+                            style={{ marginTop: '1.5rem' }}
+                            onClick={() => {
+                                if (!timetable || !timetable.schedule) return;
+                                const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
+                                const data = timetable.schedule.map(d => [
+                                    d.day,
+                                    ...d.periods.map(p => `${p.subject} (${p.faculty || 'Unassigned'})`)
+                                ]);
+                                exportToCSV(headers, data, `Global_Timetable_${viewMode}_${sem}.csv`);
+                            }}
+                        >
+                            Download Global XLS
+                        </button>
                     )}
                 </div>
             )}
@@ -1809,7 +1823,7 @@ function AttendanceManager() {
                                     Faculty: {viewingRecord.facultyName}
                                 </p>
                             </div>
-                            <button onClick={() => setViewingRecord(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
+                            <button onClick={() => setViewingRecord(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>X</button>
                         </div>
                         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                             <table className="premium-table">

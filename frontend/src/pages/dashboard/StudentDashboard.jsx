@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import API_BASE_URL from '../../config'
 import { useNavigate } from 'react-router-dom'
 import '../../App.css'
+import './PrincipalDashboard.css'
 import GlobalLoader from '../../components/GlobalLoader'
 import CommunicationCenter from '../../components/CommunicationCenter'
 import { exportToCSV } from '../../utils/exportUtils'
@@ -138,11 +139,11 @@ function StudentDashboard() {
                             <h5 style={{ margin: 0, color: '#64748b' }}>Current Class</h5>
                             {currentClass ? (
                                 <div>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#0f172a' }}>{currentClass.subject}</div>
-                                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{currentClass.room || 'Room Assigned'}</div>
+                                    <div style={{ fontSize: '1.2rem', fontWeight: '700', color: 'var(--text-primary)' }}>{currentClass.subject}</div>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{currentClass.room || 'Room Assigned'}</div>
                                 </div>
                             ) : (
-                                <div style={{ fontSize: '1rem', fontWeight: '600', color: '#94a3b8' }}>No active session</div>
+                                <div style={{ fontSize: '1rem', fontWeight: '600', color: 'var(--text-muted)' }}>No active session</div>
                             )}
                         </div>
                     </div>
@@ -152,9 +153,9 @@ function StudentDashboard() {
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <div className="stat-icon-wrapper stat-purple"><Icons.Award /></div>
                         <div>
-                            <h5 style={{ margin: 0, color: '#64748b' }}>Registration No.</h5>
-                            <div style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>{currentUser?.email || 'N/A'}</div>
-                            <span className="badge-role" style={{ background: '#f3e8ff', color: '#9333ea' }}>{currentUser?.semester || 'Active'}</span>
+                            <h5 style={{ margin: 0, color: 'var(--text-secondary)' }}>Registration No.</h5>
+                            <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>{currentUser?.email || 'N/A'}</div>
+                            <span className="badge-role" style={{ background: 'var(--brand-purple)', color: 'white' }}>{currentUser?.semester || 'Active'}</span>
                         </div>
                     </div>
                 </div>
@@ -173,13 +174,13 @@ function StudentDashboard() {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', padding: '1rem' }}>
                     {mySubjects.length > 0 ? mySubjects.map((s, i) => (
-                        <div key={i} style={{ padding: '1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                        <div key={i} style={{ padding: '1rem', background: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--primary-light)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
                                 {s.courseName?.charAt(0)}
                             </div>
                             <div>
-                                <div style={{ fontWeight: '600', color: '#1e293b' }}>{s.courseName}</div>
-                                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{s.credits} Credits • {s.category}</div>
+                                <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{s.courseName}</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{s.credits} Credits • {s.category}</div>
                             </div>
                         </div>
                     )) : (
@@ -197,7 +198,7 @@ function StudentDashboard() {
             <div className="table-header-premium">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <h3>Weekly Class Schedule</h3>
-                    <span className="badge-role" style={{ background: '#eff6ff', color: '#3b82f6' }}>{currentUser?.semester}</span>
+                    <span className="badge-role" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>{currentUser?.semester}</span>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                         <button className="btn-action csv-dl" onClick={() => {
@@ -227,18 +228,18 @@ function StudentDashboard() {
                         <tbody>
                             {myTimetable.map((day, i) => (
                                 <tr key={i}>
-                                    <td style={{ fontWeight: '700', color: '#0f172a' }}>{day.day}</td>
+                                    <td style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{day.day}</td>
                                     {day.periods.map((p, j) => (
                                         <td key={j}>
                                             <div style={{
-                                                background: p.type === 'Lab' ? '#eff6ff' : '#fff',
+                                                background: p.type === 'Lab' ? 'var(--bg-subtle)' : 'var(--bg-input)',
                                                 padding: '8px',
                                                 borderRadius: '6px',
-                                                border: p.type === 'Lab' ? '1px solid #bfdbfe' : '1px solid #f1f5f9',
+                                                border: p.type === 'Lab' ? '1px solid var(--primary-light)' : '1px solid var(--border-light)',
                                                 fontSize: '0.85rem'
                                             }}>
-                                                <div style={{ fontWeight: '600', color: '#1e293b', marginBottom: '2px' }}>{p.subject}</div>
-                                                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{p.room || (p.wing ? `📍 ${p.wing}` : 'Room 101')}</div>
+                                                <div style={{ fontWeight: '600', color: 'var(--text-primary)', marginBottom: '2px' }}>{p.subject}</div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{p.room || (p.wing ? `📍 ${p.wing}` : 'Room 101')}</div>
                                             </div>
                                         </td>
                                     ))}
@@ -291,14 +292,14 @@ function StudentDashboard() {
                         </div>
                     </div>
                     <div className="premium-stat-card">
-                        <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Total Sessions</div>
+                        <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Total Sessions</div>
                         <h3>{total}</h3>
-                        <div style={{ color: '#10b981', fontSize: '0.85rem' }}>{present} Attended</div>
+                        <div style={{ color: 'var(--univ-green)', fontSize: '0.85rem' }}>{present} Attended</div>
                     </div>
                     <div className="premium-stat-card">
-                        <div style={{ fontSize: '0.9rem', color: '#64748b' }}>Absences</div>
+                        <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Absences</div>
                         <h3>{total - present}</h3>
-                        <div style={{ color: '#ef4444', fontSize: '0.85rem' }}>Missed Classes</div>
+                        <div style={{ color: 'var(--univ-red)', fontSize: '0.85rem' }}>Missed Classes</div>
                     </div>
                 </div>
 
@@ -334,7 +335,7 @@ function StudentDashboard() {
                                             <td style={{ fontWeight: '600' }}>{record.date}</td>
                                             <td>{record.subject}</td>
                                             <td>{record.facultyName}</td>
-                                            <td style={{ color: '#64748b', fontSize: '0.85rem' }}>{record.periodTime}</td>
+                                            <td style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{record.periodTime}</td>
                                             <td>
                                                 <span className="badge-role" style={{ 
                                                     background: record.status === 'Present' ? '#dcfce7' : '#fef2f2', 
@@ -372,7 +373,7 @@ function StudentDashboard() {
     }
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container principal-dashboard">
             {/* Sidebar */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
@@ -410,10 +411,10 @@ function StudentDashboard() {
             {/* Main Content */}
             <main className="dashboard-main-area">
                 <header className="mobile-header">
-                    <button onClick={() => setMobileMenuOpen(true)} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    <button onClick={() => setMobileMenuOpen(true)} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: '8px', padding: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                     </button>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Student Dashboard</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Student Dashboard</span>
                 </header>
 
                 <div className="fade-in-up">
@@ -424,9 +425,9 @@ function StudentDashboard() {
                                     activeTab === 'timetable' ? 'Your Schedule' :
                                         activeTab === 'attendance' ? 'Attendance Overview' : 'Notices'}
                             </h1>
-                            <p style={{ color: '#64748b', margin: 0 }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+                            <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
                         </div>
-                        <div style={{ background: 'white', padding: '10px', borderRadius: '50%', boxShadow: '0 2px 10px rgba(0,0,0,0.05)' }}>🔔</div>
+                        <div style={{ background: 'var(--bg-card)', padding: '10px', borderRadius: '50%', boxShadow: 'var(--shadow-sm)', border: '1px solid var(--border-light)' }}>🔔</div>
                     </div>
                     {renderContent()}
                 </div>
@@ -435,15 +436,17 @@ function StudentDashboard() {
             {/* Toast Notification */}
             {toast.show && (
                 <div className="toast-notification fade-in-up" style={{
-                    position: 'fixed', bottom: '2rem', right: '2rem', background: '#fff',
-                    padding: '1rem 1.5rem', borderRadius: '12px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    position: 'fixed', bottom: '2rem', right: '2rem', background: 'var(--bg-card)',
+                    backdropFilter: 'var(--backdrop-blur)',
+                    padding: '1rem 1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-lg)',
                     display: 'flex', alignItems: 'center', gap: '1rem', zIndex: 9999,
-                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`
+                    borderLeft: `5px solid ${toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)'}`,
+                    border: '1px solid var(--border-light)'
                 }}>
-                    <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
+                    <div style={{ color: toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)' }}>
                         {toast.type === 'success' ? '✅' : '❌'}
                     </div>
-                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{toast.message}</div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{toast.message}</div>
                 </div>
             )}
         </div>

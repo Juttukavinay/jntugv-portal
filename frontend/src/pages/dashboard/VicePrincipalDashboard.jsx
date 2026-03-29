@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
+import './PrincipalDashboard.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
 import GlobalLoader from '../../components/GlobalLoader'
 import { exportToCSV } from '../../utils/exportUtils'
@@ -69,7 +70,7 @@ function VicePrincipalDashboard() {
     };
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container principal-dashboard">
             {/* Sidebar */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
@@ -95,8 +96,8 @@ function VicePrincipalDashboard() {
                     <div className="user-snippet">
                         <div className="user-avatar">P</div>
                         <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Vice Principal</div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Administrator</div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>Vice Principal</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Administrator</div>
                         </div>
                         <button
                             onClick={logout}
@@ -122,28 +123,28 @@ function VicePrincipalDashboard() {
                     >
                         <Icons.Home /> Menu
                     </button>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Vice Principal Dashboard</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Vice Principal Dashboard</span>
                 </header>
 
                 {/* Desktop Professional Header */}
-                <div className="desktop-only" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 0 1rem 0' }}>
+                <div className="desktop-only" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 0 1rem 0', borderBottom: '1px solid var(--border-light)' }}>
                     <div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Academic Portal</div>
-                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: '#0f172a' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Academic Portal</div>
+                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)' }}>
                             {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                         </h2>
                     </div>
                     <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                         <div style={{ position: 'relative' }}>
-                            <div style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                                <div style={{ position: 'absolute', top: '10px', right: '10px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></div>
+                            <div style={{ width: '40px', height: '40px', background: 'var(--bg-card)', borderRadius: '12px', border: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                                <div style={{ position: 'absolute', top: '10px', right: '10px', width: '8px', height: '8px', background: 'var(--univ-red)', borderRadius: '50%', border: '2px solid var(--bg-card)' }}></div>
                             </div>
                         </div>
-                        <div style={{ height: '30px', width: '1px', background: '#e2e8f0' }}></div>
+                        <div style={{ height: '30px', width: '1px', background: 'var(--border-light)' }}></div>
                         <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a' }}>Sunday, Mar 08</div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>System Uptime: 99.9%</div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-primary)' }}>Sunday, Mar 08</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>System Uptime: 99.9%</div>
                         </div>
                     </div>
                 </div>
@@ -159,20 +160,21 @@ function VicePrincipalDashboard() {
                     position: 'fixed',
                     bottom: '2rem',
                     right: '2rem',
-                    background: '#fff',
+                    background: 'var(--bg-card)',
                     padding: '1rem 1.5rem',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    boxShadow: 'var(--shadow-lg)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '1rem',
                     zIndex: 9999,
-                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`
+                    borderLeft: `5px solid ${toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)'}`,
+                    border: '1px solid var(--border-light)'
                 }}>
-                    <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
+                    <div style={{ color: toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)' }}>
                         {toast.type === 'success' ? <Icons.Check /> : '❌'}
                     </div>
-                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{toast.message}</div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{toast.message}</div>
                 </div>
             )}
         </div>
@@ -190,24 +192,24 @@ function NavItem({ icon, label, active, onClick, badge }) {
 }
 
 function PremiumStatCard({ title, value, icon, color, trend, trendType }) {
-    const colors = {
-        blue: { bg: '#eff6ff', text: '#2563eb', icon: '#3b82f6' },
-        purple: { bg: '#f5f3ff', text: '#7c3aed', icon: '#8b5cf6' },
-        orange: { bg: '#fff7ed', text: '#ea580c', icon: '#f97316' },
-        green: { bg: '#f0fdf4', text: '#16a34a', icon: '#22c55e' }
+     const colors = {
+        blue: { bg: 'rgba(59, 130, 246, 0.1)', text: 'var(--primary)', icon: 'var(--primary)' },
+        purple: { bg: 'rgba(139, 92, 246, 0.1)', text: '#a78bfa', icon: '#8b5cf6' },
+        orange: { bg: 'rgba(249, 115, 22, 0.1)', text: 'var(--univ-yellow)', icon: 'var(--univ-yellow)' },
+        green: { bg: 'rgba(16, 185, 129, 0.1)', text: 'var(--univ-green)', icon: 'var(--univ-green)' }
     };
     const c = colors[color] || colors.blue;
 
     return (
-        <div className="premium-stat-card">
-            <div className={`stat-icon-wrapper stat-${color}`} style={{ background: c.bg, color: c.icon }}>
+        <div className="premium-stat-card" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
+            <div className={`stat-icon-wrapper`} style={{ background: c.bg, color: c.icon }}>
                 {icon}
             </div>
             <div className="stat-content">
-                <h5>{title}</h5>
-                <h3>{value}</h3>
+                <h5 style={{ color: 'var(--text-muted)' }}>{title}</h5>
+                <h3 style={{ color: 'var(--text-primary)' }}>{value}</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                    <span className={`badge-role`}>{trend}</span>
+                    <span className={`badge-role`} style={{ background: 'var(--bg-subtle)', color: 'var(--primary)', border: '1px solid var(--border-light)' }}>{trend}</span>
                 </div>
             </div>
         </div>
@@ -251,11 +253,11 @@ function DashboardOverview({ onNavigate }) {
             <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                     <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome back, Vice Principal 👋</h1>
-                    <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Here's what's happening in your campus today.</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Here's what's happening in your campus today.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: '#f8fafc', padding: '0.5rem 1rem', borderRadius: '30px', border: '1px solid #e2e8f0' }}>
-                    <div className="pulse-soft" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Live Data Active</span>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'var(--bg-subtle)', padding: '0.5rem 1rem', borderRadius: '30px', border: '1px solid var(--border-light)' }}>
+                    <div className="pulse-soft" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--univ-green)' }}></div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Live Data Active</span>
                 </div>
             </div>
 
@@ -288,20 +290,20 @@ function DashboardOverview({ onNavigate }) {
 
             {/* Innovative Chart Section */}
             <div style={{ marginBottom: '2.5rem' }}>
-                <div className="premium-stat-card" style={{ display: 'block', padding: '2rem' }}>
+                <div className="premium-stat-card" style={{ display: 'block', padding: '2rem', background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Campus Engagement & Growth</h3>
-                            <p style={{ color: '#64748b', margin: '0.25rem 0 0 0' }}>Real-time student activity and department performance</p>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)' }}>Campus Engagement & Growth</h3>
+                            <p style={{ color: 'var(--text-muted)', margin: '0.25rem 0 0 0' }}>Real-time student activity and department performance</p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#3b82f6' }}></div>
-                                <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>Attendance</span>
+                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)' }}></div>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Attendance</span>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#8b5cf6' }}></div>
-                                <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>Engagement</span>
+                                <span style={{ fontSize: '0.75rem', fontWeight: '600', color: 'var(--text-secondary)' }}>Engagement</span>
                             </div>
                         </div>
                     </div>
@@ -315,61 +317,61 @@ function DashboardOverview({ onNavigate }) {
                                     <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
                                 </linearGradient>
                             </defs>
-                            {/* Grid Lines */}
-                            <line x1="0" y1="0" x2="800" y2="0" stroke="#f1f5f9" />
-                            <line x1="0" y1="50" x2="800" y2="50" stroke="#f1f5f9" />
-                            <line x1="0" y1="100" x2="800" y2="100" stroke="#f1f5f9" />
-                            <line x1="0" y1="150" x2="800" y2="150" stroke="#f1f5f9" />
+                             {/* Grid Lines */}
+                             <line x1="0" y1="0" x2="800" y2="0" stroke="var(--border-light)" />
+                             <line x1="0" y1="50" x2="800" y2="50" stroke="var(--border-light)" />
+                             <line x1="0" y1="100" x2="800" y2="100" stroke="var(--border-light)" />
+                             <line x1="0" y1="150" x2="800" y2="150" stroke="var(--border-light)" />
 
                             {/* Area Path */}
                             <path d="M0,180 Q100,140 200,160 T400,100 T600,80 T800,40 L800,200 L0,200 Z" fill="url(#chartGradient)" />
 
                             {/* Line Path */}
-                            <path d="M0,180 Q100,140 200,160 T400,100 T600,80 T800,40" fill="none" stroke="#3b82f6" strokeWidth="4" />
+                            <path d="M0,180 Q100,140 200,160 T400,100 T600,80 T800,40" fill="none" stroke="var(--primary)" strokeWidth="4" />
 
                             {/* Second Path (Engagement) */}
                             <path d="M0,150 Q120,170 240,120 T480,140 T720,60 T800,80" fill="none" stroke="#8b5cf6" strokeWidth="4" strokeDasharray="8 4" />
 
                             {/* Data Points */}
-                            <circle cx="200" cy="160" r="6" fill="#3b82f6" fillOpacity="1" />
-                            <circle cx="400" cy="100" r="6" fill="#3b82f6" fillOpacity="1" />
-                            <circle cx="600" cy="80" r="6" fill="#3b82f6" fillOpacity="1" />
+                            <circle cx="200" cy="160" r="6" fill="var(--primary)" fillOpacity="1" />
+                            <circle cx="400" cy="100" r="6" fill="var(--primary)" fillOpacity="1" />
+                            <circle cx="600" cy="80" r="6" fill="var(--primary)" fillOpacity="1" />
                         </svg>
                     </div>
                 </div>
             </div>
 
             <div className="grid-split" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
-                <div className="premium-stat-card" style={{ display: 'block' }}>
+                <div className="premium-stat-card" style={{ display: 'block', background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0 }}>Leadership & HODs</h3>
+                        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Leadership & HODs</h3>
                         <button className="btn-action primary" onClick={() => onNavigate('departments')}>Manage All</button>
                     </div>
-                    <p style={{ color: '#64748b', lineHeight: '1.6', fontSize: '0.95rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6', fontSize: '0.95rem' }}>
                         Oversee departmental leadership and ensure administrative stability across all campus branches.
                     </p>
-                    <div style={{ marginTop: '1.5rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '1rem' }}>
+                    <div style={{ marginTop: '1.5rem', background: 'var(--bg-subtle)', borderRadius: '16px', border: '1px solid var(--border-light)', padding: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                <div className="user-avatar" style={{ background: '#e2e8f0', color: '#64748b', width: '40px', height: '40px' }}>?</div>
+                                <div className="user-avatar" style={{ background: 'var(--bg-card)', color: 'var(--text-muted)', width: '40px', height: '40px', border: '1px solid var(--border-light)' }}>?</div>
                                 <div>
-                                    <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#1e293b' }}>Departmental Vacancies</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>2 HOD positions pending review</div>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>Departmental Vacancies</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>2 HOD positions pending review</div>
                                 </div>
                             </div>
-                            <button className="btn-action" style={{ fontSize: '0.75rem', padding: '4px 12px' }}>Check Now</button>
+                            <button className="btn-action" style={{ fontSize: '0.75rem', padding: '4px 12px' }} onClick={() => onNavigate('departments')}>Check Now</button>
                         </div>
                     </div>
                 </div>
 
-                <div className="premium-stat-card" style={{ display: 'block' }}>
-                    <h3 style={{ margin: '0 0 1.5rem 0' }}>Strategic Access</h3>
+                <div className="premium-stat-card" style={{ display: 'block', background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
+                    <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)' }}>Strategic Access</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <button className="btn-action" onClick={() => onNavigate('students')} style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', borderRadius: '16px' }}>
-                            <div style={{ color: '#3b82f6' }}><Icons.GradCap /></div>
+                        <button className="btn-action" onClick={() => onNavigate('students')} style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', borderRadius: '16px', background: 'var(--bg-subtle)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}>
+                            <div style={{ color: 'var(--primary)' }}><Icons.GradCap /></div>
                             <span style={{ fontWeight: '700' }}>Student Hub</span>
                         </button>
-                        <button className="btn-action" onClick={() => onNavigate('timetables')} style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', borderRadius: '16px' }}>
+                        <button className="btn-action" onClick={() => onNavigate('timetables')} style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', borderRadius: '16px', background: 'var(--bg-subtle)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}>
                             <div style={{ color: '#8b5cf6' }}><Icons.Calendar /></div>
                             <span style={{ fontWeight: '700' }}>Academic Calendar</span>
                         </button>
@@ -463,8 +465,8 @@ function DepartmentPanel({ showToast }) {
         <div className="glass-table-container fade-in-up">
             <div className="table-header-premium">
                 <div>
-                    <h3 style={{ margin: 0 }}>Faculty & Departments</h3>
-                    <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>Management and academic structure</p>
+                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Faculty & Departments</h3>
+                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Management and academic structure</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
@@ -488,7 +490,7 @@ function DepartmentPanel({ showToast }) {
                 <tbody>
                     {departments.map(dept => (
                         <tr key={dept._id}>
-                            <td style={{ fontWeight: '600', color: '#0f172a' }}>{dept.name}</td>
+                            <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{dept.name}</td>
                             <td>
                                 {editingDept === dept.name ? (
                                     <select
@@ -508,13 +510,13 @@ function DepartmentPanel({ showToast }) {
                                     </select>
                                 ) : (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: dept.hodName ? '#dcfce7' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>
+                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: dept.hodName ? 'rgba(16, 185, 129, 0.2)' : 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', border: '1px solid var(--border-light)' }}>
                                             {dept.hodName ? '👤' : '?'}
                                         </div>
                                         {dept.hodName ? (
-                                            <span style={{ fontWeight: '500', color: '#15803d' }}>{dept.hodName}</span>
+                                            <span style={{ fontWeight: '500', color: 'var(--univ-green)' }}>{dept.hodName}</span>
                                         ) : (
-                                            <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Not Assigned</span>
+                                            <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Not Assigned</span>
                                         )}
                                     </div>
                                 )}
@@ -558,24 +560,25 @@ function DepartmentPanel({ showToast }) {
 
             {showAddModal && (
                 <div className="modal-overlay">
-                    <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
+                    <div className="modal-content glass-panel" style={{ maxWidth: '400px', background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                            <h3 style={{ margin: 0 }}>Add Department</h3>
-                            <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                            <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Add Department</h3>
+                            <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
                         </div>
                         <form onSubmit={handleAddDept}>
                             <div className="input-group">
-                                <label className="input-label">Department Name</label>
+                                <label className="input-label" style={{ color: 'var(--text-secondary)' }}>Department Name</label>
                                 <input
                                     required
                                     className="modern-input"
                                     placeholder="e.g. CSE, ECE, MECH"
                                     value={newDeptName}
+                                    style={{ background: 'var(--bg-subtle)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
                                     onChange={(e) => setNewDeptName(e.target.value.toUpperCase())}
                                 />
                             </div>
                             <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', justifyContent: 'flex-end' }}>
-                                <button type="button" onClick={() => setShowAddModal(false)} className="btn-action">Cancel</button>
+                                <button type="button" onClick={() => setShowAddModal(false)} className="btn-action" style={{ color: 'var(--text-primary)' }}>Cancel</button>
                                 <button type="submit" className="btn-action primary">Create Department</button>
                             </div>
                         </form>
@@ -1283,7 +1286,21 @@ function TimetableView() {
                         {viewMode === 'class' ? 'Select a different semester or course.' : `This advanced cross-section view is generating based on active ${viewMode} allocations.`}
                     </p>
                     {viewMode !== 'class' && (
-                        <button className="btn-action primary" style={{ marginTop: '1.5rem' }}>Download Global XLS</button>
+                        <button
+                            className="btn-action primary"
+                            style={{ marginTop: '1.5rem' }}
+                            onClick={() => {
+                                if (!timetable || !timetable.schedule) return;
+                                const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
+                                const data = timetable.schedule.map(d => [
+                                    d.day,
+                                    ...d.periods.map(p => `${p.subject} (${p.faculty || 'Unassigned'})`)
+                                ]);
+                                exportToCSV(headers, data, `Global_Timetable_${viewMode}_${sem}.csv`);
+                            }}
+                        >
+                            Download Global XLS
+                        </button>
                     )}
                 </div>
             )}

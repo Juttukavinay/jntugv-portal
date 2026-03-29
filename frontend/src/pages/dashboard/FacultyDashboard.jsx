@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
+import './PrincipalDashboard.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
 import GlobalLoader from '../../components/GlobalLoader'
 import { exportToCSV } from '../../utils/exportUtils'
@@ -104,7 +105,7 @@ function FacultyDashboard() {
     }, [])
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container principal-dashboard">
             {/* Sidebar with consistent class */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
@@ -130,10 +131,10 @@ function FacultyDashboard() {
                         <div className="user-avatar">{currentUser?.name?.charAt(0) || 'F'}</div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentUser?.name}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                 {facultyProfile?.designation || 'Asst. Professor'}
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: workload.currentHours > workload.targetHours ? '#ef4444' : '#10b981', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <div style={{ fontSize: '0.75rem', color: workload.currentHours > workload.targetHours ? 'var(--univ-red)' : 'var(--univ-green)', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 <Icons.Check width={12} height={12} />
                                 Load: {workload.currentHours} / {workload.targetHours} Hrs
                             </div>
@@ -180,7 +181,7 @@ function FacultyDashboard() {
                     >
                         <Icons.Home /> Menu
                     </button>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Faculty Dashboard</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Faculty Dashboard</span>
                 </header>
 
                 <div className="fade-in-up">
@@ -199,20 +200,22 @@ function FacultyDashboard() {
                     position: 'fixed',
                     bottom: '2rem',
                     right: '2rem',
-                    background: '#fff',
+                    background: 'var(--bg-card)',
+                    backdropFilter: 'var(--backdrop-blur)',
                     padding: '1rem 1.5rem',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    boxShadow: 'var(--shadow-lg)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '1rem',
                     zIndex: 9999,
-                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`
+                    borderLeft: `5px solid ${toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)'}`,
+                    border: '1px solid var(--border-light)'
                 }}>
-                    <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
+                    <div style={{ color: toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)' }}>
                         {toast.type === 'success' ? <Icons.Check /> : '❌'}
                     </div>
-                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{toast.message}</div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{toast.message}</div>
                 </div>
             )}
         </div>
@@ -286,7 +289,7 @@ function LeaveManager({ currentUser, showToast, facultyProfile }) {
             </div>
             
             {isApplying && (
-                <div style={{ padding: '1.5rem', borderBottom: '1px solid #e2e8f0', background: '#f8fafc' }}>
+                <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)', background: 'var(--bg-subtle)' }}>
                     <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                         <div>
                             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>From Date</label>
@@ -319,7 +322,7 @@ function LeaveManager({ currentUser, showToast, facultyProfile }) {
                 </thead>
                 <tbody>
                     {leaves.length === 0 ? (
-                        <tr><td colSpan="4" style={{ textAlign: 'center', color: '#94a3b8' }}>No leave requests found.</td></tr>
+                        <tr><td colSpan="4" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No leave requests found.</td></tr>
                     ) : (
                         leaves.map(leave => (
                             <tr key={leave._id}>
@@ -329,8 +332,8 @@ function LeaveManager({ currentUser, showToast, facultyProfile }) {
                                 <td>
                                     <span style={{ 
                                         padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', 
-                                        background: leave.status === 'Approved' ? '#dcfce7' : (leave.status === 'Rejected' ? '#fee2e2' : '#fef9c3'), 
-                                        color: leave.status === 'Approved' ? '#166534' : (leave.status === 'Rejected' ? '#991b1b' : '#a16207') 
+                                        background: leave.status === 'Approved' ? 'var(--primary-light)' : (leave.status === 'Rejected' ? 'rgba(239, 68, 68, 0.2)' : 'var(--bg-subtle)'), 
+                                        color: leave.status === 'Approved' ? 'var(--primary)' : (leave.status === 'Rejected' ? 'var(--univ-red)' : 'var(--text-secondary)') 
                                     }}>
                                         {leave.status}
                                     </span>
@@ -507,7 +510,7 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
 
             <div style={{ marginBottom: '2rem' }}>
                 <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome, {currentUser?.name?.split(' ')[0]}! 👋</h1>
-                <p style={{ color: '#64748b' }}>Today is <strong>{todayName}</strong> — here is your daily summary.</p>
+                <p style={{ color: 'var(--text-secondary)' }}>Today is <strong>{todayName}</strong> — here is your daily summary.</p>
             </div>
 
             {pendingSubstitutions.length > 0 && (
@@ -521,15 +524,15 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         {pendingSubstitutions.map(sub => (
-                            <div key={sub._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '1rem', borderRadius: '12px', border: '1px solid #fef08a' }}>
+                            <div key={sub._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
                                 <div>
-                                    <div style={{ fontWeight: '700', color: '#1e293b' }}>Substituting: {sub.facultyName}</div>
-                                    <div style={{ fontSize: '0.85rem', color: '#64748b', margin: '2px 0' }}>
+                                    <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>Substituting: {sub.facultyName}</div>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '2px 0' }}>
                                         🗓️ <strong>{sub.fromDate}</strong> to <strong>{sub.toDate}</strong>
                                     </div>
-                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Reason: {sub.reason}</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Reason: {sub.reason}</div>
                                 </div>
-                                <button className="btn-action primary" style={{ background: '#ca8a04' }} onClick={() => handleAcceptSubstitution(sub._id)}>
+                                <button className="btn-action primary" style={{ background: 'var(--brand-gold)' }} onClick={() => handleAcceptSubstitution(sub._id)}>
                                     ✅ Accept Substitution
                                 </button>
                             </div>
@@ -554,7 +557,7 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
                     <div className="stat-content">
                         <h5>Teaching Workload</h5>
                         <h3>{workload.currentHours || 0} / {workload.targetHours || 16} Hrs</h3>
-                        <span className="badge-role" style={{ color: workload.currentHours > workload.targetHours ? '#ef4444' : 'inherit' }}>
+                        <span className="badge-role" style={{ color: workload.currentHours > workload.targetHours ? 'var(--univ-red)' : 'inherit' }}>
                             {workload.percentage || 0}% Occupied
                         </span>
                     </div>
@@ -572,18 +575,18 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
                     ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {todayClasses.map((cls, i) => (
-                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: cls.isSubstitution ? '#f0fdf4' : '#f8fafc', borderRadius: '12px', borderLeft: `4px solid ${cls.isSubstitution ? '#22c55e' : (cls.type === 'Lab' ? '#3b82f6' : '#10b981')}` }}>
+                                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: cls.isSubstitution ? 'rgba(34, 197, 94, 0.1)' : 'var(--bg-subtle)', borderRadius: '12px', borderLeft: `4px solid ${cls.isSubstitution ? 'var(--univ-green)' : (cls.type === 'Lab' ? 'var(--primary)' : 'var(--secondary)')}` }}>
                                     <div>
-                                        <div style={{ fontWeight: '700', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             {cls.subject}
-                                            {cls.isSubstitution && <span style={{ fontSize: '0.65rem', background: '#dcfce7', color: '#166534', padding: '2px 8px', borderRadius: '10px' }}>SUBSTITUTION</span>}
+                                            {cls.isSubstitution && <span style={{ fontSize: '0.65rem', background: 'var(--univ-green)', color: 'white', padding: '2px 8px', borderRadius: '10px' }}>SUBSTITUTION</span>}
                                         </div>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.room || 'N/A'} • {cls.type || 'Theory'} • {cls.semester}</div>
-                                        {cls.isSubstitution && <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 'bold' }}>For: {cls.originalFaculty}</div>}
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{cls.room || 'N/A'} • {cls.type || 'Theory'} • {cls.semester}</div>
+                                        {cls.isSubstitution && <div style={{ fontSize: '0.75rem', color: 'var(--univ-green)', fontWeight: 'bold' }}>For: {cls.originalFaculty}</div>}
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontWeight: '600', color: '#334155' }}>{cls.time}</div>
-                                        {cls.faculty !== currentUser?.name && !cls.isSubstitution && <div style={{ fontSize: '0.7rem', color: '#7c3aed' }}>Assisting</div>}
+                                        <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{cls.time}</div>
+                                        {cls.faculty !== currentUser?.name && !cls.isSubstitution && <div style={{ fontSize: '0.7rem', color: 'var(--primary)' }}>Assisting</div>}
                                     </div>
                                 </div>
                             ))}
@@ -602,10 +605,10 @@ function FacultyOverview({ currentUser, onNavigate, workload, facultyProfile }) 
                         ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                                 {futureSubstitutions.map(sub => (
-                                    <div key={sub._id} style={{ padding: '0.8rem 1rem', background: '#f8fafc', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                        <div style={{ fontWeight: '700', color: '#0f172a', fontSize: '0.9rem' }}>{sub.facultyName}'s Class</div>
-                                        <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Scheduled: <strong>{sub.fromDate} to {sub.toDate}</strong></div>
-                                        <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 'bold', marginTop: '4px' }}>✓ Accepted</div>
+                                    <div key={sub._id} style={{ padding: '0.8rem 1rem', background: 'var(--bg-subtle)', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                                        <div style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '0.9rem' }}>{sub.facultyName}'s Class</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Scheduled: <strong>{sub.fromDate} to {sub.toDate}</strong></div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--univ-green)', fontWeight: 'bold', marginTop: '4px' }}>✓ Accepted</div>
                                     </div>
                                 ))}
                             </div>
@@ -689,7 +692,7 @@ function SectionStudentList() {
                             <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
                             <td>{s.name}</td>
                             <td>{s.year}-{s.semester}</td>
-                            <td><span style={{ color: '#3b82f6', cursor: 'pointer' }}>Email</span></td>
+                            <td><span style={{ color: 'var(--primary)', cursor: 'pointer' }}>Email</span></td>
                         </tr>
                     ))}
                 </tbody>
@@ -801,10 +804,10 @@ function FacultyTimetable({ currentUser, showToast }) {
     return (
         <div className="glass-table-container">
             {/* TABS */}
-            <div style={{ display: 'flex', gap: '0', borderBottom: '2px solid #e2e8f0', marginBottom: '0' }}>
+            <div style={{ display: 'flex', gap: '0', borderBottom: '2px solid var(--border-light)', marginBottom: '0' }}>
                 {[{ key: 'class', label: '📅 Class Timetable' }, { key: 'myschedule', label: '👤 My Weekly Schedule' }].map(tab => (
                     <button key={tab.key} onClick={() => setTimetableTab(tab.key)}
-                        style={{ padding: '0.75rem 1.5rem', border: 'none', background: 'none', cursor: 'pointer', fontWeight: timetableTab === tab.key ? '700' : '500', color: timetableTab === tab.key ? '#2563eb' : '#64748b', borderBottom: timetableTab === tab.key ? '3px solid #2563eb' : '3px solid transparent', marginBottom: '-2px', transition: 'all 0.2s' }}
+                        style={{ padding: '0.75rem 1.5rem', border: 'none', background: 'none', cursor: 'pointer', fontWeight: timetableTab === tab.key ? '700' : '500', color: timetableTab === tab.key ? 'var(--primary)' : 'var(--text-secondary)', borderBottom: timetableTab === tab.key ? '3px solid var(--primary)' : '3px solid transparent', marginBottom: '-2px', transition: 'all 0.2s' }}
                     >{tab.label}</button>
                 ))}
             </div>
@@ -821,14 +824,14 @@ function FacultyTimetable({ currentUser, showToast }) {
                                 if (dayClasses.length === 0) return null;
                                 return (
                                     <div key={day} style={{ marginBottom: '1.5rem' }}>
-                                        <div style={{ fontWeight: '700', color: '#334155', background: '#f1f5f9', padding: '0.5rem 1rem', borderRadius: '8px', marginBottom: '0.5rem' }}>{day}</div>
+                                        <div style={{ fontWeight: '700', color: 'var(--text-primary)', background: 'var(--bg-subtle)', padding: '0.5rem 1rem', borderRadius: '8px', marginBottom: '0.5rem' }}>{day}</div>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                                             {dayClasses.sort((a,b) => a.time?.localeCompare(b.time)).map((cls, idx) => (
-                                                <div key={idx} style={{ background: cls.type === 'Lab' ? '#eff6ff' : '#f0fdf4', border: `1px solid ${cls.type === 'Lab' ? '#bfdbfe' : '#bbf7d0'}`, borderRadius: '10px', padding: '0.75rem 1rem', minWidth: '180px' }}>
-                                                    <div style={{ fontWeight: '700', fontSize: '0.9rem', color: '#0f172a' }}>{cls.subject}</div>
-                                                    <div style={{ fontSize: '0.78rem', color: '#2563eb', marginTop: '2px' }}>{cls.time}</div>
-                                                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '2px' }}>{cls.semester} • {cls.room || 'N/A'}</div>
-                                                    <div style={{ fontSize: '0.7rem', marginTop: '4px', color: cls.type === 'Lab' ? '#1d4ed8' : '#15803d', fontWeight: '600' }}>{cls.type || 'Theory'}</div>
+                                                <div key={idx} style={{ background: cls.type === 'Lab' ? 'var(--primary-light)' : 'rgba(45, 212, 191, 0.1)', border: `1px solid ${cls.type === 'Lab' ? 'var(--primary-light)' : 'var(--border-light)'}`, borderRadius: '10px', padding: '0.75rem 1rem', minWidth: '180px' }}>
+                                                    <div style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>{cls.subject}</div>
+                                                    <div style={{ fontSize: '0.78rem', color: 'var(--primary)', marginTop: '2px' }}>{cls.time}</div>
+                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{cls.semester} • {cls.room || 'N/A'}</div>
+                                                    <div style={{ fontSize: '0.7rem', marginTop: '4px', color: cls.type === 'Lab' ? 'var(--primary)' : 'var(--secondary)', fontWeight: '600' }}>{cls.type || 'Theory'}</div>
                                                 </div>
                                             ))}
                                         </div>
@@ -897,7 +900,7 @@ function FacultyTimetable({ currentUser, showToast }) {
                                 <th>09:30-10:30</th>
                                 <th>10:30-11:30</th>
                                 <th>11:30-12:30</th>
-                                <th style={{ background: '#f8fafc', width: '50px' }}>Lunch</th>
+                                <th style={{ background: 'var(--bg-subtle)', width: '50px' }}>Lunch</th>
                                 <th>02:00-03:00</th>
                                 <th>03:00-04:00</th>
                                 <th>04:00-05:00</th>
@@ -921,10 +924,10 @@ function FacultyTimetable({ currentUser, showToast }) {
                                                     onClick={() => handleSlotClick(dIndex, realIndex, p)}
                                                     style={{
                                                         flex: p.credits || 1,
-                                                        background: p.type === 'Lab' ? '#eff6ff' : (p.type === 'Theory' ? '#fffbeb' : '#f4f4f5'),
+                                                        background: p.type === 'Lab' ? 'var(--primary-light)' : (p.type === 'Theory' ? 'rgba(245, 158, 11, 0.1)' : 'var(--bg-subtle)'),
                                                         padding: '8px',
                                                         borderRadius: '6px',
-                                                        border: '1px solid #e2e8f0',
+                                                        border: '1px solid var(--border-light)',
                                                         fontSize: '0.8rem',
                                                         minHeight: '60px',
                                                         display: 'flex',
@@ -937,26 +940,26 @@ function FacultyTimetable({ currentUser, showToast }) {
                                                     onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
                                                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                                 >
-                                                    <div style={{ fontWeight: '700', color: '#1e293b' }}>{p.subject}</div>
+                                                    <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{p.subject}</div>
                                                     {p.faculty ? (
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                            <div style={{ fontSize: '0.75rem', color: '#1e40af', fontWeight: '700' }}>
+                                                            <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: '700' }}>
                                                                 {p.faculty === currentUser.name ? '👤 You (M)' : `${p.faculty} (M)`}
                                                             </div>
-                                                            {p.wing && <div style={{ fontSize: '0.65rem', color: '#059669', fontWeight: 'bold' }}>📍 {p.wing}</div>}
+                                                            {p.wing && <div style={{ fontSize: '0.65rem', color: 'var(--univ-green)', fontWeight: 'bold' }}>📍 {p.wing}</div>}
                                                             {p.assistants?.includes(currentUser.name) && (
-                                                                <div style={{ fontSize: '0.7rem', color: '#16a34a', fontWeight: 'bold' }}>
+                                                                <div style={{ fontSize: '0.7rem', color: 'var(--univ-green)', fontWeight: 'bold' }}>
                                                                     ✨ You are Assisting
                                                                 </div>
                                                             )}
                                                             {p.assistants?.length > 0 && (
-                                                                <div style={{ fontSize: '0.65rem', color: '#64748b' }}>
+                                                                <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>
                                                                     Ast: {p.assistants.join(', ')}
                                                                 </div>
                                                             )}
                                                         </div>
                                                     ) : (
-                                                        <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontStyle: 'italic' }}>Available</div>
+                                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>Available</div>
                                                     )}
                                                 </div>
                                             )
@@ -966,9 +969,9 @@ function FacultyTimetable({ currentUser, showToast }) {
 
                                 return (
                                     <tr key={dIndex}>
-                                        <td style={{ fontWeight: '700', color: '#334155' }}>{day.day}</td>
+                                        <td style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{day.day}</td>
                                         <td colSpan={3} style={{ padding: '6px' }}>{renderBlock(morning)}</td>
-                                        <td style={{ background: '#f1f5f9', fontWeight: 'bold', fontSize: '0.75rem', color: '#94a3b8', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>LUNCH</td>
+                                        <td style={{ background: 'var(--bg-subtle)', fontWeight: 'bold', fontSize: '0.75rem', color: 'var(--text-muted)', writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>LUNCH</td>
                                         <td colSpan={3} style={{ padding: '6px' }}>{renderBlock(afternoon)}</td>
                                     </tr>
                                 );
@@ -1053,14 +1056,14 @@ function AllocationModal({ slot, currentUser, onClose, onSuccess, showToast }) {
                     <div className="success-animation" style={{ padding: '2rem' }}>
                         <div style={{
                             width: '80px', height: '80px', margin: '0 auto 1rem',
-                            borderRadius: '50%', background: '#22c55e', color: 'white',
+                            borderRadius: '50%', background: 'var(--univ-green)', color: 'white',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '3rem', boxShadow: '0 0 20px rgba(34, 197, 94, 0.4)'
+                            fontSize: '3rem', boxShadow: '0 0 20px rgba(16, 185, 129, 0.4)'
                         }}>
                             ✓
                         </div>
-                        <h3 style={{ color: '#16a34a' }}>Slot Booked!</h3>
-                        <p style={{ color: '#64748b' }}>You have successfully assigned this class.</p>
+                        <h3 style={{ color: 'var(--univ-green)' }}>Slot Booked!</h3>
+                        <p style={{ color: 'var(--text-secondary)' }}>You have successfully assigned this class.</p>
                     </div>
                 ) : (
                     <>
@@ -1383,17 +1386,17 @@ function AttendanceManager() {
                                                 cursor: taken ? 'default' : 'pointer',
                                                 padding: '1.25rem',
                                                 borderRadius: '12px',
-                                                border: `2px solid ${taken ? '#bbf7d0' : isActive ? '#2563eb' : '#e2e8f0'}`,
-                                                background: taken ? '#f0fdf4' : isActive ? '#eff6ff' : 'white',
+                                                border: `2px solid ${taken ? 'var(--univ-green)' : isActive ? 'var(--primary)' : 'var(--border-light)'}`,
+                                                background: taken ? 'rgba(34, 197, 94, 0.1)' : isActive ? 'var(--primary-light)' : 'var(--bg-card)',
                                                 transition: 'all 0.2s',
-                                                borderLeft: `5px solid ${taken ? '#22c55e' : cls.isLab ? '#3b82f6' : '#10b981'}`,
+                                                borderLeft: `5px solid ${taken ? 'var(--univ-green)' : cls.isLab ? 'var(--primary)' : 'var(--secondary)'}`,
                                                 opacity: taken ? 0.88 : 1
                                             }}
                                         >
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
                                                 <div style={{ fontWeight: '700', fontSize: '1rem', color: '#0f172a' }}>{cls.subject || 'Unknown'}</div>
                                                 {taken && (
-                                                    <span style={{ background: '#dcfce7', color: '#166534', fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
+                                                    <span style={{ background: 'var(--univ-green)', color: 'white', fontSize: '0.7rem', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', whiteSpace: 'nowrap' }}>
                                                         ✅ Taken
                                                     </span>
                                                 )}
@@ -1420,14 +1423,14 @@ function AttendanceManager() {
                         <div className="table-header-premium">
                             <div>
                                 <h3 style={{ margin: '0 0 2px 0' }}>Attendance: {selectedClass.subject}</h3>
-                                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedClass.semester} • {selectedClass.time} • {selectedClass.room || 'N/A'}</div>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{selectedClass.semester} • {selectedClass.time} • {selectedClass.room || 'N/A'}</div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                                <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ All Present</button>
-                                <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ All Absent</button>
-                                <div style={{ background: '#f8fafc', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                    <span style={{ marginRight: '1rem', fontSize: '0.9rem', fontWeight: 'bold', color: '#16a34a' }}>Present: {presentCount}</span>
-                                    <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#ef4444' }}>Absent: {absentCount}</span>
+                                <button className="btn-action" style={{ background: 'rgba(34, 197, 94, 0.2)', color: 'var(--univ-green)', fontWeight: '600', border: '1px solid var(--univ-green)' }} onClick={() => markAll('Present')}>✓ All Present</button>
+                                <button className="btn-action" style={{ background: 'rgba(239, 68, 68, 0.2)', color: 'var(--univ-red)', fontWeight: '600', border: '1px solid var(--univ-red)' }} onClick={() => markAll('Absent')}>✗ All Absent</button>
+                                <div style={{ background: 'var(--bg-subtle)', padding: '6px 16px', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                                    <span style={{ marginRight: '1rem', fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--univ-green)' }}>Present: {presentCount}</span>
+                                    <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--univ-red)' }}>Absent: {absentCount}</span>
                                 </div>
                             </div>
                         </div>
@@ -1439,11 +1442,11 @@ function AttendanceManager() {
                                         <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
                                         <td>{s.name}</td>
                                         <td style={{ textAlign: 'center' }}>
-                                            <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', borderRadius: '20px', padding: '4px', cursor: 'pointer', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
-                                                <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? '#22c55e' : '#ef4444', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)' }}></div>
+                                            <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? 'var(--primary-light)' : 'rgba(239, 68, 68, 0.2)', borderRadius: '20px', padding: '4px', cursor: 'pointer', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
+                                                <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? 'var(--univ-green)' : 'var(--univ-red)', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)' }}></div>
                                                 <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', alignItems: 'center', height: '26px', fontSize: '0.85rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
-                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>A</span>
-                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>P</span>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? 'var(--univ-green)' : '#fff' }}>A</span>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : 'var(--univ-red)' }}>P</span>
                                                 </div>
                                             </div>
                                         </td>
@@ -1479,7 +1482,7 @@ function AttendanceManager() {
                             </thead>
                             <tbody>
                                 {history.length === 0 ? (
-                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No records found</td></tr>
+                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No records found</td></tr>
                                 ) : history.map((rec, idx) => {
                                     const p = rec.records?.filter(r => r.status === 'Present').length || 0;
                                     const total = rec.records?.length || 0;
@@ -1490,12 +1493,12 @@ function AttendanceManager() {
                                             <td>{rec.semester}</td>
                                             <td>{rec.periodTime}</td>
                                             <td style={{ textAlign: 'center' }}>
-                                                <span style={{ color: p === total ? '#16a34a' : '#2563eb', fontWeight: 'bold' }}>{p}</span> / {total}
+                                                <span style={{ color: p === total ? 'var(--univ-green)' : 'var(--primary)', fontWeight: 'bold' }}>{p}</span> / {total}
                                             </td>
                                             <td style={{ textAlign: 'center' }}>
                                                 <button 
                                                     className="btn-action" 
-                                                    style={{ padding: '4px 12px', fontSize: '0.75rem', background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe' }}
+                                                    style={{ padding: '4px 12px', fontSize: '0.75rem', background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}
                                                     onClick={() => setViewingRecord(rec)}
                                                 >
                                                     View Details
@@ -1516,7 +1519,7 @@ function AttendanceManager() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
                             <div>
                                 <h3 style={{ margin: 0 }}>{viewingRecord.subject} Attendance</h3>
-                                <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                                <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                                     {viewingRecord.semester} • {viewingRecord.date} • {viewingRecord.periodTime}
                                 </p>
                             </div>
@@ -1538,8 +1541,8 @@ function AttendanceManager() {
                                             <td>{r.name}</td>
                                             <td>
                                                 <span className="badge-role" style={{ 
-                                                    background: r.status === 'Present' ? '#dcfce7' : '#fee2e2',
-                                                    color: r.status === 'Present' ? '#166534' : '#991b1b'
+                                                    background: r.status === 'Present' ? 'var(--primary-light)' : 'rgba(239, 68, 68, 0.2)',
+                                                    color: r.status === 'Present' ? 'var(--univ-green)' : 'var(--univ-red)'
                                                 }}>
                                                     {r.status}
                                                 </span>

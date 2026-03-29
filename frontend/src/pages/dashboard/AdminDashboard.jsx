@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
+import './PrincipalDashboard.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
 import GlobalLoader from '../../components/GlobalLoader'
 import { exportToCSV } from '../../utils/exportUtils'
@@ -90,7 +91,7 @@ function AdminDashboard() {
     };
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container principal-dashboard">
             {/* Sidebar */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">

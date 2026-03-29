@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
+import './PrincipalDashboard.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
 import GlobalLoader from '../../components/GlobalLoader'
 import { exportToCSV } from '../../utils/exportUtils'
@@ -119,7 +120,7 @@ function HodDashboard() {
     }, []);
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container principal-dashboard">
             {/* Sidebar */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
@@ -147,7 +148,7 @@ function HodDashboard() {
                         <div className="user-avatar" title={user.name}>{user.name ? user.name.charAt(0) : 'H'}</div>
                         <div style={{ flex: 1, overflow: 'hidden' }}>
                             <div style={{ fontSize: '0.9rem', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user.name || 'HOD'}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Head of Dept</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Head of Dept</div>
                         </div>
                         <button
                             onClick={() => {
@@ -176,7 +177,7 @@ function HodDashboard() {
                     >
                         <Icons.Home /> Menu
                     </button>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>HOD Dashboard</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>HOD Dashboard</span>
                 </header>
 
                 {renderContent()}
@@ -188,21 +189,23 @@ function HodDashboard() {
                     position: 'fixed',
                     bottom: '2rem',
                     right: '2rem',
-                    background: '#fff',
+                    background: 'var(--bg-card)',
+                    backdropFilter: 'var(--backdrop-blur)',
                     padding: '1rem 1.5rem',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    boxShadow: 'var(--shadow-lg)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '1rem',
                     zIndex: 9999,
-                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`,
+                    borderLeft: `5px solid ${toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)'}`,
+                    border: '1px solid var(--border-light)',
                     animation: 'slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}>
-                    <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
+                    <div style={{ color: toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)' }}>
                         {toast.type === 'success' ? <Icons.Check /> : '❌'}
                     </div>
-                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{toast.message}</div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{toast.message}</div>
                 </div>
             )}
         </div>
@@ -289,7 +292,7 @@ function LeaveApprovals({ user, showToast, allFaculty }) {
                 </thead>
                 <tbody>
                     {leaves.length === 0 ? (
-                        <tr><td colSpan="5" style={{ textAlign: 'center', color: '#94a3b8' }}>No pending leave requests.</td></tr>
+                        <tr><td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No pending leave requests.</td></tr>
                     ) : (
                         leaves.map(leave => (
                             <tr key={leave._id}>
@@ -311,7 +314,7 @@ function LeaveApprovals({ user, showToast, allFaculty }) {
                                             }
                                         </select>
                                     ) : (
-                                        <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{leave.substituteFaculty || '-'}</span>
+                                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{leave.substituteFaculty || '-'}</span>
                                     )}
                                 </td>
                                 <td>
@@ -325,7 +328,7 @@ function LeaveApprovals({ user, showToast, allFaculty }) {
                                             >Approve</button>
                                             <button 
                                                 className="btn-action" 
-                                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: '#ef4444' }}
+                                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--univ-red)' }}
                                                 disabled={processingId === leave._id}
                                                 onClick={() => handleAction(leave._id, 'Rejected')}
                                             >Reject</button>
@@ -333,8 +336,8 @@ function LeaveApprovals({ user, showToast, allFaculty }) {
                                     ) : (
                                         <span style={{ 
                                             padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', 
-                                            background: leave.status === 'Approved' ? '#dcfce7' : '#fee2e2', 
-                                            color: leave.status === 'Approved' ? '#166534' : '#991b1b' 
+                                            background: leave.status === 'Approved' ? 'var(--primary-light)' : 'rgba(239, 68, 68, 0.2)', 
+                                            color: leave.status === 'Approved' ? 'var(--primary)' : 'var(--univ-red)' 
                                         }}>
                                             {leave.status}
                                         </span>
@@ -389,7 +392,7 @@ function HodOverview({ onNavigate, onQuickAttendance, user }) {
             {loading && <GlobalLoader />}
             <div style={{ marginBottom: '2.5rem' }}>
                 <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome back, {user.name || 'HOD'} 👋</h1>
-                <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Manage your department's academics and resources efficiently.</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Manage your department's academics and resources efficiently.</p>
             </div>
 
             <div className="modern-stats-grid">
@@ -419,14 +422,14 @@ function HodOverview({ onNavigate, onQuickAttendance, user }) {
                                         justifyContent: 'space-between', 
                                         alignItems: 'center', 
                                         padding: '1.25rem', 
-                                        background: '#fff', 
+                                        background: 'var(--bg-card)', 
                                         borderRadius: '16px', 
                                         boxShadow: 'var(--shadow-sm)', 
                                         borderLeft: `6px solid ${cls.type === 'Lab' ? 'var(--secondary)' : 'var(--primary)'}`,
                                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        border: '1px solid #f1f5f9'
+                                        border: '1px solid var(--border-light)'
                                     }}
-                                    onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+                                    onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
                                     onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}
                                 >
                                     <div style={{ flex: 1 }}>
@@ -449,18 +452,18 @@ function HodOverview({ onNavigate, onQuickAttendance, user }) {
                                         >
                                             {cls.subject}
                                         </div>
-                                        <div style={{ fontSize: '0.9rem', color: '#64748b', fontWeight: '500' }}>
+                                        <div style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '500' }}>
                                             {cls.semester} • <span style={{ color: 'var(--secondary)', fontWeight: '700' }}>{cls.room || 'TBD'}</span>
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
                                         <div style={{ 
-                                            background: '#f1f5f9', 
+                                            background: 'var(--bg-subtle)', 
                                             padding: '4px 12px', 
                                             borderRadius: '8px', 
                                             fontSize: '0.85rem', 
                                             fontWeight: '700', 
-                                            color: 'var(--accent-dark)' 
+                                            color: 'var(--text-primary)' 
                                         }}>
                                             {cls.time}
                                         </div>
@@ -480,7 +483,7 @@ function HodOverview({ onNavigate, onQuickAttendance, user }) {
                             ))}
                         </div>
                     ) : (
-                        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem' }}>No classes scheduled for you today.</div>
+                        <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No classes scheduled for you today.</div>
                     )}
                 </div>
 
@@ -567,9 +570,9 @@ function StudentManager({ showToast, user }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             <h3 style={{ margin: 0 }}>Student Directory</h3>
-                            <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
+                            <div style={{ display: 'flex', background: 'var(--bg-subtle)', borderRadius: '8px', padding: '4px' }}>
                                 {['B.Tech', 'M.Tech', 'MCA'].map(c => (
-                                    <button key={c} onClick={() => setActiveCourse(c)} style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: activeCourse === c ? '#fff' : 'transparent', color: activeCourse === c ? '#0f172a' : '#64748b', fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>{c}</button>
+                                    <button key={c} onClick={() => setActiveCourse(c)} style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: activeCourse === c ? 'var(--bg-card)' : 'transparent', color: activeCourse === c ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? 'var(--shadow-sm)' : 'none' }}>{c}</button>
                                 ))}
                             </div>
                         </div>
@@ -582,9 +585,9 @@ function StudentManager({ showToast, user }) {
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: '500' }}>Year:</span>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: '500' }}>Year:</span>
                         {['All', '1', '2', '3', '4'].map(y => (
-                            <button key={y} onClick={() => setActiveYear(y)} style={{ padding: '4px 10px', borderRadius: '20px', border: '1px solid ' + (activeYear === y ? '#3b82f6' : '#e2e8f0'), background: activeYear === y ? '#eff6ff' : 'transparent', color: activeYear === y ? '#2563eb' : '#64748b', fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer' }}>{y === 'All' ? 'All' : y}</button>
+                            <button key={y} onClick={() => setActiveYear(y)} style={{ padding: '4px 10px', borderRadius: '20px', border: '1px solid ' + (activeYear === y ? 'var(--primary)' : 'var(--border-light)'), background: activeYear === y ? 'var(--primary-light)' : 'transparent', color: activeYear === y ? 'var(--primary)' : 'var(--text-secondary)', fontSize: '0.75rem', fontWeight: '600', cursor: 'pointer' }}>{y === 'All' ? 'All' : y}</button>
                         ))}
                     </div>
                 </div>
@@ -600,8 +603,8 @@ function StudentManager({ showToast, user }) {
                                     <td>{s.year}-{s.semester}</td>
                                     <td>
                                         <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button onClick={() => { setModalType('edit'); setCurrentStudent(s); setFormData(s); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #e2e8f0', background: '#fff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Edit"><Icons.Edit /></button>
-                                            <button onClick={() => { setModalType('delete'); setCurrentStudent(s); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #fee2e2', background: '#fff', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Delete"><Icons.Trash /></button>
+                                            <button onClick={() => { setModalType('edit'); setCurrentStudent(s); setFormData(s); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid var(--border-light)', background: 'var(--bg-card)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Edit"><Icons.Edit /></button>
+                                            <button onClick={() => { setModalType('delete'); setCurrentStudent(s); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid rgba(239, 68, 68, 0.2)', background: 'var(--bg-card)', color: 'var(--univ-red)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Delete"><Icons.Trash /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -622,7 +625,7 @@ function StudentManager({ showToast, user }) {
                                 <p>Delete {currentStudent?.name}?</p>
                                 <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
                                     <button className="btn-action" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                                    <button className="btn-action primary" style={{ background: '#ef4444' }} onClick={confirmDelete}>Delete</button>
+                                    <button className="btn-action primary" style={{ background: 'var(--univ-red)' }} onClick={confirmDelete}>Delete</button>
                                 </div>
                             </div>
                         ) : (
@@ -731,25 +734,25 @@ function FacultyManager({ showToast, user }) {
                                 return (
                                     <tr key={f._id}>
                                         <td style={{ fontWeight: '600' }}>{f.name}</td>
-                                        <td><div style={{ fontSize: '0.85rem' }}>{f.designation}</div><div style={{ fontSize: '0.7rem', color: '#64748b' }}>{f.type}</div></td>
+                                        <td><div style={{ fontSize: '0.85rem' }}>{f.designation}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{f.type}</div></td>
                                         <td style={{ minWidth: '150px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '4px' }}>
                                                 <span>{work.totalHours} / {work.targetHours} Hrs (L:{work.labHours})</span>
-                                                <span style={{ fontWeight: 'bold', color: work.percentage > 100 ? '#ef4444' : '#16a34a' }}>{work.percentage}%</span>
+                                                <span style={{ fontWeight: 'bold', color: work.percentage > 100 ? 'var(--univ-red)' : 'var(--univ-green)' }}>{work.percentage}%</span>
                                             </div>
-                                            <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
-                                                <div style={{ width: `${Math.min(work.percentage, 100)}%`, height: '100%', background: work.percentage > 100 ? '#ef4444' : 'var(--primary)', transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                                            <div style={{ width: '100%', height: '6px', background: 'var(--bg-subtle)', borderRadius: '3px', overflow: 'hidden' }}>
+                                                <div style={{ width: `${Math.min(work.percentage, 100)}%`, height: '100%', background: work.percentage > 100 ? 'var(--univ-red)' : 'var(--primary)', transition: 'width 0.4s cubic-bezier(0.16, 1, 0.3, 1)' }} />
                                             </div>
                                         </td>
                                         <td>
-                                            <span style={{ padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', background: work.totalHours < work.targetHours ? '#dcfce7' : '#fee2e2', color: work.totalHours < work.targetHours ? '#166534' : '#991b1b' }}>
+                                            <span style={{ padding: '0.25rem 0.75rem', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', background: work.totalHours < work.targetHours ? 'var(--primary-light)' : 'rgba(239, 68, 68, 0.2)', color: work.totalHours < work.targetHours ? 'var(--univ-green)' : 'var(--univ-red)' }}>
                                                 {work.totalHours < work.targetHours ? 'Available' : 'Occupied'}
                                             </span>
                                         </td>
                                         <td>
                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                <button onClick={() => { setModalType('edit'); setCurrentFac(f); setFormData(f); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #e2e8f0', background: '#fff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Edit"><Icons.Edit /></button>
-                                                <button onClick={() => { setModalType('delete'); setCurrentFac(f); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid #fee2e2', background: '#fff', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Delete"><Icons.Trash /></button>
+                                                <button onClick={() => { setModalType('edit'); setCurrentFac(f); setFormData(f); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid var(--border-light)', background: 'var(--bg-card)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Edit"><Icons.Edit /></button>
+                                                <button onClick={() => { setModalType('delete'); setCurrentFac(f); setIsModalOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '50%', border: '1px solid rgba(239, 68, 68, 0.2)', background: 'var(--bg-card)', color: 'var(--univ-red)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} title="Delete"><Icons.Trash /></button>
                                             </div>
                                         </td>
                                     </tr>
@@ -771,7 +774,7 @@ function FacultyManager({ showToast, user }) {
                                 <p>Delete {currentFac?.name}?</p>
                                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1rem' }}>
                                     <button className="btn-action" onClick={() => setIsModalOpen(false)}>Cancel</button>
-                                    <button className="btn-action primary" style={{ background: '#ef4444' }} onClick={confirmDelete}>Delete</button>
+                                    <button className="btn-action primary" style={{ background: 'var(--univ-red)' }} onClick={confirmDelete}>Delete</button>
                                 </div>
                             </div>
                         ) : (
@@ -952,9 +955,9 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             <h3>Timetable Manager</h3>
-                            <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
+                            <div style={{ display: 'flex', background: 'var(--bg-subtle)', borderRadius: '8px', padding: '4px' }}>
                                 {['B.Tech', 'M.Tech', 'MCA'].map(c => (
-                                    <button key={c} onClick={() => setActiveCourse(c)} style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: activeCourse === c ? '#fff' : 'transparent', color: activeCourse === c ? '#0f172a' : '#64748b', fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>{c}</button>
+                                    <button key={c} onClick={() => setActiveCourse(c)} style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: activeCourse === c ? 'var(--bg-card)' : 'transparent', color: activeCourse === c ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? 'var(--shadow-sm)' : 'none' }}>{c}</button>
                                 ))}
                             </div>
                         </div>
@@ -1017,9 +1020,9 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                             <button className="btn-action" onClick={() => setShowSettings(true)}>⚙️ Settings</button>
                             <button className="btn-action primary" onClick={generateTimetable} disabled={loading}>{loading ? 'Generating...' : '⚡ Auto-Generate'}</button>
                             <button className="btn-action" style={{ background: 'linear-gradient(135deg, #8b5cf6, #d946ef)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }} onClick={generateTimetableAI} disabled={loading}>{loading ? 'Optimizing...' : '✨ AI Generate'}</button>
-                            <button className="btn-action" style={{ background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' }} onClick={createBlankTimetable} disabled={loading}>📝 Create Blank</button>
+                            <button className="btn-action" style={{ background: 'var(--bg-card)', color: 'var(--primary)', border: '1px solid var(--primary)' }} onClick={createBlankTimetable} disabled={loading}>📝 Create Blank</button>
                             {timetable && (
-                                <button className="btn-action" style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fff', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={async () => { if (confirm('Delete ENTIRE timetable for this semester?')) { await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`, { method: 'DELETE' }); fetchTimetable(); } }}>
+                                <button className="btn-action" style={{ color: 'var(--univ-red)', borderColor: 'rgba(239, 68, 68, 0.2)', background: 'var(--bg-card)', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={async () => { if (confirm('Delete ENTIRE timetable for this semester?')) { await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`, { method: 'DELETE' }); fetchTimetable(); } }}>
                                     <Icons.Trash /> Delete Timetable
                                 </button>
                             )}
@@ -1039,12 +1042,12 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                                     const renderBlock = (periods) => (
                                         <div style={{ display: 'flex', gap: '4px', height: '100%' }}>
                                             {periods.map((p, i) => (
-                                                <div key={i} onClick={() => updateCell(dIndex, day.periods.indexOf(p))} style={{ flex: p.credits || 1, background: p.type === 'Lab' ? '#eff6ff' : (p.type === 'Theory' ? '#fffbeb' : '#f4f4f5'), padding: '6px', borderRadius: '6px', border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.8rem' }}>
+                                                <div key={i} onClick={() => updateCell(dIndex, day.periods.indexOf(p))} style={{ flex: p.credits || 1, background: p.type === 'Lab' ? 'var(--primary-light)' : (p.type === 'Theory' ? 'rgba(245, 158, 11, 0.1)' : 'var(--bg-subtle)'), padding: '6px', borderRadius: '6px', border: '1px solid var(--border-light)', cursor: 'pointer', fontSize: '0.8rem' }}>
                                                     <div style={{ fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.subject}</div>
                                                     {p.subject && <div style={{ fontSize: '0.65rem', color: '#16a34a', fontWeight: '800', marginTop: '2px' }}>🏢 {p.room || (p.type === 'Lab' ? 'Lab' : 'LH')}</div>}
                                                     {p.faculty && <div style={{ fontSize: '0.65rem', color: '#2563eb', fontWeight: '700' }}>{p.faculty} (M)</div>}
                                                     {p.assistants?.length > 0 && (
-                                                        <div style={{ fontSize: '0.6rem', color: '#64748b' }}>
+                                                        <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
                                                             + {p.assistants.join(', ')}
                                                         </div>
                                                     )}
@@ -1056,7 +1059,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                                         <tr key={dIndex} style={{ height: '70px' }}>
                                             <td style={{ fontWeight: 'bold' }}>{day.day}</td>
                                             <td colSpan={3} style={{ padding: '4px' }}>{renderBlock(morning)}</td>
-                                            <td style={{ background: '#f1f5f9', fontWeight: 'bold', fontSize: '0.8rem', color: '#64748b' }}>BREAK</td>
+                                            <td style={{ background: 'var(--bg-subtle)', fontWeight: 'bold', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>BREAK</td>
                                             <td colSpan={3} style={{ padding: '4px' }}>{renderBlock(afternoon)}</td>
                                         </tr>
                                     );
@@ -1064,7 +1067,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                             </tbody>
                         </table>
                     ) : (
-                        <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>No timetable found. Click Auto-Generate to create one.</div>
+                        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>No timetable found. Click Auto-Generate to create one.</div>
                     )}
                 </div>
             </div>
@@ -1178,9 +1181,9 @@ function SubjectsManager({ facultyList, showToast, user }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <h3>Curriculum Manager</h3>
-                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
+                        <div style={{ display: 'flex', background: 'var(--bg-subtle)', borderRadius: '8px', padding: '4px' }}>
                             {['B.Tech', 'M.Tech', 'MCA'].map(c => (
-                                <button key={c} onClick={() => { setActiveCourse(c); if (c === 'B.Tech') setSemesterName('I-B.Tech I Sem'); else if (c === 'M.Tech') setSemesterName('I-M.Tech I Sem'); else setSemesterName('I-MCA I Sem'); }} style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: activeCourse === c ? '#fff' : 'transparent', color: activeCourse === c ? '#0f172a' : '#64748b', fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none' }}>{c}</button>
+                                <button key={c} onClick={() => { setActiveCourse(c); if (c === 'B.Tech') setSemesterName('I-B.Tech I Sem'); else if (c === 'M.Tech') setSemesterName('I-M.Tech I Sem'); else setSemesterName('I-MCA I Sem'); }} style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: activeCourse === c ? 'var(--bg-card)' : 'transparent', color: activeCourse === c ? 'var(--text-primary)' : 'var(--text-secondary)', fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? 'var(--shadow-sm)' : 'none' }}>{c}</button>
                             ))}
                         </div>
                     </div>
@@ -1223,7 +1226,7 @@ function SubjectsManager({ facultyList, showToast, user }) {
                     <thead><tr><th style={{ width: '50px' }}>S.No</th><th>Category</th><th>Code</th><th>Title</th><th>L</th><th>T</th><th>P</th><th>C</th><th>Action</th></tr></thead>
                     <tbody>
                         {editRows.map((row, i) => (
-                            <tr key={i} style={{ background: '#fff' }}>
+                            <tr key={i} style={{ background: 'var(--bg-card)' }}>
                                 <td><input value={row.sNo || ''} onChange={e => handleSubjectChange(i, 'sNo', e.target.value)} className="modern-input" style={{ width: '100%', padding: '4px' }} /></td>
                                 <td>
                                     <select value={row.category || 'PC'} onChange={e => handleSubjectChange(i, 'category', e.target.value)} className="modern-input" style={{ padding: '4px' }}>
@@ -1240,7 +1243,7 @@ function SubjectsManager({ facultyList, showToast, user }) {
                                     <button
                                         onClick={() => deleteSubject(i)}
                                         className="btn-action"
-                                        style={{ color: '#fff', background: '#ef4444', border: 'none', cursor: 'pointer', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                        style={{ color: '#fff', background: 'var(--univ-red)', border: 'none', cursor: 'pointer', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '4px' }}
                                         title="Delete Subject"
                                     >
                                         <Icons.Trash />
@@ -1250,7 +1253,7 @@ function SubjectsManager({ facultyList, showToast, user }) {
                         ))}
                     </tbody>
                 </table>
-                <button onClick={addSubjectRow} style={{ width: '100%', padding: '12px', marginTop: '10px', border: '2px dashed #cbd5e1', borderRadius: '8px', color: '#64748b', cursor: 'pointer', background: '#f8fafc', fontWeight: '600' }}>+ Add Row</button>
+                <button onClick={addSubjectRow} style={{ width: '100%', padding: '12px', marginTop: '10px', border: '2px dashed var(--border-light)', borderRadius: '8px', color: 'var(--text-secondary)', cursor: 'pointer', background: 'var(--bg-subtle)', fontWeight: '600' }}>+ Add Row</button>
             </div >
         </div >
     );
@@ -1284,11 +1287,11 @@ function BookingForm({ initialData, facultyList = [], roomList = [], onSubmit, o
     return (
         <div style={{ display: 'grid', gap: '1rem' }}>
             <div>
-                <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Subject Name</label>
+                <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'block' }}>Subject Name</label>
                 <input className="search-input-premium" value={subject} onChange={e => setSubject(e.target.value)} placeholder="Enter subject or '-'" />
             </div>
             <div>
-                <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>
+                <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'block' }}>
                     {isLab ? 'Main Permanent Faculty (Professor)' : 'Assigned Faculty'}
                 </label>
                 <select className="search-input-premium" value={mainFaculty} onChange={e => setMainFaculty(e.target.value)}>
@@ -1299,7 +1302,7 @@ function BookingForm({ initialData, facultyList = [], roomList = [], onSubmit, o
             </div>
             {isLab && (
                 <div>
-                    <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>
+                    <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'block' }}>
                         Lab Assistants (2 Contract Faculty)
                     </label>
                     <select multiple className="search-input-premium" style={{ height: '120px' }} value={assistants} onChange={handleAssistantChange}>
@@ -1319,7 +1322,7 @@ function BookingForm({ initialData, facultyList = [], roomList = [], onSubmit, o
             </div>
             {isLab && (
                 <div>
-                    <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Laboratory Wing</label>
+                    <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'block' }}>Laboratory Wing</label>
                     <select className="search-input-premium" value={wing} onChange={e => setWing(e.target.value)}>
                         <option value="">-- Select Wing --</option>
                         <option value="Wing 1">Wing 1</option>
@@ -1327,14 +1330,14 @@ function BookingForm({ initialData, facultyList = [], roomList = [], onSubmit, o
                     </select>
                 </div>
             )}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', background: '#f8fafc', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem', background: 'var(--bg-subtle)', borderRadius: '8px' }}>
                 <input type="checkbox" checked={updateAll} onChange={e => setUpdateAll(e.target.checked)} id="syncAll" />
-                <label htmlFor="syncAll" style={{ fontSize: '0.8rem', color: '#475569', fontWeight: '600', cursor: 'pointer' }}>Apply this faculty to ALL slots of this subject</label>
+                <label htmlFor="syncAll" style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: '600', cursor: 'pointer' }}>Apply this faculty to ALL slots of this subject</label>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
                 <button
                     className="btn-action"
-                    style={{ color: '#ef4444', borderColor: '#fee2e2', background: '#fef2f2' }}
+                    style={{ color: 'var(--univ-red)', borderColor: 'rgba(239, 68, 68, 0.2)', background: 'rgba(239, 68, 68, 0.1)' }}
                     onClick={() => {
                         if (confirm('Clear this slot?')) onSubmit({ subject: '-', faculty: '', assistants: [], updateAll: false });
                     }}
@@ -1606,7 +1609,7 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
         <div className="fade-in-up">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <div>
-                    <h2 style={{ margin: 0, color: 'var(--accent-dark)' }}>Attendance Gateway</h2>
+                    <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>Attendance Gateway</h2>
                     <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
                         {attendanceTab === 'department'
                             ? `Overall attendance reports for ${user.department || 'your'} department.`
@@ -1616,7 +1619,7 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', gap: '0.75rem', background: 'white', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                    <div style={{ display: 'flex', gap: '0.75rem', background: 'var(--bg-card)', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
                         <button
                             className={`btn-action ${attendanceTab === 'department' ? 'primary' : ''}`}
                             onClick={() => setAttendanceTab('department')}
@@ -1664,25 +1667,25 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                                             cursor: 'pointer',
                                             padding: '1.1rem',
                                             borderRadius: '14px',
-                                            border: `2px solid ${taken ? '#86efac' : active ? '#3b82f6' : '#e2e8f0'}`,
-                                            background: taken ? '#f0fdf4' : active ? '#eff6ff' : '#fff'
+                                            border: `2px solid ${taken ? 'var(--univ-green)' : active ? 'var(--primary)' : 'var(--border-light)'}`,
+                                            background: taken ? 'var(--primary-light)' : active ? 'var(--primary-light)' : 'var(--bg-card)'
                                         }}
                                     >
                                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.4rem' }}>
-                                            <div style={{ fontWeight: '800', color: '#0f172a' }}>{cls.subject}</div>
-                                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: taken ? '#166534' : '#475569' }}>
+                                            <div style={{ fontWeight: '800', color: 'var(--text-primary)' }}>{cls.subject}</div>
+                                            <span style={{ fontSize: '0.75rem', fontWeight: '700', color: taken ? 'var(--univ-green)' : 'var(--text-secondary)' }}>
                                                 {taken ? 'Taken' : 'Pending'}
                                             </span>
                                         </div>
-                                        <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{cls.semester}</div>
-                                        <div style={{ fontSize: '0.82rem', color: '#334155', marginTop: '0.4rem', fontWeight: '600' }}>{cls.time}</div>
-                                        {cls.room && <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '0.35rem' }}>Room: {cls.room}</div>}
+                                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{cls.semester}</div>
+                                        <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginTop: '0.4rem', fontWeight: '600' }}>{cls.time}</div>
+                                        {cls.room && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>Room: {cls.room}</div>}
                                     </div>
                                 );
                             })}
                         </div>
                     ) : (
-                        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '1rem 0 1.5rem' }}>No HOD classes found for today.</div>
+                        <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '1rem 0 1.5rem' }}>No HOD classes found for today.</div>
                     )}
 
                     {loading && (
@@ -1694,15 +1697,15 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
 
                 {students.length > 0 ? (
                     <div className="glass-table-container fade-in-up" style={{ borderRadius: '24px', overflow: 'hidden' }}>
-                        <div className="table-header-premium" style={{ background: '#f8fafc', padding: '1.5rem 2rem' }}>
+                        <div className="table-header-premium" style={{ background: 'var(--bg-subtle)', padding: '1.5rem 2rem' }}>
                             <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{attendanceExists ? 'Reviewing Record' : 'Attendance Registry'}</h3>
                                     {attendanceExists && (
                                         <span style={{ 
-                                            background: '#dcfce7', color: '#16a34a', fontSize: '0.7rem', 
+                                            background: 'var(--primary-light)', color: 'var(--univ-green)', fontSize: '0.7rem', 
                                             padding: '2px 10px', borderRadius: '99px', fontWeight: 800,
-                                            border: '1px solid #bbf7d0', textTransform: 'uppercase', letterSpacing: '0.5px'
+                                            border: '1px solid var(--primary-light)', textTransform: 'uppercase', letterSpacing: '0.5px'
                                         }}>Recorded</span>
                                     )}
                                 </div>
@@ -1711,11 +1714,11 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <div style={{ display: 'flex', background: 'white', borderRadius: '12px', padding: '4px', border: '1px solid var(--border-light)', marginRight: '0.5rem' }}>
-                                    <button onClick={() => markAll('Present')} style={{ padding: '6px 14px', border: 'none', background: 'transparent', color: '#16a34a', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer' }}>✓ All P</button>
-                                    <button onClick={() => markAll('Absent')} style={{ padding: '6px 14px', border: 'none', background: 'transparent', color: '#ef4444', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer' }}>✗ All A</button>
+                                <div style={{ display: 'flex', background: 'var(--bg-card)', borderRadius: '12px', padding: '4px', border: '1px solid var(--border-light)', marginRight: '0.5rem' }}>
+                                    <button onClick={() => markAll('Present')} style={{ padding: '6px 14px', border: 'none', background: 'transparent', color: 'var(--univ-green)', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer' }}>✓ All P</button>
+                                    <button onClick={() => markAll('Absent')} style={{ padding: '6px 14px', border: 'none', background: 'transparent', color: 'var(--univ-red)', fontWeight: '700', fontSize: '0.75rem', cursor: 'pointer' }}>✗ All A</button>
                                 </div>
-                                <div style={{ background: 'var(--accent-dark)', color: 'white', padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '600', display: 'flex', gap: '12px' }}>
+                                <div style={{ background: 'var(--bg-subtle)', color: 'var(--text-primary)', padding: '8px 16px', borderRadius: '10px', fontSize: '0.8rem', fontWeight: '600', display: 'flex', gap: '12px', border: '1px solid var(--border-light)' }}>
                                     <span>P: {presentCount}</span>
                                     <span style={{ opacity: 0.3 }}>|</span>
                                     <span>A: {absentCount}</span>
@@ -1734,20 +1737,20 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                                 <tbody>
                                     {students.map((s, idx) => (
                                         <tr key={s._id} style={{ animation: `fadeIn 0.3s ease-out ${idx * 0.01}s backwards` }}>
-                                            <td style={{ paddingLeft: '2rem', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', color: 'var(--accent-dark)' }}>{s.rollNumber}</td>
+                                            <td style={{ paddingLeft: '2rem', fontFamily: "'JetBrains Mono', monospace", fontWeight: '700', color: 'var(--text-primary)' }}>{s.rollNumber}</td>
                                             <td style={{ fontWeight: 500 }}>{s.name}</td>
                                             <td style={{ textAlign: 'center' }}>
                                                 <div 
                                                     style={{ 
                                                         display: 'inline-flex', 
-                                                        background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', 
+                                                        background: attendanceData[s._id] === 'Present' ? 'var(--primary-light)' : 'rgba(239, 68, 68, 0.2)', 
                                                         borderRadius: '30px', 
                                                         padding: '4px', 
                                                         cursor: 'pointer', 
                                                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
                                                         width: '110px', 
                                                         position: 'relative',
-                                                        border: `1px solid ${attendanceData[s._id] === 'Present' ? '#bbf7d0' : '#fecaca'}`
+                                                        border: `1px solid ${attendanceData[s._id] === 'Present' ? 'var(--primary-light)' : 'rgba(239, 68, 68, 0.3)'}`
                                                     }} 
                                                     onClick={() => toggleStatus(s._id)}
                                                 >
@@ -1757,14 +1760,14 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                                                         left: attendanceData[s._id] === 'Present' ? '60px' : '4px', 
                                                         width: '42px', 
                                                         height: '30px', 
-                                                        background: attendanceData[s._id] === 'Present' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #ef4444, #dc2626)', 
+                                                        background: attendanceData[s._id] === 'Present' ? 'linear-gradient(135deg, var(--univ-green), #16a34a)' : 'linear-gradient(135deg, var(--univ-red), #dc2626)', 
                                                         borderRadius: '20px', 
                                                         transition: 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                                                         boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
                                                     }}></div>
                                                     <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 15px', alignItems: 'center', height: '30px', fontSize: '0.75rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
-                                                        <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>ABSENT</span>
-                                                        <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>PRESENT</span>
+                                                        <span style={{ color: attendanceData[s._id] === 'Present' ? 'var(--univ-green)' : '#fff' }}>ABSENT</span>
+                                                        <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : 'var(--univ-red)' }}>PRESENT</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -1773,7 +1776,7 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                                 </tbody>
                             </table>
                         </div>
-                        <div style={{ padding: '2rem', textAlign: 'right', background: '#f8fafc', borderTop: '1px solid var(--border-light)' }}>
+                        <div style={{ padding: '2rem', textAlign: 'right', background: 'var(--bg-subtle)', borderTop: '1px solid var(--border-light)' }}>
                             <button
                                 className="btn-action primary"
                                 style={{ width: '220px', padding: '12px' }}
@@ -1786,9 +1789,9 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                     </div>
                 ) : (
                     selectedSemester && selectedSubject && !loading && (
-                        <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: '#94a3b8', borderRadius: '24px' }}>
+                        <div className="glass-panel" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-muted)', borderRadius: '24px' }}>
                             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
-                            <h3 style={{ color: 'var(--accent-dark)', marginBottom: '0.5rem' }}>No Students Found</h3>
+                            <h3 style={{ color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No Students Found</h3>
                             <p>We couldn't find any students for {selectedSemester} in {user.department}.<br/>Please verify the filters or check the student directory.</p>
                         </div>
                     )
@@ -1806,10 +1809,10 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
                             <div>
                                 <h3 style={{ margin: 0 }}>{viewingRecord.subject} Attendance</h3>
-                                <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                                <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                                     {viewingRecord.semester} • {viewingRecord.date} • {viewingRecord.periodTime}
                                 </p>
-                                <p style={{ margin: '4px 0 0 0', color: '#3b82f6', fontSize: '0.85rem', fontWeight: '600' }}>
+                                <p style={{ margin: '4px 0 0 0', color: 'var(--primary)', fontSize: '0.85rem', fontWeight: '600' }}>
                                     Faculty: {viewingRecord.facultyName}
                                 </p>
                             </div>
@@ -1906,16 +1909,16 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <div>
                         <h3 style={{ margin: 0 }}>📅 Attendance Calendar</h3>
-                        <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>
+                        <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
                             {daysWithAttendance} day(s) with attendance this month
                         </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <button onClick={fetchHistory} className="btn-action" style={{ padding: '6px 14px', fontSize: '0.8rem' }}>🔄 Refresh</button>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'white', padding: '6px', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
-                            <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 10px', fontSize: '1rem', color: '#64748b' }}>◀</button>
-                            <span style={{ fontWeight: 700, fontSize: '1rem', minWidth: '160px', textAlign: 'center', color: 'var(--accent-dark)' }}>{monthNames[month]} {year}</span>
-                            <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 10px', fontSize: '1rem', color: '#64748b' }}>▶</button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-card)', padding: '6px', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                            <button onClick={prevMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 10px', fontSize: '1rem', color: 'var(--text-secondary)' }}>◀</button>
+                            <span style={{ fontWeight: 700, fontSize: '1rem', minWidth: '160px', textAlign: 'center', color: 'var(--text-primary)' }}>{monthNames[month]} {year}</span>
+                            <button onClick={nextMonth} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px 10px', fontSize: '1rem', color: 'var(--text-secondary)' }}>▶</button>
                         </div>
                     </div>
                 </div>
@@ -1929,7 +1932,7 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
                         {/* Day Headers */}
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
                             {dayNames.map(d => (
-                                <div key={d} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', padding: '8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{d}</div>
+                                <div key={d} style={{ textAlign: 'center', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', padding: '8px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{d}</div>
                             ))}
                         </div>
 
@@ -1962,9 +1965,9 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
                                             justifyContent: 'center',
                                             cursor: 'pointer',
                                             transition: 'all 0.2s',
-                                            background: isSelected ? 'var(--primary)' : isToday ? '#FFF1F2' : hasRecords ? '#F0FDF4' : isSunday ? '#fef2f2' : 'white',
-                                            color: isSelected ? 'white' : isToday ? 'var(--primary)' : isSunday ? '#ef4444' : 'var(--accent-dark)',
-                                            border: isSelected ? '2px solid var(--primary)' : isToday ? '2px solid var(--primary)' : '1px solid #f1f5f9',
+                                            background: isSelected ? 'var(--primary)' : isToday ? 'rgba(255, 107, 107, 0.1)' : hasRecords ? 'var(--primary-light)' : isSunday ? 'rgba(239, 68, 68, 0.1)' : 'var(--bg-card)',
+                                            color: isSelected ? 'white' : isToday ? 'var(--primary)' : isSunday ? 'var(--univ-red)' : 'var(--text-primary)',
+                                            border: isSelected ? '2px solid var(--primary)' : isToday ? '2px solid var(--primary)' : '1px solid var(--border-light)',
                                             fontWeight: isToday || isSelected ? 800 : 500,
                                             fontSize: '0.95rem',
                                             position: 'relative',
@@ -1984,10 +1987,10 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
                                                         width: '5px',
                                                         height: '5px',
                                                         borderRadius: '50%',
-                                                        background: isSelected ? 'white' : '#22c55e'
+                                                        background: isSelected ? 'white' : 'var(--univ-green)'
                                                     }} />
                                                 ))}
-                                                {recordCount > 3 && <span style={{ fontSize: '0.5rem', color: isSelected ? 'white' : '#16a34a', fontWeight: 700 }}>+{recordCount - 3}</span>}
+                                                {recordCount > 3 && <span style={{ fontSize: '0.5rem', color: isSelected ? 'white' : 'var(--univ-green)', fontWeight: 700 }}>+{recordCount - 3}</span>}
                                             </div>
                                         )}
                                     </div>
@@ -1996,9 +1999,9 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
                         </div>
 
                         {/* Legend */}
-                        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', justifyContent: 'center', fontSize: '0.75rem', color: '#64748b' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e' }} /> Attendance Taken</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '3px', border: '2px solid var(--primary)', background: '#FFF1F2' }} /> Today</div>
+                        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1rem', justifyContent: 'center', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--univ-green)' }} /> Attendance Taken</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '3px', border: '2px solid var(--primary)', background: 'rgba(255, 107, 107, 0.1)' }} /> Today</div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--primary)' }} /> Selected</div>
                         </div>
                     </div>
@@ -2008,14 +2011,14 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
             {/* Records for selected date */}
             {selectedDate && (
                 <div className="glass-table-container fade-in-up" style={{ borderRadius: '24px', overflow: 'hidden' }}>
-                    <div className="table-header-premium" style={{ background: '#f8fafc', padding: '1.25rem 2rem' }}>
+                    <div className="table-header-premium" style={{ background: 'var(--bg-subtle)', padding: '1.25rem 2rem' }}>
                         <div>
                             <h3 style={{ margin: 0 }}>Records for {new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h3>
-                            <p style={{ margin: '4px 0 0', color: '#64748b', fontSize: '0.85rem' }}>{selectedRecords.length} session(s) recorded</p>
+                            <p style={{ margin: '4px 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>{selectedRecords.length} session(s) recorded</p>
                         </div>
                     </div>
                     {selectedRecords.length === 0 ? (
-                        <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>
+                        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                             <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>📭</div>
                             <p>No attendance was taken on this date.</p>
                         </div>
@@ -2032,9 +2035,9 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
                                             justifyContent: 'space-between',
                                             alignItems: 'center',
                                             padding: '1rem 1.5rem',
-                                            background: 'white',
+                                            background: 'var(--bg-card)',
                                             borderRadius: '16px',
-                                            border: '1px solid #f1f5f9',
+                                            border: '1px solid var(--border-light)',
                                             transition: 'all 0.2s',
                                             cursor: 'pointer'
                                         }}
@@ -2045,30 +2048,30 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                 <div style={{
                                                     width: '44px', height: '44px', borderRadius: '12px',
-                                                    background: rec.subject?.toLowerCase().includes('lab') ? '#F5F3FF' : '#EFF6FF',
+                                                    background: 'var(--bg-subtle)',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     fontSize: '1.2rem'
                                                 }}>
                                                     {rec.subject?.toLowerCase().includes('lab') ? '🔬' : '📖'}
                                                 </div>
                                                 <div>
-                                                    <div style={{ fontWeight: 700, color: 'var(--accent-dark)' }}>{rec.subject}</div>
-                                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{rec.semester} • {rec.periodTime || 'N/A'} • {rec.facultyName}</div>
+                                                    <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{rec.subject}</div>
+                                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{rec.semester} • {rec.periodTime || 'N/A'} • {rec.facultyName}</div>
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                                 <div style={{ textAlign: 'right' }}>
-                                                    <div style={{ fontWeight: 800, color: pct >= 75 ? '#16a34a' : pct >= 50 ? '#d97706' : '#ef4444', fontSize: '1.1rem' }}>{pct}%</div>
-                                                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{p}/{total} present</div>
+                                                    <div style={{ fontWeight: 800, color: pct >= 75 ? 'var(--univ-green)' : pct >= 50 ? '#d97706' : 'var(--univ-red)', fontSize: '1.1rem' }}>{pct}%</div>
+                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{p}/{total} present</div>
                                                 </div>
                                                 <div style={{ 
                                                     width: '40px', height: '40px', borderRadius: '50%', 
-                                                    background: `conic-gradient(${pct >= 75 ? '#22c55e' : pct >= 50 ? '#f59e0b' : '#ef4444'} ${pct}%, #f1f5f9 0%)`,
+                                                    background: `conic-gradient(${pct >= 75 ? 'var(--univ-green)' : pct >= 50 ? '#f59e0b' : 'var(--univ-red)'} ${pct}%, var(--bg-subtle) 0%)`,
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                                 }}>
-                                                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'white' }} />
+                                                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'var(--bg-card)' }} />
                                                 </div>
-                                                <span style={{ color: '#94a3b8', fontSize: '1.2rem' }}>→</span>
+                                                <span style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>→</span>
                                             </div>
                                         </div>
                                     );
@@ -2169,13 +2172,13 @@ function InfrastructureManager({ user, showToast }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                         <div>
                             <h3>University Infrastructure Manager</h3>
-                            <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>Define and Manage Physical Assets (Classes & Labs)</p>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>Define and Manage Physical Assets (Classes & Labs)</p>
                         </div>
-                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '12px', padding: '0.5rem', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', background: 'var(--bg-subtle)', borderRadius: '12px', padding: '0.5rem', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase' }}>Dept: {user.department || 'IT'}</span>
                         </div>
                         <div style={{ marginLeft: '1rem' }}>
-                            <label style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>Current Batch</label>
+                            <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Current Batch</label>
                             <input 
                                 className="modern-input" 
                                 style={{ width: '120px', padding: '6px' }} 
@@ -2195,7 +2198,7 @@ function InfrastructureManager({ user, showToast }) {
                             <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--secondary)' }}>{rooms.filter(r => r.type === 'Lab').length} <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>/ Min: 2</span></div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginLeft: '1rem' }}>
-                            <label style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 'bold' }}>Batch Size</label>
+                            <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Batch Size</label>
                             <input
                                 type="number"
                                 min="1"
@@ -2203,7 +2206,7 @@ function InfrastructureManager({ user, showToast }) {
                                 value={addCount}
                                 onChange={e => setAddCount(e.target.value)}
                                 className="modern-input"
-                                style={{ width: '70px', padding: '8px', color: '#1e293b', border: '2px solid var(--border-light)' }}
+                                style={{ width: '70px', padding: '8px', color: 'var(--text-primary)', border: '2px solid var(--border-light)' }}
                             />
                         </div>
                         <button onClick={() => addRoomsBulk('Classroom')} className="btn-action primary" style={{ background: 'var(--primary)' }}>+ Classes</button>
@@ -2313,7 +2316,7 @@ function InfrastructureManager({ user, showToast }) {
                                             onChange={e => handleRoomChange(r, 'morningSession', e.target.value)}
                                             className="modern-input"
                                             style={{
-                                                color: r.morningSession === 'Available' ? '#10b981' : '#ef4444',
+                                                color: r.morningSession === 'Available' ? 'var(--univ-green)' : 'var(--univ-red)',
                                                 fontWeight: 'bold',
                                                 padding: '6px'
                                             }}
@@ -2329,7 +2332,7 @@ function InfrastructureManager({ user, showToast }) {
                                             onChange={e => handleRoomChange(r, 'afternoonSession', e.target.value)}
                                             className="modern-input"
                                             style={{
-                                                color: r.afternoonSession === 'Available' ? '#10b981' : '#ef4444',
+                                                color: r.afternoonSession === 'Available' ? 'var(--univ-green)' : 'var(--univ-red)',
                                                 fontWeight: 'bold',
                                                 padding: '6px'
                                             }}
@@ -2340,14 +2343,14 @@ function InfrastructureManager({ user, showToast }) {
                                         </select>
                                     </td>
                                     <td>
-                                        <button onClick={() => deleteRoom(r)} className="btn-action" style={{ color: '#ef4444' }}>
+                                        <button onClick={() => deleteRoom(r)} className="btn-action" style={{ color: 'var(--univ-red)' }}>
                                             <Icons.Trash />
                                         </button>
                                     </td>
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="11" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
+                                    <td colSpan="11" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                                         No infrastructure data found. Add assets to get started. 🚀
                                     </td>
                                 </tr>
@@ -2368,36 +2371,36 @@ export default HodDashboard;
 function AIReportCard({ report, onClear }) {
     if (!report) return null;
     return (
-        <div className="glass-panel fade-in-up" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderLeft: '6px solid #8b5cf6', background: '#f5f3ff', borderRadius: '16px' }}>
+        <div className="glass-panel fade-in-up" style={{ padding: '1.5rem', marginBottom: '1.5rem', borderLeft: '6px solid var(--primary)', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ padding: '8px', background: '#ede9fe', color: '#8b5cf6', borderRadius: '8px', fontSize: '1.2rem' }}>✨</div>
-                    <h3 style={{ margin: 0, color: '#5b21b6', fontSize: '1.1rem' }}>Gemini AI Optimization Report</h3>
+                    <div style={{ padding: '8px', background: 'rgba(139, 92, 246, 0.2)', color: 'var(--primary)', borderRadius: '8px', fontSize: '1.2rem' }}>✨</div>
+                    <h3 style={{ margin: 0, color: 'var(--text-primary)', fontSize: '1.1rem' }}>Gemini AI Optimization Report</h3>
                 </div>
-                <button onClick={onClear} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '1.2rem' }}>✕</button>
+                <button onClick={onClear} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1.2rem' }}>✕</button>
             </div>
             
-            <p style={{ fontSize: '0.9rem', color: '#4c1d95', marginBottom: '1.25rem', fontWeight: '600', lineHeight: '1.5' }}>{report.summary}</p>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1.25rem', fontWeight: '600', lineHeight: '1.5' }}>{report.summary}</p>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-                <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
-                    <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#7c3aed', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>Clashes Resolved</h4>
-                    <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#1e1b4b', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ background: 'var(--bg-card)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                    <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--primary)', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>Clashes Resolved</h4>
+                    <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {report.clashesResolved?.map((c, i) => <li key={i}>{c}</li>)}
-                        {(!report.clashesResolved || report.clashesResolved.length === 0) && <li style={{ listStyle: 'none', marginLeft: '-1.2rem', color: '#94a3b8' }}>No clashes detected.</li>}
+                        {(!report.clashesResolved || report.clashesResolved.length === 0) && <li style={{ listStyle: 'none', marginLeft: '-1.2rem', color: 'var(--text-muted)' }}>No clashes detected.</li>}
                     </ul>
                 </div>
-                <div style={{ background: '#fff', padding: '1rem', borderRadius: '12px', border: '1px solid #ddd6fe' }}>
-                    <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#7c3aed', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>AI Suggestions & Warnings</h4>
-                    <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: '#1e1b4b', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ background: 'var(--bg-card)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-light)' }}>
+                    <h4 style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--primary)', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>AI Suggestions & Warnings</h4>
+                    <ul style={{ margin: 0, paddingLeft: '1.2rem', fontSize: '0.85rem', color: 'var(--text-primary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {report.warnings?.map((w, i) => <li key={i}>{w}</li>)}
-                        {(!report.warnings || report.warnings.length === 0) && <li style={{ listStyle: 'none', marginLeft: '-1.2rem', color: '#94a3b8' }}>All subjects fully allocated.</li>}
+                        {(!report.warnings || report.warnings.length === 0) && <li style={{ listStyle: 'none', marginLeft: '-1.2rem', color: 'var(--text-muted)' }}>All subjects fully allocated.</li>}
                     </ul>
                 </div>
             </div>
             
             {report.optimizationNotes && (
-                <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dotted #ddd6fe', fontSize: '0.8rem', fontStyle: 'italic', color: '#6d28d9', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dotted var(--border-light)', fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--primary)', display: 'flex', gap: '8px', alignItems: 'center' }}>
                     <span style={{ fontWeight: 'bold' }}>Intelligence Note:</span> {report.optimizationNotes}
                 </div>
             )}
