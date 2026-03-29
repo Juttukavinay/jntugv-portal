@@ -830,7 +830,11 @@ function AcademicCalendarManager({ showToast, user }) {
     ]);
     const [loading, setLoading] = useState(false);
     const [analytics, setAnalytics] = useState(null);
+    const [monthCursor, setMonthCursor] = useState(() => new Date());
+    const [timetableByDay, setTimetableByDay] = useState({});
+    const [calendarDoc, setCalendarDoc] = useState(null);
     const dept = user?.department || 'IT';
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
     const updateEntry = (idx, field, value) => {
         setEntries(prev => prev.map((row, i) => i === idx ? { ...row, [field]: value } : row));
@@ -845,10 +849,12 @@ function AcademicCalendarManager({ showToast, user }) {
             setLoading(true);
             const res = await fetch(`${API_BASE_URL}/api/academic-calendar?semester=${encodeURIComponent(semester)}&department=${encodeURIComponent(dept)}`);
             if (!res.ok) {
+                setCalendarDoc(null);
                 setLoading(false);
                 return;
             }
             const data = await res.json();
+            setCalendarDoc(data);
             setTitle(data.title || 'Academic Calendar');
             setAcademicYear(data.academicYear || '2025-26');
             setNotes(data.notes || '');
@@ -875,6 +881,34 @@ function AcademicCalendarManager({ showToast, user }) {
         loadCalendar();
         setAnalytics(null);
     }, [loadCalendar]);
+
+    useEffect(() => {
+        const fetchTimetableForCalendar = async () => {
+            try {
+                const deptParam = dept ? `&department=${encodeURIComponent(dept)}` : '';
+                const res = await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(semester)}${deptParam}`);
+                const data = await res.json();
+                const tt = Array.isArray(data) ? data[0] : data;
+                if (!tt || !Array.isArray(tt.schedule)) {
+                    setTimetableByDay({});
+                    return;
+                }
+                const map = {};
+                tt.schedule.forEach((d) => {
+                    map[d.day] = (d.periods || []).filter((p) => {
+                        const sub = (p.subject || '').trim();
+                        const type = (p.type || '').toLowerCase();
+                        return sub && sub !== '-' && sub !== 'LUNCH BREAK' && type !== 'free' && type !== 'break' && type !== 'activity';
+                    });
+                });
+                setTimetableByDay(map);
+            } catch (e) {
+                console.error(e);
+                setTimetableByDay({});
+            }
+        };
+        fetchTimetableForCalendar();
+    }, [semester, dept]);
 
     const saveCalendar = async () => {
         try {
@@ -925,6 +959,61 @@ function AcademicCalendarManager({ showToast, user }) {
             showToast('Unable to calculate period load', 'error');
         }
     };
+
+    const toDateOnly = (value) => {
+        const dt = new Date(value);
+        dt.setHours(0, 0, 0, 0);
+        return dt;
+    };
+
+    const inRange = (date, from, to) => {
+        if (!from || !to) return false;
+        const d = toDateOnly(date);
+        const f = toDateOnly(from);
+        const t = toDateOnly(to);
+        return d >= f && d <= t;
+    };
+
+    const instructionRanges = entries.filter((e) => {
+        const desc = (e.description || '').toLowerCase();
+        return e.category === 'instruction' || desc.includes('instruction period') || desc.includes('spell of instruction');
+    });
+
+    const blockedRanges = entries.filter((e) => {
+        const desc = (e.description || '').toLowerCase();
+        const isInstruction = e.category === 'instruction' || desc.includes('instruction period') || desc.includes('spell of instruction');
+        return !isInstruction;
+    });
+
+    const getDateMeta = (dateObj) => {
+        const holiday = holidays.find((h) => inRange(dateObj, h.fromDate, h.toDate));
+        const blocking = blockedRanges.find((e) => inRange(dateObj, e.fromDate, e.toDate));
+        const instruction = instructionRanges.some((e) => inRange(dateObj, e.fromDate, e.toDate));
+        return { holiday, blocking, instruction };
+    };
+
+    const getClassesForDate = (dateObj) => {
+        const { holiday, blocking, instruction } = getDateMeta(dateObj);
+        if (!instruction || holiday || blocking) return [];
+        const dayLabel = dayNames[dateObj.getDay()];
+        return timetableByDay[dayLabel] || [];
+    };
+
+    const buildCalendarGrid = () => {
+        const first = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), 1);
+        const start = new Date(first);
+        start.setDate(first.getDate() - first.getDay());
+        const cells = [];
+        for (let i = 0; i < 42; i += 1) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            cells.push(d);
+        }
+        return cells;
+    };
+
+    const calendarCells = buildCalendarGrid();
+    const monthLabel = monthCursor.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
     return (
         <div className="glass-table-container">
@@ -1017,6 +1106,85 @@ function AcademicCalendarManager({ showToast, user }) {
             <div style={{ padding: '0 1.25rem 1.25rem 1.25rem' }}>
                 <label className="input-label">Notes</label>
                 <textarea className="search-input-premium" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} style={{ width: '100%' }} />
+            </div>
+
+            <div style={{ padding: '0 1.25rem 1.25rem 1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    <h4 style={{ margin: 0 }}>Calendar View (Scheduled Classes by Date)</h4>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <button
+                            className="btn-action"
+                            onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() - 1, 1))}
+                        >
+                            Prev
+                        </button>
+                        <div style={{ fontWeight: '700', minWidth: '170px', textAlign: 'center' }}>{monthLabel}</div>
+                        <button
+                            className="btn-action"
+                            onClick={() => setMonthCursor(new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 1))}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    {dayNames.map((dn) => (
+                        <div key={dn} style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-secondary)', textAlign: 'center' }}>
+                            {dn.slice(0, 3)}
+                        </div>
+                    ))}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: '0.5rem' }}>
+                    {calendarCells.map((d, idx) => {
+                        const inCurrentMonth = d.getMonth() === monthCursor.getMonth();
+                        const { holiday, blocking, instruction } = getDateMeta(d);
+                        const classes = getClassesForDate(d);
+                        return (
+                            <div
+                                key={`${d.toISOString()}-${idx}`}
+                                style={{
+                                    minHeight: '110px',
+                                    padding: '0.45rem',
+                                    borderRadius: '10px',
+                                    border: '1px solid var(--border-light)',
+                                    background: inCurrentMonth ? 'var(--bg-card)' : 'var(--bg-subtle)',
+                                    opacity: inCurrentMonth ? 1 : 0.7,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: '0.25rem'
+                                }}
+                            >
+                                <div style={{ fontSize: '0.78rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                                    {d.getDate()}
+                                </div>
+                                {holiday && <div style={{ fontSize: '0.66rem', color: 'var(--univ-red)', fontWeight: '700' }}>Holiday</div>}
+                                {blocking && !holiday && <div style={{ fontSize: '0.66rem', color: 'var(--primary)', fontWeight: '700' }}>{blocking.description}</div>}
+                                {instruction && !holiday && !blocking && (
+                                    <>
+                                        <div style={{ fontSize: '0.66rem', color: 'var(--univ-green)', fontWeight: '700' }}>
+                                            Classes: {classes.length}
+                                        </div>
+                                        {classes.slice(0, 2).map((p, i) => (
+                                            <div key={`${p.time}-${i}`} style={{ fontSize: '0.64rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {p.time} {p.subject}
+                                            </div>
+                                        ))}
+                                        {classes.length > 2 && (
+                                            <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>+{classes.length - 2} more</div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                {!calendarDoc && (
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                        Save a calendar first to view date-wise class schedule.
+                    </div>
+                )}
             </div>
 
             {analytics && (
