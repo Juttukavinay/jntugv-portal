@@ -172,7 +172,7 @@ function PrincipalDashboard() {
                     borderLeft: `5px solid ${toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)'}`
                 }}>
                     <div style={{ color: toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)' }}>
-                        {toast.type === 'success' ? <Icons.Check /> : 'âŒ'}
+                        {toast.type === 'success' ? <Icons.Check /> : ''}
                     </div>
                     <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{toast.message}</div>
                 </div>
@@ -187,6 +187,15 @@ function NavItem({ icon, label, active, onClick, badge }) {
             {icon}
             <span>{label}</span>
             {badge && <span className="nav-link-badge">{badge}</span>}
+        </div>
+    );
+}
+
+function HeroSymbol({ icon, label, theme }) {
+    return (
+        <div className={`hero-symbol hero-symbol-${theme}`}>
+            <span className="hero-symbol-icon">{icon}</span>
+            <span className="hero-symbol-label">{label}</span>
         </div>
     );
 }
@@ -250,10 +259,19 @@ function DashboardOverview({ onNavigate }) {
     return (
         <div>
             {loading && <GlobalLoader />}
-            <div className="principal-hero-banner">
-                <div>
+            <div className="principal-hero-banner principal-hero-animated">
+                <div className="hero-orb hero-orb-a"></div>
+                <div className="hero-orb hero-orb-b"></div>
+                <div className="hero-orb hero-orb-c"></div>
+                <div className="principal-hero-content">
                     <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome back, Principal</h1>
                     <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', margin: 0 }}>Here's what's happening in your campus today.</p>
+                    <div className="principal-symbol-row">
+                        <HeroSymbol icon={<Icons.Building />} label="Operations" theme="violet" />
+                        <HeroSymbol icon={<Icons.Users />} label="Faculty Network" theme="cyan" />
+                        <HeroSymbol icon={<Icons.GradCap />} label="Student Success" theme="orange" />
+                        <HeroSymbol icon={<Icons.Book />} label="Curriculum Drive" theme="green" />
+                    </div>
                 </div>
                 <div className="principal-live-chip">
                     <div className="pulse-soft" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--univ-green)' }}></div>
@@ -471,11 +489,11 @@ function DepartmentPanel({ showToast }) {
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            ðŸ“¤ Upload CSV
+                            Upload CSV
                         </label>
-                        <button className="btn-action csv-dl" onClick={handleExportCSV} title="Export CSV">ðŸ“„ CSV</button>
-                        <button className="btn-action excel" onClick={handleExportCSV} title="Export Excel">ðŸ“Š Excel</button>
-                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">ðŸ“• PDF</button>
+                        <button className="btn-action csv-dl" onClick={handleExportCSV} title="Export CSV">Export CSV</button>
+                        <button className="btn-action excel" onClick={handleExportCSV} title="Export Excel">Export Excel</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">Export PDF</button>
                     <button className="btn-action primary" onClick={() => setShowAddModal(true)}>+ Add Department</button>
                 </div>
             </div>
@@ -511,7 +529,7 @@ function DepartmentPanel({ showToast }) {
                                 ) : (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: dept.hodName ? 'rgba(16, 185, 129, 0.2)' : 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>
-                                            {dept.hodName ? 'ðŸ‘¤' : '?'}
+                                            {dept.hodName ? <Icons.Users /> : '?'}
                                         </div>
                                         {dept.hodName ? (
                                             <span style={{ fontWeight: '500', color: 'var(--univ-green)' }}>{dept.hodName}</span>
@@ -563,7 +581,7 @@ function DepartmentPanel({ showToast }) {
                     <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Add Department</h3>
-                            <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
+                            <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
                         </div>
                         <form onSubmit={handleAddDept}>
                             <div className="input-group">
@@ -662,19 +680,19 @@ function StudentDirectory({ showToast }) {
                     <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                         <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            ðŸ“¤ Upload CSV
+                            Upload CSV
                         </label>
                         <button className="btn-action csv-dl" onClick={() => {
                             const headers = ['Roll Number', 'Name', 'Course', 'Year', 'Semester', 'Department'];
                             const data = filtered.map(s => [s.rollNumber, s.name, s.course, s.year, s.semester, s.department]);
                             exportToCSV(headers, data, `Students_${activeCourse}.csv`);
-                        }} title="Export CSV">ðŸ“„ CSV</button>
+                        }} title="Export CSV">Export CSV</button>
                         <button className="btn-action excel" onClick={() => {
                             const headers = ['Roll Number', 'Name', 'Course', 'Year', 'Semester', 'Department'];
                             const data = filtered.map(s => [s.rollNumber, s.name, s.course, s.year, s.semester, s.department]);
                             exportToCSV(headers, data, `Students_${activeCourse}.csv`);
-                        }} title="Export Excel">ðŸ“Š Excel</button>
-                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">ðŸ“• PDF</button>
+                        }} title="Export Excel">Export Excel</button>
+                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">Export PDF</button>
                         <div style={{ position: 'relative' }}>
                             <input
                                 type="text"
@@ -723,7 +741,7 @@ function StudentDirectory({ showToast }) {
                     <div className="modal-content glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Add New Student</h3>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
+                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
                         </div>
                         <AddStudentForm onSubmit={handleAddStudent} onCancel={() => setShowModal(false)} />
                     </div>
@@ -855,19 +873,19 @@ function FacultyDirectory({ showToast }) {
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            ðŸ“¤ Upload CSV
+                            Upload CSV
                         </label>
                         <button className="btn-action csv-dl" onClick={() => {
                         const headers = ['Name', 'Email', 'Designation', 'Department', 'Mobile', 'Type'];
                         const data = faculty.map(f => [f.name, f.email, f.designation, f.department, f.mobileNumber, f.type]);
                         exportToCSV(headers, data, 'Faculty_Report.csv');
-                    }} title="Export CSV">ðŸ“„ CSV</button>
+                    }} title="Export CSV">Export CSV</button>
                         <button className="btn-action excel" onClick={() => {
                         const headers = ['Name', 'Email', 'Designation', 'Department', 'Mobile', 'Type'];
                         const data = faculty.map(f => [f.name, f.email, f.designation, f.department, f.mobileNumber, f.type]);
                         exportToCSV(headers, data, 'Faculty_Report.csv');
-                    }} title="Export Excel">ðŸ“Š Excel</button>
-                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">ðŸ“• PDF</button>
+                    }} title="Export Excel">Export Excel</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">Export PDF</button>
                     <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Faculty</button>
                 </div>
             </div>
@@ -933,7 +951,7 @@ function FacultyDirectory({ showToast }) {
                     <div className="modal-content glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Add New Faculty</h3>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
+                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
                         </div>
                         <AddFacultyForm onSubmit={handleAddFaculty} onCancel={() => setShowModal(false)} />
                     </div>
@@ -945,7 +963,7 @@ function FacultyDirectory({ showToast }) {
                     <div className="modal-content glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Edit Faculty: {editingFaculty.name}</h3>
-                            <button onClick={() => setEditingFaculty(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
+                            <button onClick={() => setEditingFaculty(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
                         </div>
                         <AddFacultyForm 
                             initialData={editingFaculty} 
@@ -1064,19 +1082,19 @@ function CurriculumView() {
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            ðŸ“¤ Upload CSV
+                            Upload CSV
                         </label>
                         <button className="btn-action csv-dl" onClick={() => {
                             const headers = ['Code', 'Subject Title', 'Sem', 'L', 'T', 'P', 'Credits'];
                             const data = filteredSubjects.map(s => [s.courseCode, s.courseName, s.semester, s.L, s.T, s.P, s.credits]);
                             exportToCSV(headers, data, `Curriculum_${activeCourse}.csv`);
-                        }} title="Export CSV">ðŸ“„ CSV</button>
+                        }} title="Export CSV">Export CSV</button>
                         <button className="btn-action excel" onClick={() => {
                             const headers = ['Code', 'Subject Title', 'Sem', 'L', 'T', 'P', 'Credits'];
                             const data = filteredSubjects.map(s => [s.courseCode, s.courseName, s.semester, s.L, s.T, s.P, s.credits]);
                             exportToCSV(headers, data, `Curriculum_${activeCourse}.csv`);
-                        }} title="Export Excel">ðŸ“Š Excel</button>
-                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">ðŸ“• PDF</button>
+                        }} title="Export Excel">Export Excel</button>
+                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">Export PDF</button>
                         <select
                             className="search-input-premium"
                             style={{ width: '200px' }}
@@ -1192,10 +1210,10 @@ function TimetableView() {
                             <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>Monitor campus-wide time allocations</p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">ðŸ“• PDF</button>
+                            <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">Export PDF</button>
                             <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            ðŸ“¤ Upload CSV
+                            Upload CSV
                         </label>
                         <button className="btn-action csv-dl" onClick={() => {
                                 if (!timetable || !timetable.schedule) return;
@@ -1205,7 +1223,7 @@ function TimetableView() {
                                     ...d.periods.map(p => `${p.subject} (${p.faculty || 'Unassigned'})`)
                                 ]);
                                 exportToCSV(headers, data, `Timetable_${sem}.csv`);
-                            }} title="Export CSV">ðŸ“„ CSV</button>
+                            }} title="Export CSV">Export CSV</button>
                         <button className="btn-action excel" onClick={() => {
                                 if (!timetable || !timetable.schedule) return;
                                 const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
@@ -1214,14 +1232,14 @@ function TimetableView() {
                                     ...d.periods.map(p => `${p.subject} (${p.faculty || 'Unassigned'})`)
                                 ]);
                                 exportToCSV(headers, data, `Timetable_${sem}.csv`);
-                            }} title="Export Excel">ðŸ“Š Excel</button>
+                            }} title="Export Excel">Export Excel</button>
                         </div>
                         <div style={{ display: 'flex', background: 'var(--bg-subtle)', borderRadius: '12px', padding: '4px', border: '1px solid var(--border-light)' }}>
                             {[
-                                { id: 'class', label: 'Class Wise', icon: 'ðŸ«' },
-                                { id: 'faculty', label: 'Faculty Wise', icon: 'ðŸ‘¨â€ðŸ«' },
-                                { id: 'room', label: 'Labs/Rooms', icon: 'ðŸ§ª' },
-                                { id: 'master', label: 'Master View', icon: 'ðŸ“‹' }
+                                { id: 'class', label: 'Class Wise', icon: <Icons.Calendar /> },
+                                { id: 'faculty', label: 'Faculty Wise', icon: <Icons.Users /> },
+                                { id: 'room', label: 'Labs/Rooms', icon: <Icons.Building /> },
+                                { id: 'master', label: 'Master View', icon: <Icons.Home /> }
                             ].map(m => (
                                 <button
                                     key={m.id}
@@ -1235,7 +1253,7 @@ function TimetableView() {
                                         transition: 'all 0.2s'
                                     }}
                                 >
-                                    <span>{m.icon}</span> {m.label}
+                                    <span style={{ display: 'inline-flex', width: '16px', height: '16px' }}>{m.icon}</span> {m.label}
                                 </button>
                             ))}
                         </div>
@@ -1313,7 +1331,7 @@ function TimetableView() {
 
                         {viewMode === 'master' && (
                             <div style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '600' }}>
-                                âš¡ Viewing Full Campus Master Grid
+                                Alert: Viewing Full Campus Master Grid
                             </div>
                         )}
                     </div>
@@ -1355,7 +1373,7 @@ function TimetableView() {
             ) : (
                 <div style={{ padding: '5rem', textAlign: 'center', color: '#64748b' }}>
                     <div style={{ fontSize: '3.5rem', marginBottom: '1.5rem', filter: 'grayscale(0.5)' }}>
-                        {viewMode === 'class' ? 'ðŸ“…' : viewMode === 'faculty' ? 'ðŸ‘¤' : viewMode === 'room' ? 'ðŸ§ª' : 'ðŸŒŽ'}
+                        {viewMode === 'class' ? 'Class' : viewMode === 'faculty' ? 'Faculty' : viewMode === 'room' ? 'Labs' : 'Global'}
                     </div>
                     <h4 style={{ margin: 0, color: '#1e293b' }}>
                         {viewMode === 'class' ? 'No Timetable Found' : `${viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} View Initializing...`}
@@ -1590,7 +1608,7 @@ function AttendanceManager() {
             {viewMode === 'mark' ? (
                 <>
                 <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
-                    <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)' }}>ðŸ“‹ Strategic Attendance Loading</h3>
+                    <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)' }}>Strategic Attendance Loading</h3>
                     
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
                         <div>
@@ -1659,13 +1677,13 @@ function AttendanceManager() {
 
                     {!loading && selectedSemester && selectedSubject && !selectedTime && (
                         <div style={{ textAlign: 'center', padding: '1rem', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--univ-yellow)', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                            âš ï¸ Subject not found in today's timetable. Please enter the time slot manually to load students.
+                            Subject not found in today's timetable. Please enter the time slot manually to load students.
                         </div>
                     )}
                     
                     {loading && (
                         <div style={{ textAlign: 'center', padding: '1rem' }}>
-                            <div className="pulse-soft">ðŸ” Synchronizing records...</div>
+                            <div className="pulse-soft">Synchronizing records...</div>
                         </div>
                     )}
                 </div>
@@ -1674,12 +1692,12 @@ function AttendanceManager() {
                     <div className="glass-table-container">
                         <div className="table-header-premium">
                             <div>
-                                <h3 style={{ margin: '0 0 2px 0', color: 'var(--text-primary)' }}>{attendanceExists ? 'âœ… View Record' : 'âœï¸ Mark Attendance'}: {selectedSubject}</h3>
-                                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{selectedSemester} â€¢ {selectedTime} {attendanceExists && <span style={{ color: 'var(--univ-green)', fontWeight: 'bold', marginLeft: '10px' }}>[RECORDED]</span>}</div>
+                                <h3 style={{ margin: '0 0 2px 0', color: 'var(--text-primary)' }}>{attendanceExists ? 'View Record' : 'Mark Attendance'}: {selectedSubject}</h3>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{selectedSemester} | {selectedTime} {attendanceExists && <span style={{ color: 'var(--univ-green)', fontWeight: 'bold', marginLeft: '10px' }}>[RECORDED]</span>}</div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <button className="btn-action" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--univ-green)', fontWeight: '600', border: '1px solid rgba(16, 185, 129, 0.2)' }} onClick={() => markAll('Present')}>âœ“ Mark All Present</button>
-                                <button className="btn-action" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--univ-red)', fontWeight: '600', border: '1px solid rgba(239, 68, 68, 0.2)' }} onClick={() => markAll('Absent')}>âœ— Mark All Absent</button>
+                                <button className="btn-action" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--univ-green)', fontWeight: '600', border: '1px solid rgba(16, 185, 129, 0.2)' }} onClick={() => markAll('Present')}>Mark All Present</button>
+                                <button className="btn-action" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--univ-red)', fontWeight: '600', border: '1px solid rgba(239, 68, 68, 0.2)' }} onClick={() => markAll('Absent')}>Mark All Absent</button>
                                 <div style={{ background: 'var(--bg-subtle)', padding: '6px 16px', borderRadius: '12px', border: '1px solid var(--border-light)', fontSize: '0.85rem', fontWeight: '600' }}>
                                     <span style={{ marginRight: '1rem', color: 'var(--univ-green)' }}>Present: {presentCount}</span>
                                     <span style={{ color: 'var(--univ-red)' }}>Absent: {absentCount}</span>
@@ -1729,7 +1747,7 @@ function AttendanceManager() {
                 <div className="glass-table-container">
                     <div className="table-header-premium">
                         <h3>Attendance Reports (All Records)</h3>
-                        <button className="btn-action" onClick={fetchHistory}>ðŸ”„ Refresh</button>
+                        <button className="btn-action" onClick={fetchHistory}>Refresh</button>
                     </div>
                     <div style={{ overflowX: 'auto' }}>
                         <table className="premium-table">
@@ -1785,13 +1803,13 @@ function AttendanceManager() {
                             <div>
                                 <h3 style={{ margin: 0 }}>{viewingRecord.subject} Attendance</h3>
                                 <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>
-                                    {viewingRecord.semester} â€¢ {viewingRecord.date} â€¢ {viewingRecord.periodTime}
+                                    {viewingRecord.semester} | {viewingRecord.date} | {viewingRecord.periodTime}
                                 </p>
                                 <p style={{ margin: '4px 0 0 0', color: '#3b82f6', fontSize: '0.85rem', fontWeight: '600' }}>
                                     Faculty: {viewingRecord.facultyName}
                                 </p>
                             </div>
-                            <button onClick={() => setViewingRecord(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
+                            <button onClick={() => setViewingRecord(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}></button>
                         </div>
                         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                             <table className="premium-table">
@@ -1825,7 +1843,7 @@ function AttendanceManager() {
                                 const headers = ['Roll Number', 'Name', 'Status'];
                                 const data = viewingRecord.records.map(r => [r.rollNumber, r.name, r.status]);
                                 exportToCSV(headers, data, `Attendance_${viewingRecord.subject}_${viewingRecord.date}.csv`);
-                            }}>ðŸ“„ Export CSV</button>
+                            }}>Export CSV</button>
                             <button className="btn-action primary" onClick={() => setViewingRecord(null)}>Close</button>
                         </div>
                     </div>
