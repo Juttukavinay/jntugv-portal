@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
 import '../../App.css'
+import './PrincipalDashboard.css'
 import CommunicationCenter from '../../components/CommunicationCenter'
 import GlobalLoader from '../../components/GlobalLoader'
 import { exportToCSV } from '../../utils/exportUtils'
@@ -30,6 +31,11 @@ function PrincipalDashboard() {
     const [activeTab, setActiveTab] = useState('overview');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+    const todayLabel = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'short',
+        day: '2-digit'
+    });
 
     const logout = () => {
         localStorage.removeItem('user');
@@ -66,7 +72,7 @@ function PrincipalDashboard() {
     };
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container principal-dashboard">
             {/* Sidebar */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
@@ -92,12 +98,12 @@ function PrincipalDashboard() {
                     <div className="user-snippet">
                         <div className="user-avatar">P</div>
                         <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '0.9rem', fontWeight: '600' }}>Dr. Principal</div>
-                            <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Administrator</div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-primary)' }}>Dr. Principal</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Administrator</div>
                         </div>
                         <button
                             onClick={logout}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--univ-red)' }}
                             title="Logout"
                         >
                             <Icons.LogOut />
@@ -111,36 +117,35 @@ function PrincipalDashboard() {
 
             {/* Main Content Area */}
             <main className="dashboard-main-area">
-                <header className="mobile-header">
+                <header className="mobile-header principal-mobile-header">
                     <button
                         onClick={() => setMobileMenuOpen(true)}
-                        className="mobile-menu-btn"
-                        style={{ background: 'var(--primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', padding: '0.6rem', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '700' }}
+                        className="mobile-menu-btn principal-mobile-menu-btn"
                     >
                         <Icons.Home /> Menu
                     </button>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a' }}>Principal Dashboard</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: '700', color: 'var(--text-primary)' }}>Principal Dashboard</span>
                 </header>
 
                 {/* Desktop Professional Header */}
-                <div className="desktop-only" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', padding: '0 0 1rem 0' }}>
-                    <div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>Academic Portal</div>
-                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '800', color: '#0f172a' }}>
+                <div className="desktop-only principal-topbar">
+                    <div className="principal-topbar-heading">
+                        <div className="principal-topbar-subtitle">Academic Command Center</div>
+                        <h2>
                             {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
                         </h2>
                     </div>
-                    <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                    <div className="principal-topbar-right">
                         <div style={{ position: 'relative' }}>
-                            <div style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                                <div style={{ position: 'absolute', top: '10px', right: '10px', width: '8px', height: '8px', background: '#ef4444', borderRadius: '50%', border: '2px solid white' }}></div>
+                            <div className="principal-alert-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                                <div className="principal-alert-dot"></div>
                             </div>
                         </div>
-                        <div style={{ height: '30px', width: '1px', background: '#e2e8f0' }}></div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#0f172a' }}>Sunday, Mar 08</div>
-                            <div style={{ fontSize: '0.75rem', color: '#64748b' }}>System Uptime: 99.9%</div>
+                        <div className="principal-topbar-divider"></div>
+                        <div className="principal-topbar-meta">
+                            <div className="principal-topbar-date">{todayLabel}</div>
+                            <div className="principal-topbar-uptime">System Uptime: 99.9%</div>
                         </div>
                     </div>
                 </div>
@@ -156,20 +161,20 @@ function PrincipalDashboard() {
                     position: 'fixed',
                     bottom: '2rem',
                     right: '2rem',
-                    background: '#fff',
+                    background: 'var(--bg-card)',
                     padding: '1rem 1.5rem',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    boxShadow: 'var(--shadow-lg)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '1rem',
                     zIndex: 9999,
-                    borderLeft: `5px solid ${toast.type === 'success' ? '#10b981' : '#ef4444'}`
+                    borderLeft: `5px solid ${toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)'}`
                 }}>
-                    <div style={{ color: toast.type === 'success' ? '#10b981' : '#ef4444' }}>
-                        {toast.type === 'success' ? <Icons.Check /> : '❌'}
+                    <div style={{ color: toast.type === 'success' ? 'var(--univ-green)' : 'var(--univ-red)' }}>
+                        {toast.type === 'success' ? <Icons.Check /> : 'âŒ'}
                     </div>
-                    <div style={{ fontWeight: '600', color: '#1e293b' }}>{toast.message}</div>
+                    <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{toast.message}</div>
                 </div>
             )}
         </div>
@@ -188,10 +193,10 @@ function NavItem({ icon, label, active, onClick, badge }) {
 
 function PremiumStatCard({ title, value, icon, color, trend, trendType }) {
     const colors = {
-        blue: { bg: '#eff6ff', text: '#2563eb', icon: '#3b82f6' },
-        purple: { bg: '#f5f3ff', text: '#7c3aed', icon: '#8b5cf6' },
-        orange: { bg: '#fff7ed', text: '#ea580c', icon: '#f97316' },
-        green: { bg: '#f0fdf4', text: '#16a34a', icon: '#22c55e' }
+        blue: { bg: 'rgba(59, 130, 246, 0.1)', text: '#60a5fa', icon: '#3b82f6' },
+        purple: { bg: 'rgba(139, 92, 246, 0.1)', text: '#a78bfa', icon: '#8b5cf6' },
+        orange: { bg: 'rgba(249, 115, 22, 0.1)', text: '#fb923c', icon: '#f97316' },
+        green: { bg: 'rgba(16, 185, 129, 0.1)', text: '#34d399', icon: '#10b981' }
     };
     const c = colors[color] || colors.blue;
 
@@ -245,14 +250,14 @@ function DashboardOverview({ onNavigate }) {
     return (
         <div>
             {loading && <GlobalLoader />}
-            <div style={{ marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div className="principal-hero-banner">
                 <div>
-                    <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome back, Principal 👋</h1>
-                    <p style={{ color: '#64748b', fontSize: '1.1rem' }}>Here's what's happening in your campus today.</p>
+                    <h1 className="title-gradient" style={{ fontSize: '2rem', margin: '0 0 0.5rem 0' }}>Welcome back, Principal</h1>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', margin: 0 }}>Here's what's happening in your campus today.</p>
                 </div>
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: '#f8fafc', padding: '0.5rem 1rem', borderRadius: '30px', border: '1px solid #e2e8f0' }}>
-                    <div className="pulse-soft" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
-                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Live Data Active</span>
+                <div className="principal-live-chip">
+                    <div className="pulse-soft" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--univ-green)' }}></div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Live Data Active</span>
                 </div>
             </div>
 
@@ -288,8 +293,8 @@ function DashboardOverview({ onNavigate }) {
                 <div className="premium-stat-card" style={{ display: 'block', padding: '2rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                         <div>
-                            <h3 style={{ margin: 0, fontSize: '1.25rem' }}>Campus Engagement & Growth</h3>
-                            <p style={{ color: '#64748b', margin: '0.25rem 0 0 0' }}>Real-time student activity and department performance</p>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--text-primary)' }}>Campus Engagement & Growth</h3>
+                            <p style={{ color: 'var(--text-secondary)', margin: '0.25rem 0 0 0' }}>Real-time student activity and department performance</p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -313,19 +318,19 @@ function DashboardOverview({ onNavigate }) {
                                 </linearGradient>
                             </defs>
                             {/* Grid Lines */}
-                            <line x1="0" y1="0" x2="800" y2="0" stroke="#f1f5f9" />
-                            <line x1="0" y1="50" x2="800" y2="50" stroke="#f1f5f9" />
-                            <line x1="0" y1="100" x2="800" y2="100" stroke="#f1f5f9" />
-                            <line x1="0" y1="150" x2="800" y2="150" stroke="#f1f5f9" />
+                            <line x1="0" y1="0" x2="800" y2="0" stroke="var(--border-light)" />
+                            <line x1="0" y1="50" x2="800" y2="50" stroke="var(--border-light)" />
+                            <line x1="0" y1="100" x2="800" y2="100" stroke="var(--border-light)" />
+                            <line x1="0" y1="150" x2="800" y2="150" stroke="var(--border-light)" />
 
                             {/* Area Path */}
                             <path d="M0,180 Q100,140 200,160 T400,100 T600,80 T800,40 L800,200 L0,200 Z" fill="url(#chartGradient)" />
 
                             {/* Line Path */}
-                            <path d="M0,180 Q100,140 200,160 T400,100 T600,80 T800,40" fill="none" stroke="#3b82f6" strokeWidth="4" />
+                            <path d="M0,180 Q100,140 200,160 T400,100 T600,80 T800,40" fill="none" stroke="var(--primary)" strokeWidth="4" />
 
                             {/* Second Path (Engagement) */}
-                            <path d="M0,150 Q120,170 240,120 T480,140 T720,60 T800,80" fill="none" stroke="#8b5cf6" strokeWidth="4" strokeDasharray="8 4" />
+                            <path d="M0,150 Q120,170 240,120 T480,140 T720,60 T800,80" fill="none" stroke="var(--secondary)" strokeWidth="4" strokeDasharray="8 4" />
 
                             {/* Data Points */}
                             <circle cx="200" cy="160" r="6" fill="#3b82f6" fillOpacity="1" />
@@ -339,19 +344,19 @@ function DashboardOverview({ onNavigate }) {
             <div className="grid-split" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem' }}>
                 <div className="premium-stat-card" style={{ display: 'block' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                        <h3 style={{ margin: 0 }}>Leadership & HODs</h3>
+                        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Leadership & HODs</h3>
                         <button className="btn-action primary" onClick={() => onNavigate('departments')}>Manage All</button>
                     </div>
-                    <p style={{ color: '#64748b', lineHeight: '1.6', fontSize: '0.95rem' }}>
+                    <p style={{ color: 'var(--text-secondary)', lineHeight: '1.6', fontSize: '0.95rem' }}>
                         Oversee departmental leadership and ensure administrative stability across all campus branches.
                     </p>
-                    <div style={{ marginTop: '1.5rem', background: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0', padding: '1rem' }}>
+                    <div style={{ marginTop: '1.5rem', background: 'var(--bg-subtle)', borderRadius: '16px', border: '1px solid var(--border-light)', padding: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                <div className="user-avatar" style={{ background: '#e2e8f0', color: '#64748b', width: '40px', height: '40px' }}>?</div>
+                                <div className="user-avatar" style={{ background: 'var(--bg-card)', color: 'var(--text-muted)', width: '40px', height: '40px' }}>?</div>
                                 <div>
-                                    <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#1e293b' }}>Departmental Vacancies</div>
-                                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>2 HOD positions pending review</div>
+                                    <div style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)' }}>Departmental Vacancies</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>2 HOD positions pending review</div>
                                 </div>
                             </div>
                             <button className="btn-action" style={{ fontSize: '0.75rem', padding: '4px 12px' }}>Check Now</button>
@@ -360,14 +365,14 @@ function DashboardOverview({ onNavigate }) {
                 </div>
 
                 <div className="premium-stat-card" style={{ display: 'block' }}>
-                    <h3 style={{ margin: '0 0 1.5rem 0' }}>Strategic Access</h3>
+                    <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)' }}>Strategic Access</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                         <button className="btn-action" onClick={() => onNavigate('students')} style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', borderRadius: '16px' }}>
-                            <div style={{ color: '#3b82f6' }}><Icons.GradCap /></div>
+                            <div style={{ color: 'var(--primary)' }}><Icons.GradCap /></div>
                             <span style={{ fontWeight: '700' }}>Student Hub</span>
                         </button>
                         <button className="btn-action" onClick={() => onNavigate('timetables')} style={{ height: '100px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', borderRadius: '16px' }}>
-                            <div style={{ color: '#8b5cf6' }}><Icons.Calendar /></div>
+                            <div style={{ color: 'var(--secondary)' }}><Icons.Calendar /></div>
                             <span style={{ fontWeight: '700' }}>Academic Calendar</span>
                         </button>
                     </div>
@@ -460,17 +465,17 @@ function DepartmentPanel({ showToast }) {
         <div className="glass-table-container fade-in-up">
             <div className="table-header-premium">
                 <div>
-                    <h3 style={{ margin: 0 }}>Faculty & Departments</h3>
-                    <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>Management and academic structure</p>
+                    <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Faculty & Departments</h3>
+                    <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Management and academic structure</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            📤 Upload CSV
+                            ðŸ“¤ Upload CSV
                         </label>
-                        <button className="btn-action csv-dl" onClick={handleExportCSV} title="Export CSV">📄 CSV</button>
-                        <button className="btn-action excel" onClick={handleExportCSV} title="Export Excel">📊 Excel</button>
-                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                        <button className="btn-action csv-dl" onClick={handleExportCSV} title="Export CSV">ðŸ“„ CSV</button>
+                        <button className="btn-action excel" onClick={handleExportCSV} title="Export Excel">ðŸ“Š Excel</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">ðŸ“• PDF</button>
                     <button className="btn-action primary" onClick={() => setShowAddModal(true)}>+ Add Department</button>
                 </div>
             </div>
@@ -485,7 +490,7 @@ function DepartmentPanel({ showToast }) {
                 <tbody>
                     {departments.map(dept => (
                         <tr key={dept._id}>
-                            <td style={{ fontWeight: '600', color: '#0f172a' }}>{dept.name}</td>
+                            <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{dept.name}</td>
                             <td>
                                 {editingDept === dept.name ? (
                                     <select
@@ -505,13 +510,13 @@ function DepartmentPanel({ showToast }) {
                                     </select>
                                 ) : (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: dept.hodName ? '#dcfce7' : '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>
-                                            {dept.hodName ? '👤' : '?'}
+                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: dept.hodName ? 'rgba(16, 185, 129, 0.2)' : 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem' }}>
+                                            {dept.hodName ? 'ðŸ‘¤' : '?'}
                                         </div>
                                         {dept.hodName ? (
-                                            <span style={{ fontWeight: '500', color: '#15803d' }}>{dept.hodName}</span>
+                                            <span style={{ fontWeight: '500', color: 'var(--univ-green)' }}>{dept.hodName}</span>
                                         ) : (
-                                            <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Not Assigned</span>
+                                            <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Not Assigned</span>
                                         )}
                                     </div>
                                 )}
@@ -526,7 +531,7 @@ function DepartmentPanel({ showToast }) {
                                         </button>
                                         <button
                                             className="btn-action"
-                                            style={{ background: '#fee2e2', color: '#ef4444', border: '1px solid #fca5a5' }}
+                                            style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--univ-red)', border: '1px solid var(--univ-red)44' }}
                                             onClick={async () => {
                                                 if (window.confirm(`Are you sure you want to delete ${dept.name}?`)) {
                                                     try {
@@ -558,7 +563,7 @@ function DepartmentPanel({ showToast }) {
                     <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Add Department</h3>
-                            <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                            <button onClick={() => setShowAddModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
                         </div>
                         <form onSubmit={handleAddDept}>
                             <div className="input-group">
@@ -638,17 +643,17 @@ function StudentDirectory({ showToast }) {
             <div className="table-header-premium" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <h3 style={{ margin: 0 }}>Student Directory</h3>
-                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
+                        <h3 style={{ margin: 0, color: 'var(--text-primary)' }}>Student Directory</h3>
+                        <div style={{ display: 'flex', background: 'var(--bg-subtle)', borderRadius: '8px', padding: '4px' }}>
                             {['B.Tech', 'M.Tech', 'MCA'].map(c => (
                                 <button
                                     key={c}
                                     onClick={() => setActiveCourse(c)}
                                     style={{
                                         padding: '6px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer',
-                                        background: activeCourse === c ? '#fff' : 'transparent',
-                                        color: activeCourse === c ? '#0f172a' : '#64748b',
-                                        fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                        background: activeCourse === c ? 'var(--bg-card)' : 'transparent',
+                                        color: activeCourse === c ? 'var(--primary)' : 'var(--text-secondary)',
+                                        fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? 'var(--shadow-sm)' : 'none'
                                     }}
                                 >{c}</button>
                             ))}
@@ -657,19 +662,19 @@ function StudentDirectory({ showToast }) {
                     <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
                         <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            📤 Upload CSV
+                            ðŸ“¤ Upload CSV
                         </label>
                         <button className="btn-action csv-dl" onClick={() => {
                             const headers = ['Roll Number', 'Name', 'Course', 'Year', 'Semester', 'Department'];
                             const data = filtered.map(s => [s.rollNumber, s.name, s.course, s.year, s.semester, s.department]);
                             exportToCSV(headers, data, `Students_${activeCourse}.csv`);
-                        }} title="Export CSV">📄 CSV</button>
+                        }} title="Export CSV">ðŸ“„ CSV</button>
                         <button className="btn-action excel" onClick={() => {
                             const headers = ['Roll Number', 'Name', 'Course', 'Year', 'Semester', 'Department'];
                             const data = filtered.map(s => [s.rollNumber, s.name, s.course, s.year, s.semester, s.department]);
                             exportToCSV(headers, data, `Students_${activeCourse}.csv`);
-                        }} title="Export Excel">📊 Excel</button>
-                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                        }} title="Export Excel">ðŸ“Š Excel</button>
+                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">ðŸ“• PDF</button>
                         <div style={{ position: 'relative' }}>
                             <input
                                 type="text"
@@ -679,7 +684,7 @@ function StudentDirectory({ showToast }) {
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
-                            <Icons.Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', width: '16px', height: '16px' }} />
+                            <Icons.Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', width: '16px', height: '16px' }} />
                         </div>
                         <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Student</button>
                     </div>
@@ -699,14 +704,14 @@ function StudentDirectory({ showToast }) {
                     <tbody>
                         {filtered.length > 0 ? filtered.map(s => (
                             <tr key={s._id}>
-                                <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
-                                <td>{s.name}</td>
-                                <td><span className="badge-role">{s.course} {s.year} Year</span> <span style={{ color: '#94a3b8' }}>/</span> {s.semester}</td>
-                                <td>{s.department}</td>
+                                <td style={{ fontFamily: 'monospace', fontWeight: '600', color: 'var(--text-primary)' }}>{s.rollNumber}</td>
+                                <td style={{ color: 'var(--text-primary)' }}>{s.name}</td>
+                                <td><span className="badge-role">{s.course} {s.year} Year</span> <span style={{ color: 'var(--text-muted)' }}>/</span> <span style={{ color: 'var(--text-secondary)' }}>{s.semester}</span></td>
+                                <td style={{ color: 'var(--text-secondary)' }}>{s.department}</td>
                             </tr>
                         )) : (
                             <tr>
-                                <td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>No students found.</td>
+                                <td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No students found.</td>
                             </tr>
                         )}
                     </tbody>
@@ -718,7 +723,7 @@ function StudentDirectory({ showToast }) {
                     <div className="modal-content glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Add New Student</h3>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
                         </div>
                         <AddStudentForm onSubmit={handleAddStudent} onCancel={() => setShowModal(false)} />
                     </div>
@@ -846,23 +851,23 @@ function FacultyDirectory({ showToast }) {
     return (
         <div className="glass-table-container">
             <div className="table-header-premium">
-                <h3>Faculty Directory</h3>
+                <h3 style={{ color: 'var(--text-primary)' }}>Faculty Directory</h3>
                 <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                     <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            📤 Upload CSV
+                            ðŸ“¤ Upload CSV
                         </label>
                         <button className="btn-action csv-dl" onClick={() => {
                         const headers = ['Name', 'Email', 'Designation', 'Department', 'Mobile', 'Type'];
                         const data = faculty.map(f => [f.name, f.email, f.designation, f.department, f.mobileNumber, f.type]);
                         exportToCSV(headers, data, 'Faculty_Report.csv');
-                    }} title="Export CSV">📄 CSV</button>
+                    }} title="Export CSV">ðŸ“„ CSV</button>
                         <button className="btn-action excel" onClick={() => {
                         const headers = ['Name', 'Email', 'Designation', 'Department', 'Mobile', 'Type'];
                         const data = faculty.map(f => [f.name, f.email, f.designation, f.department, f.mobileNumber, f.type]);
                         exportToCSV(headers, data, 'Faculty_Report.csv');
-                    }} title="Export Excel">📊 Excel</button>
-                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                    }} title="Export Excel">ðŸ“Š Excel</button>
+                    <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">ðŸ“• PDF</button>
                     <button className="btn-action primary" onClick={() => setShowModal(true)}>+ Add Faculty</button>
                 </div>
             </div>
@@ -881,19 +886,19 @@ function FacultyDirectory({ showToast }) {
                 <tbody>
                     {faculty.map(f => (
                         <tr key={f._id}>
-                            <td style={{ fontWeight: '600' }}>{f.name}</td>
-                            <td>{f.email}</td>
-                            <td>{f.designation}</td>
+                            <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{f.name}</td>
+                            <td style={{ color: 'var(--text-secondary)' }}>{f.email}</td>
+                            <td style={{ color: 'var(--text-secondary)' }}>{f.designation}</td>
                             <td style={{ fontWeight: '700', color: 'var(--primary)' }}>{f.department}</td>
-                            <td>{f.mobileNumber}</td>
+                            <td style={{ color: 'var(--text-secondary)' }}>{f.mobileNumber}</td>
                             <td>
                                 <span style={{
                                     padding: '0.25rem 0.75rem',
                                     borderRadius: '99px',
                                     fontSize: '0.75rem',
                                     fontWeight: '600',
-                                    background: f.type === 'Regular' ? '#dcfce7' : '#fef9c3',
-                                    color: f.type === 'Regular' ? '#166534' : '#854d0e'
+                                    background: f.type === 'Regular' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(234, 179, 8, 0.2)',
+                                    color: f.type === 'Regular' ? 'var(--univ-green)' : 'var(--univ-yellow)'
                                 }}>
                                     {f.type}
                                 </span>
@@ -903,7 +908,7 @@ function FacultyDirectory({ showToast }) {
                                     <button 
                                         onClick={() => setEditingFaculty(f)}
                                         className="btn-action" 
-                                        style={{ padding: '4px', background: '#f1f5f9', border: '1px solid #e2e8f0', color: '#64748b' }}
+                                        style={{ padding: '4px', background: 'var(--bg-subtle)', border: '1px solid var(--border-light)', color: 'var(--text-secondary)' }}
                                         title="Edit Faculty"
                                     >
                                         <Icons.Edit />
@@ -911,7 +916,7 @@ function FacultyDirectory({ showToast }) {
                                     <button 
                                         onClick={() => handleDeleteFaculty(f._id)}
                                         className="btn-action" 
-                                        style={{ padding: '4px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#ef4444' }}
+                                        style={{ padding: '4px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--univ-red)44', color: 'var(--univ-red)' }}
                                         title="Delete Faculty"
                                     >
                                         <Icons.Trash />
@@ -928,7 +933,7 @@ function FacultyDirectory({ showToast }) {
                     <div className="modal-content glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Add New Faculty</h3>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
                         </div>
                         <AddFacultyForm onSubmit={handleAddFaculty} onCancel={() => setShowModal(false)} />
                     </div>
@@ -940,7 +945,7 @@ function FacultyDirectory({ showToast }) {
                     <div className="modal-content glass-panel">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Edit Faculty: {editingFaculty.name}</h3>
-                            <button onClick={() => setEditingFaculty(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                            <button onClick={() => setEditingFaculty(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
                         </div>
                         <AddFacultyForm 
                             initialData={editingFaculty} 
@@ -1040,17 +1045,17 @@ function CurriculumView() {
             <div className="table-header-premium" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between', width: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <h3>Curriculum Overview</h3>
-                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '8px', padding: '4px' }}>
+                        <h3 style={{ color: 'var(--text-primary)' }}>Curriculum Overview</h3>
+                        <div style={{ display: 'flex', background: 'var(--bg-subtle)', borderRadius: '8px', padding: '4px' }}>
                             {['B.Tech', 'M.Tech', 'MCA'].map(c => (
                                 <button
                                     key={c}
                                     onClick={() => { setActiveCourse(c); setSelectedSem('All'); }}
                                     style={{
                                         padding: '6px 16px', border: 'none', borderRadius: '6px', cursor: 'pointer',
-                                        background: activeCourse === c ? '#fff' : 'transparent',
-                                        color: activeCourse === c ? '#0f172a' : '#64748b',
-                                        fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+                                        background: activeCourse === c ? 'var(--bg-card)' : 'transparent',
+                                        color: activeCourse === c ? 'var(--primary)' : 'var(--text-secondary)',
+                                        fontWeight: '600', fontSize: '0.85rem', boxShadow: activeCourse === c ? 'var(--shadow-sm)' : 'none'
                                     }}
                                 >{c}</button>
                             ))}
@@ -1059,19 +1064,19 @@ function CurriculumView() {
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                         <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            📤 Upload CSV
+                            ðŸ“¤ Upload CSV
                         </label>
                         <button className="btn-action csv-dl" onClick={() => {
                             const headers = ['Code', 'Subject Title', 'Sem', 'L', 'T', 'P', 'Credits'];
                             const data = filteredSubjects.map(s => [s.courseCode, s.courseName, s.semester, s.L, s.T, s.P, s.credits]);
                             exportToCSV(headers, data, `Curriculum_${activeCourse}.csv`);
-                        }} title="Export CSV">📄 CSV</button>
+                        }} title="Export CSV">ðŸ“„ CSV</button>
                         <button className="btn-action excel" onClick={() => {
                             const headers = ['Code', 'Subject Title', 'Sem', 'L', 'T', 'P', 'Credits'];
                             const data = filteredSubjects.map(s => [s.courseCode, s.courseName, s.semester, s.L, s.T, s.P, s.credits]);
                             exportToCSV(headers, data, `Curriculum_${activeCourse}.csv`);
-                        }} title="Export Excel">📊 Excel</button>
-                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">📕 PDF</button>
+                        }} title="Export Excel">ðŸ“Š Excel</button>
+                        <button className="btn-action pdf" onClick={() => window.print()} title="Export PDF">ðŸ“• PDF</button>
                         <select
                             className="search-input-premium"
                             style={{ width: '200px' }}
@@ -1100,16 +1105,16 @@ function CurriculumView() {
                     <tbody>
                         {filteredSubjects.length > 0 ? filteredSubjects.map((s, i) => (
                             <tr key={i}>
-                                <td style={{ fontFamily: 'monospace' }}>{s.courseCode}</td>
-                                <td style={{ fontWeight: '500' }}>{s.courseName}</td>
-                                <td>{s.semester}</td>
-                                <td style={{ textAlign: 'center' }}>{s.L}</td>
-                                <td style={{ textAlign: 'center' }}>{s.T}</td>
-                                <td style={{ textAlign: 'center' }}>{s.P}</td>
-                                <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{s.credits}</td>
+                                <td style={{ fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{s.courseCode}</td>
+                                <td style={{ fontWeight: '500', color: 'var(--text-primary)' }}>{s.courseName}</td>
+                                <td style={{ color: 'var(--text-secondary)' }}>{s.semester}</td>
+                                <td style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{s.L}</td>
+                                <td style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{s.T}</td>
+                                <td style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{s.P}</td>
+                                <td style={{ textAlign: 'center', fontWeight: 'bold', color: 'var(--primary)' }}>{s.credits}</td>
                             </tr>
                         )) : (
-                            <tr><td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>No subjects found for {activeCourse}</td></tr>
+                            <tr><td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>No subjects found for {activeCourse}</td></tr>
                         )}
                     </tbody>
                 </table>
@@ -1160,15 +1165,15 @@ function TimetableView() {
                     flex: 1,
                     padding: '8px',
                     borderRadius: '8px',
-                    background: p.type === 'Lab' ? '#eff6ff' : 'white',
-                    border: '1px solid #e2e8f0',
+                    background: p.type === 'Lab' ? 'rgba(59, 130, 246, 0.1)' : 'var(--bg-subtle)',
+                    border: '1px solid var(--border-light)',
                     fontSize: '0.75rem',
                     display: 'flex', flexDirection: 'column', justifyContent: 'center',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                    boxShadow: 'var(--shadow-sm)',
                     transition: 'all 0.2s'
                 }}>
-                    <div style={{ fontWeight: '700', color: '#1e293b', marginBottom: '2px' }}>{p.subject}</div>
-                    <div style={{ color: '#64748b', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ fontWeight: '700', color: 'var(--text-primary)', marginBottom: '2px' }}>{p.subject}</div>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Icons.Users style={{ width: '10px', height: '10px' }} />
                         {p.faculty || 'Unassigned'}
                     </div>
@@ -1187,10 +1192,10 @@ function TimetableView() {
                             <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>Monitor campus-wide time allocations</p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">📕 PDF</button>
+                            <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">ðŸ“• PDF</button>
                             <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            📤 Upload CSV
+                            ðŸ“¤ Upload CSV
                         </label>
                         <button className="btn-action csv-dl" onClick={() => {
                                 if (!timetable || !timetable.schedule) return;
@@ -1200,7 +1205,7 @@ function TimetableView() {
                                     ...d.periods.map(p => `${p.subject} (${p.faculty || 'Unassigned'})`)
                                 ]);
                                 exportToCSV(headers, data, `Timetable_${sem}.csv`);
-                            }} title="Export CSV">📄 CSV</button>
+                            }} title="Export CSV">ðŸ“„ CSV</button>
                         <button className="btn-action excel" onClick={() => {
                                 if (!timetable || !timetable.schedule) return;
                                 const headers = ['Day', 'P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'];
@@ -1209,24 +1214,24 @@ function TimetableView() {
                                     ...d.periods.map(p => `${p.subject} (${p.faculty || 'Unassigned'})`)
                                 ]);
                                 exportToCSV(headers, data, `Timetable_${sem}.csv`);
-                            }} title="Export Excel">📊 Excel</button>
+                            }} title="Export Excel">ðŸ“Š Excel</button>
                         </div>
-                        <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '12px', padding: '4px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', background: 'var(--bg-subtle)', borderRadius: '12px', padding: '4px', border: '1px solid var(--border-light)' }}>
                             {[
-                                { id: 'class', label: 'Class Wise', icon: '🏫' },
-                                { id: 'faculty', label: 'Faculty Wise', icon: '👨‍🏫' },
-                                { id: 'room', label: 'Labs/Rooms', icon: '🧪' },
-                                { id: 'master', label: 'Master View', icon: '📋' }
+                                { id: 'class', label: 'Class Wise', icon: 'ðŸ«' },
+                                { id: 'faculty', label: 'Faculty Wise', icon: 'ðŸ‘¨â€ðŸ«' },
+                                { id: 'room', label: 'Labs/Rooms', icon: 'ðŸ§ª' },
+                                { id: 'master', label: 'Master View', icon: 'ðŸ“‹' }
                             ].map(m => (
                                 <button
                                     key={m.id}
                                     onClick={() => setViewMode(m.id)}
                                     style={{
                                         padding: '8px 16px', border: 'none', borderRadius: '8px', cursor: 'pointer',
-                                        background: viewMode === m.id ? 'white' : 'transparent',
-                                        color: viewMode === m.id ? '#4f46e5' : '#64748b',
+                                        background: viewMode === m.id ? 'var(--bg-card)' : 'transparent',
+                                        color: viewMode === m.id ? 'var(--primary)' : 'var(--text-secondary)',
                                         fontWeight: '700', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px',
-                                        boxShadow: viewMode === m.id ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none',
+                                        boxShadow: viewMode === m.id ? 'var(--shadow-sm)' : 'none',
                                         transition: 'all 0.2s'
                                     }}
                                 >
@@ -1243,9 +1248,9 @@ function TimetableView() {
                                     {['B.Tech', 'M.Tech', 'MCA'].map(c => (
                                         <button key={c} onClick={() => setActiveCourse(c)} style={{
                                             padding: '6px 14px', border: '1px solid', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer',
-                                            borderColor: activeCourse === c ? '#4f46e5' : '#e2e8f0',
-                                            background: activeCourse === c ? '#eef2ff' : 'white',
-                                            color: activeCourse === c ? '#4f46e5' : '#64748b'
+                                            borderColor: activeCourse === c ? 'var(--primary)' : 'var(--border-light)',
+                                            background: activeCourse === c ? 'var(--bg-subtle)' : 'var(--bg-card)',
+                                            color: activeCourse === c ? 'var(--primary)' : 'var(--text-secondary)'
                                         }}>{c}</button>
                                     ))}
                                 </div>
@@ -1307,8 +1312,8 @@ function TimetableView() {
                         )}
 
                         {viewMode === 'master' && (
-                            <div style={{ fontSize: '0.85rem', color: '#4f46e5', fontWeight: '600' }}>
-                                ⚡ Viewing Full Campus Master Grid
+                            <div style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: '600' }}>
+                                âš¡ Viewing Full Campus Master Grid
                             </div>
                         )}
                     </div>
@@ -1350,7 +1355,7 @@ function TimetableView() {
             ) : (
                 <div style={{ padding: '5rem', textAlign: 'center', color: '#64748b' }}>
                     <div style={{ fontSize: '3.5rem', marginBottom: '1.5rem', filter: 'grayscale(0.5)' }}>
-                        {viewMode === 'class' ? '📅' : viewMode === 'faculty' ? '👤' : viewMode === 'room' ? '🧪' : '🌎'}
+                        {viewMode === 'class' ? 'ðŸ“…' : viewMode === 'faculty' ? 'ðŸ‘¤' : viewMode === 'room' ? 'ðŸ§ª' : 'ðŸŒŽ'}
                     </div>
                     <h4 style={{ margin: 0, color: '#1e293b' }}>
                         {viewMode === 'class' ? 'No Timetable Found' : `${viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} View Initializing...`}
@@ -1584,12 +1589,12 @@ function AttendanceManager() {
 
             {viewMode === 'mark' ? (
                 <>
-                <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px' }}>
-                    <h3 style={{ margin: '0 0 1.5rem 0' }}>📋 Strategic Attendance Loading</h3>
+                <div className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem', borderRadius: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
+                    <h3 style={{ margin: '0 0 1.5rem 0', color: 'var(--text-primary)' }}>ðŸ“‹ Strategic Attendance Loading</h3>
                     
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem' }}>
                         <div>
-                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Department</label>
+                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Department</label>
                             <select 
                                 className="search-input-premium" 
                                 style={{ width: '100%', marginTop: '0.5rem' }}
@@ -1602,7 +1607,7 @@ function AttendanceManager() {
                         </div>
 
                         <div>
-                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Semester</label>
+                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Semester</label>
                             <select 
                                 className="search-input-premium" 
                                 style={{ width: '100%', marginTop: '0.5rem' }}
@@ -1615,7 +1620,7 @@ function AttendanceManager() {
                         </div>
                         
                         <div>
-                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Subject / Lab</label>
+                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Subject / Lab</label>
                             <select 
                                 className="search-input-premium" 
                                 style={{ width: '100%', marginTop: '0.5rem' }}
@@ -1629,7 +1634,7 @@ function AttendanceManager() {
                         </div>
 
                         <div>
-                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Date</label>
+                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Date</label>
                             <input 
                                 type="date"
                                 className="search-input-premium" 
@@ -1640,7 +1645,7 @@ function AttendanceManager() {
                         </div>
 
                         <div>
-                            <label style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 'bold' }}>Time Slot</label>
+                            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Time Slot</label>
                             <input 
                                 type="text"
                                 className="search-input-premium" 
@@ -1653,14 +1658,14 @@ function AttendanceManager() {
                     </div>
 
                     {!loading && selectedSemester && selectedSubject && !selectedTime && (
-                        <div style={{ textAlign: 'center', padding: '1rem', background: '#fffbeb', color: '#92400e', borderRadius: '8px', fontSize: '0.9rem' }}>
-                            ⚠️ Subject not found in today's timetable. Please enter the time slot manually to load students.
+                        <div style={{ textAlign: 'center', padding: '1rem', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--univ-yellow)', borderRadius: '8px', fontSize: '0.9rem', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                            âš ï¸ Subject not found in today's timetable. Please enter the time slot manually to load students.
                         </div>
                     )}
                     
                     {loading && (
                         <div style={{ textAlign: 'center', padding: '1rem' }}>
-                            <div className="pulse-soft">🔍 Synchronizing records...</div>
+                            <div className="pulse-soft">ðŸ” Synchronizing records...</div>
                         </div>
                     )}
                 </div>
@@ -1669,15 +1674,15 @@ function AttendanceManager() {
                     <div className="glass-table-container">
                         <div className="table-header-premium">
                             <div>
-                                <h3 style={{ margin: '0 0 2px 0' }}>{attendanceExists ? '✅ View Record' : '✍️ Mark Attendance'}: {selectedSubject}</h3>
-                                <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{selectedSemester} • {selectedTime} {attendanceExists && <span style={{ color: '#16a34a', fontWeight: 'bold', marginLeft: '10px' }}>[RECORDED]</span>}</div>
+                                <h3 style={{ margin: '0 0 2px 0', color: 'var(--text-primary)' }}>{attendanceExists ? 'âœ… View Record' : 'âœï¸ Mark Attendance'}: {selectedSubject}</h3>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{selectedSemester} â€¢ {selectedTime} {attendanceExists && <span style={{ color: 'var(--univ-green)', fontWeight: 'bold', marginLeft: '10px' }}>[RECORDED]</span>}</div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                <button className="btn-action" style={{ background: '#dcfce7', color: '#166534', fontWeight: '600', border: '1px solid #bbf7d0' }} onClick={() => markAll('Present')}>✓ Mark All Present</button>
-                                <button className="btn-action" style={{ background: '#fee2e2', color: '#991b1b', fontWeight: '600', border: '1px solid #fecaca' }} onClick={() => markAll('Absent')}>✗ Mark All Absent</button>
-                                <div style={{ background: '#f8fafc', padding: '6px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '0.85rem', fontWeight: '600' }}>
-                                    <span style={{ marginRight: '1rem', color: '#16a34a' }}>Present: {presentCount}</span>
-                                    <span style={{ color: '#ef4444' }}>Absent: {absentCount}</span>
+                                <button className="btn-action" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--univ-green)', fontWeight: '600', border: '1px solid rgba(16, 185, 129, 0.2)' }} onClick={() => markAll('Present')}>âœ“ Mark All Present</button>
+                                <button className="btn-action" style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--univ-red)', fontWeight: '600', border: '1px solid rgba(239, 68, 68, 0.2)' }} onClick={() => markAll('Absent')}>âœ— Mark All Absent</button>
+                                <div style={{ background: 'var(--bg-subtle)', padding: '6px 16px', borderRadius: '12px', border: '1px solid var(--border-light)', fontSize: '0.85rem', fontWeight: '600' }}>
+                                    <span style={{ marginRight: '1rem', color: 'var(--univ-green)' }}>Present: {presentCount}</span>
+                                    <span style={{ color: 'var(--univ-red)' }}>Absent: {absentCount}</span>
                                 </div>
                             </div>
                         </div>
@@ -1692,14 +1697,14 @@ function AttendanceManager() {
                             <tbody>
                                 {students.map(s => (
                                     <tr key={s._id}>
-                                        <td style={{ fontFamily: 'monospace', fontWeight: '600' }}>{s.rollNumber}</td>
-                                        <td>{s.name}</td>
+                                        <td style={{ fontFamily: 'monospace', fontWeight: '600', color: 'var(--text-primary)' }}>{s.rollNumber}</td>
+                                        <td style={{ color: 'var(--text-primary)' }}>{s.name}</td>
                                         <td style={{ textAlign: 'center' }}>
-                                            <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? '#dcfce7' : '#fee2e2', borderRadius: '20px', padding: '4px', cursor: 'pointer', transition: 'all 0.3s ease', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
-                                                <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? '#22c55e' : '#ef4444', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
+                                            <div style={{ display: 'inline-flex', background: attendanceData[s._id] === 'Present' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)', borderRadius: '20px', padding: '4px', cursor: 'pointer', transition: 'all 0.3s ease', width: '80px', position: 'relative' }} onClick={() => toggleStatus(s._id)}>
+                                                <div style={{ position: 'absolute', top: '4px', left: attendanceData[s._id] === 'Present' ? '44px' : '4px', width: '32px', height: '26px', background: attendanceData[s._id] === 'Present' ? 'var(--univ-green)' : 'var(--univ-red)', borderRadius: '16px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}></div>
                                                 <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'space-between', padding: '0 10px', alignItems: 'center', height: '26px', fontSize: '0.85rem', fontWeight: '800', zIndex: 2, userSelect: 'none' }}>
-                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#166534' : '#fff' }}>A</span>
-                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : '#991b1b' }}>P</span>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? 'var(--text-secondary)' : '#fff' }}>A</span>
+                                                    <span style={{ color: attendanceData[s._id] === 'Present' ? '#fff' : 'var(--text-secondary)' }}>P</span>
                                                 </div>
                                             </div>
                                         </td>
@@ -1724,7 +1729,7 @@ function AttendanceManager() {
                 <div className="glass-table-container">
                     <div className="table-header-premium">
                         <h3>Attendance Reports (All Records)</h3>
-                        <button className="btn-action" onClick={fetchHistory}>🔄 Refresh</button>
+                        <button className="btn-action" onClick={fetchHistory}>ðŸ”„ Refresh</button>
                     </div>
                     <div style={{ overflowX: 'auto' }}>
                         <table className="premium-table">
@@ -1780,13 +1785,13 @@ function AttendanceManager() {
                             <div>
                                 <h3 style={{ margin: 0 }}>{viewingRecord.subject} Attendance</h3>
                                 <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>
-                                    {viewingRecord.semester} • {viewingRecord.date} • {viewingRecord.periodTime}
+                                    {viewingRecord.semester} â€¢ {viewingRecord.date} â€¢ {viewingRecord.periodTime}
                                 </p>
                                 <p style={{ margin: '4px 0 0 0', color: '#3b82f6', fontSize: '0.85rem', fontWeight: '600' }}>
                                     Faculty: {viewingRecord.facultyName}
                                 </p>
                             </div>
-                            <button onClick={() => setViewingRecord(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>×</button>
+                            <button onClick={() => setViewingRecord(null)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>Ã—</button>
                         </div>
                         <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                             <table className="premium-table">
@@ -1820,7 +1825,7 @@ function AttendanceManager() {
                                 const headers = ['Roll Number', 'Name', 'Status'];
                                 const data = viewingRecord.records.map(r => [r.rollNumber, r.name, r.status]);
                                 exportToCSV(headers, data, `Attendance_${viewingRecord.subject}_${viewingRecord.date}.csv`);
-                            }}>📄 Export CSV</button>
+                            }}>ðŸ“„ Export CSV</button>
                             <button className="btn-action primary" onClick={() => setViewingRecord(null)}>Close</button>
                         </div>
                     </div>
@@ -1832,3 +1837,4 @@ function AttendanceManager() {
 }
 
 export default PrincipalDashboard;
+
