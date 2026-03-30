@@ -121,7 +121,7 @@ function HodDashboard() {
     }, []);
 
     return (
-        <div className="dashboard-container principal-dashboard">
+        <div className="dashboard-container">
             {/* Sidebar */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">

@@ -105,7 +105,7 @@ function FacultyDashboard() {
     }, [])
 
     return (
-        <div className="dashboard-container principal-dashboard">
+        <div className="dashboard-container">
             {/* Sidebar with consistent class */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">

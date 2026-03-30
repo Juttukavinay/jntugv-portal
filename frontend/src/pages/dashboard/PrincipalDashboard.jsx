@@ -72,7 +72,7 @@ function PrincipalDashboard() {
     };
 
     return (
-        <div className="dashboard-container principal-dashboard">
+        <div className="dashboard-container">
             {/* Sidebar */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
@@ -1202,12 +1202,12 @@ function TimetableView() {
 
     return (
         <div className="glass-table-container fade-in-up">
-            <div className="table-header-premium" style={{ borderBottom: '1px solid #f1f5f9', background: '#fff', padding: '1.5rem 2rem' }}>
+            <div className="table-header-premium" style={{ padding: '1.5rem 2rem' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', width: '100%' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                             <h3 style={{ fontSize: '1.25rem', fontWeight: '800' }}>Academic Scheduler</h3>
-                            <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.85rem' }}>Monitor campus-wide time allocations</p>
+                            <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>Monitor campus-wide time allocations</p>
                         </div>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                             <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">Export PDF</button>
@@ -1259,7 +1259,7 @@ function TimetableView() {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: '#f8fafc', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'var(--bg-subtle)', borderRadius: '14px', border: '1px solid var(--border-light)' }}>
                         {viewMode === 'class' && (
                             <>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -1340,14 +1340,14 @@ function TimetableView() {
 
             {viewMode === 'class' && timetable ? (
                 <div style={{ overflowX: 'auto', padding: '1.5rem' }}>
-                    <table className="clean-table" style={{ textAlign: 'center', width: '100%', tableLayout: 'fixed', fontSize: '0.85rem', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+                    <table className="premium-table" style={{ textAlign: 'center', minWidth: '1200px' }}>
                         <thead>
                             <tr>
-                                <th style={{ width: '100px', background: 'transparent' }}>Day</th>
+                                <th>Day</th>
                                 <th>09:30 - 10:30</th>
                                 <th>10:30 - 11:30</th>
                                 <th>11:30 - 12:30</th>
-                                <th style={{ width: '40px' }}></th>
+                                <th style={{ background: 'var(--bg-subtle)' }}>Lunch</th>
                                 <th>02:00 - 03:00</th>
                                 <th>03:00 - 04:00</th>
                                 <th>04:00 - 05:00</th>
@@ -1355,15 +1355,31 @@ function TimetableView() {
                         </thead>
                         <tbody>
                             {timetable.schedule.map((day, dIndex) => {
-                                const morning = day.periods.filter(p => !p.time.includes('12:30') && !p.time.includes('02:00') && !p.time.includes('03:') && !p.time.includes('04:') && p.type !== 'Break');
+                                const morning = day.periods.filter(p => !p.time.includes('12:30') && !p.time.startsWith('02') && !p.time.startsWith('03') && !p.time.startsWith('04'));
                                 const afternoon = day.periods.filter(p => p.time.startsWith('02') || p.time.startsWith('03') || p.time.startsWith('04'));
+                                const renderBlock = (periods) => (
+                                    <div style={{ display: 'flex', gap: '4px', height: '100%' }}>
+                                        {periods.map((p, i) => (
+                                            <div key={i} style={{ flex: p.credits || 1, background: p.type === 'Lab' ? 'var(--primary-light)' : (p.type === 'Theory' ? 'rgba(245, 158, 11, 0.1)' : 'var(--bg-subtle)'), padding: '6px', borderRadius: '6px', border: '1px solid var(--border-light)', fontSize: '0.8rem' }}>
+                                                <div style={{ fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--text-primary)' }}>{p.subject}</div>
+                                                {p.subject && <div style={{ fontSize: '0.65rem', color: 'var(--univ-green)', fontWeight: '800', marginTop: '2px' }}>🏢 {p.room || (p.type === 'Lab' ? 'Lab' : 'LH')}</div>}
+                                                {p.faculty && <div style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: '700' }}>{p.faculty} (M)</div>}
+                                                {p.assistants?.length > 0 && (
+                                                    <div style={{ fontSize: '0.6rem', color: 'var(--text-secondary)' }}>
+                                                        + {p.assistants.join(', ')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
 
                                 return (
                                     <tr key={dIndex}>
-                                        <td style={{ fontWeight: '800', color: '#1e293b', background: '#f8fafc', borderRadius: '12px 0 0 12px' }}>{day.day}</td>
-                                        <td colSpan={3} style={{ padding: '0 4px' }}>{renderPeriod(morning)}</td>
-                                        <td style={{ background: '#f1f5f9', color: '#94a3b8', fontSize: '0.6rem', fontWeight: 'bold', writingMode: 'vertical-rl', padding: '8px 0' }}>LUNCH</td>
-                                        <td colSpan={3} style={{ padding: '0 4px', borderRadius: '0 12px 12px 0' }}>{renderPeriod(afternoon)}</td>
+                                        <td style={{ fontWeight: '800', color: 'var(--text-primary)' }}>{day.day}</td>
+                                        <td colSpan={3} style={{ padding: '4px' }}>{renderBlock(morning)}</td>
+                                        <td style={{ background: 'var(--bg-subtle)', color: 'var(--text-secondary)', fontSize: '0.7rem', fontWeight: 'bold', writingMode: 'vertical-rl', padding: '8px 4px' }}>LUNCH</td>
+                                        <td colSpan={3} style={{ padding: '4px' }}>{renderBlock(afternoon)}</td>
                                     </tr>
                                 );
                             })}
@@ -1371,11 +1387,11 @@ function TimetableView() {
                     </table>
                 </div>
             ) : (
-                <div style={{ padding: '5rem', textAlign: 'center', color: '#64748b' }}>
+                <div style={{ padding: '5rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                     <div style={{ fontSize: '3.5rem', marginBottom: '1.5rem', filter: 'grayscale(0.5)' }}>
                         {viewMode === 'class' ? 'Class' : viewMode === 'faculty' ? 'Faculty' : viewMode === 'room' ? 'Labs' : 'Global'}
                     </div>
-                    <h4 style={{ margin: 0, color: '#1e293b' }}>
+                    <h4 style={{ margin: 0, color: 'var(--text-primary)' }}>
                         {viewMode === 'class' ? 'No Timetable Found' : `${viewMode.charAt(0).toUpperCase() + viewMode.slice(1)} View Initializing...`}
                     </h4>
                     <p style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
@@ -1778,7 +1794,7 @@ function AttendanceManager() {
                             </thead>
                             <tbody>
                                 {history.length === 0 ? (
-                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>No records found</td></tr>
+                                    <tr><td colSpan="7" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>No records found</td></tr>
                                 ) : history.map((rec, idx) => {
                                     const p = rec.records?.filter(r => r.status === 'Present').length || 0;
                                     const total = rec.records?.length || 0;
@@ -1795,7 +1811,7 @@ function AttendanceManager() {
                                             <td style={{ textAlign: 'center' }}>
                                                 <button 
                                                     className="btn-action" 
-                                                    style={{ padding: '4px 12px', fontSize: '0.75rem', background: '#eff6ff', color: '#2563eb', border: '1px solid #dbeafe' }}
+                                                    style={{ padding: '4px 12px', fontSize: '0.75rem', background: 'var(--bg-subtle)', color: 'var(--primary)', border: '1px solid var(--border-light)' }}
                                                     onClick={() => setViewingRecord(rec)}
                                                 >
                                                     View Detailed
@@ -1816,7 +1832,7 @@ function AttendanceManager() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'flex-start' }}>
                             <div>
                                 <h3 style={{ margin: 0 }}>{viewingRecord.subject} Attendance</h3>
-                                <p style={{ margin: '4px 0 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                                <p style={{ margin: '4px 0 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                                     {viewingRecord.semester} | {viewingRecord.date} | {viewingRecord.periodTime}
                                 </p>
                                 <p style={{ margin: '4px 0 0 0', color: '#3b82f6', fontSize: '0.85rem', fontWeight: '600' }}>
