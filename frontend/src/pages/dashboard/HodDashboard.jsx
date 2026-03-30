@@ -1581,7 +1581,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                     )}
                     {timetable ? (
                         <table className="premium-table" style={{ textAlign: 'center', minWidth: '1200px' }}>
-                            <thead><tr><th>Day</th><th>09:30-10:30</th><th>10:30-11:30</th><th>11:30-12:30</th><th style={{ background: '#f8fafc' }}>Lunch</th><th>02:00-03:00</th><th>03:00-04:00</th><th>04:00-05:00</th></tr></thead>
+                            <thead><tr><th>Day</th><th>09:30-10:30</th><th>10:30-11:30</th><th>11:30-12:30</th><th style={{ background: 'var(--bg-subtle)' }}>Lunch</th><th>02:00-03:00</th><th>03:00-04:00</th><th>04:00-05:00</th></tr></thead>
                             <tbody>
                                 {timetable.schedule.map((day, dIndex) => {
                                     const morning = day.periods.filter(p => !p.time.includes('12:30') && !p.time.startsWith('02') && !p.time.startsWith('03') && !p.time.startsWith('04'));
@@ -1859,7 +1859,7 @@ function BookingForm({ initialData, facultyList = [], roomList = [], onSubmit, o
                 </div>
             )}
             <div>
-                <label style={{ fontSize: '0.9rem', color: '#64748b', marginBottom: '0.5rem', display: 'block' }}>Allotted Room / Lab</label>
+                <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '0.5rem', display: 'block' }}>Allotted Room / Lab</label>
                 <select className="search-input-premium" value={room} onChange={e => setRoom(e.target.value)}>
                     <option value="">-- Select Room --</option>
                     {roomList.map(r => (
@@ -2256,7 +2256,7 @@ function AttendanceManager({ showToast, initialParams, onClearParams }) {
                                         }}>Recorded</span>
                                     )}
                                 </div>
-                                <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '4px' }}>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
                                     {selectedSubject} • {selectedTime} • <span style={{ fontWeight: 600 }}>{students.length} Students Detected</span>
                                 </div>
                             </div>
