@@ -91,7 +91,7 @@ function AdminDashboard() {
     };
 
     return (
-        <div className="dashboard-container">
+        <div className="dashboard-container principal-dashboard">
             {/* Sidebar */}
             <aside className={`glass-sidebar ${mobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">

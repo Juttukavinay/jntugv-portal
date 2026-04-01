@@ -879,12 +879,12 @@
 
 /* --- PROFESSIONAL SIDEBAR NAVIGATION & DASHBOARD --- */
 :root {
-  --dash-sidebar: var(--bg-card);
-  --dash-sidebar-active: var(--bg-subtle);
-  --dash-sidebar-text: var(--text-secondary);
-  --dash-bg: var(--bg-main);
-  --dash-card-bg: var(--bg-card);
-  --dash-border: var(--border-light);
+  --dash-sidebar: #ffffff;
+  --dash-sidebar-active: #f0f7ff;
+  --dash-sidebar-text: #475569;
+  --dash-bg: #f4f6f9;
+  --dash-card-bg: #ffffff;
+  --dash-border: #e2e8f0;
 }
 
 .dashboard-container {
@@ -1254,12 +1254,12 @@
 }
 
 .premium-table th {
-  background: var(--bg-subtle);
+  background: #f8fafc;
   padding: 1rem 2.5rem;
   text-align: left;
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--text-secondary);
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   border-bottom: 1px solid var(--dash-border);
@@ -1267,13 +1267,13 @@
 
 .premium-table td {
   padding: 1.25rem 2.5rem;
-  border-bottom: 1px solid var(--dash-border);
+  border-bottom: 1px solid #f1f5f9;
   font-size: 0.95rem;
-  color: var(--text-primary);
+  color: #1e293b;
 }
 
 .premium-table tr:last-child td { border-bottom: none; }
-.premium-table tr:hover { background: var(--bg-subtle); }
+.premium-table tr:hover { background: #fdfdfd; }
 
 /* Dynamic UI Elements */
 .title-gradient {
