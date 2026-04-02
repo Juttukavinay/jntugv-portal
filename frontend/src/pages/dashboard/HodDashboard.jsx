@@ -1681,11 +1681,56 @@ function SubjectsManager({ facultyList, showToast, user }) {
     const addSubjectRow = () => setEditRows([...editRows, { sNo: editRows.length + 1, category: 'PC', semester: semesterName, assignedFaculty: '', assignedAssistants: [] }]);
 
     const saveSubjects = async () => {
-        const validRows = editRows.filter(r => r.courseName);
-        if (validRows.length === 0) return showToast("Please fill at least one subject", 'error');
-        const res = await fetch(`${API_BASE_URL}/api/courses/save`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ regulation, activeCourse, courseName, department: user.department || 'IT', subjects: validRows.map(r => ({ ...r, semester: semesterName })) }) });
-        if ((await res.json()).success) { showToast('Saved Successfully!'); fetchSubjects(); }
-        else showToast('Failed to save', 'error');
+        const nonEmptyRows = editRows.filter((r) => {
+            const hasCredits = r.credits !== undefined && r.credits !== null && String(r.credits).trim() !== '';
+            return Boolean(
+                String(r.courseName || '').trim() ||
+                String(r.courseCode || '').trim() ||
+                hasCredits ||
+                String(r.L || '').trim() ||
+                String(r.T || '').trim() ||
+                String(r.P || '').trim()
+            );
+        });
+        if (nonEmptyRows.length === 0) return showToast("Please fill at least one subject", 'error');
+
+        for (let i = 0; i < nonEmptyRows.length; i += 1) {
+            const row = nonEmptyRows[i];
+            const rowNum = i + 1;
+            if (!String(row.courseName || '').trim()) return showToast(`Row ${rowNum}: Course Name is required`, 'error');
+            if (!String(row.courseCode || '').trim()) return showToast(`Row ${rowNum}: Course Code is required`, 'error');
+            if (row.credits === undefined || row.credits === null || String(row.credits).trim() === '') {
+                return showToast(`Row ${rowNum}: Credits is required`, 'error');
+            }
+        }
+
+        const subjectsPayload = nonEmptyRows.map((r, idx) => ({
+            ...r,
+            sNo: Number(String(r.sNo || '').trim()) || idx + 1,
+            category: r.category || 'PC',
+            courseCode: String(r.courseCode || '').trim(),
+            courseName: String(r.courseName || '').trim(),
+            L: Number(String(r.L || '').trim()) || 0,
+            T: Number(String(r.T || '').trim()) || 0,
+            P: Number(String(r.P || '').trim()) || 0,
+            credits: Number(String(r.credits || '').trim()),
+            semester: semesterName
+        }));
+
+        const res = await fetch(`${API_BASE_URL}/api/courses/save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                regulation,
+                activeCourse,
+                courseName,
+                department: user.department || 'IT',
+                subjects: subjectsPayload
+            })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) { showToast('Saved Successfully!'); fetchSubjects(); }
+        else showToast(data.message || 'Failed to save', 'error');
     }
 
     const deleteSubject = async (index) => {
@@ -1743,6 +1788,17 @@ function SubjectsManager({ facultyList, showToast, user }) {
                             {isUploading ? '⏳...' : '📄 UP/CSV'}
                             <input type="file" accept=".pdf, .csv" onChange={handleFileUpload} style={{ display: 'none' }} disabled={isUploading} />
                         </label>
+                        <button
+                            className="btn-action"
+                            onClick={() => {
+                                const headers = ['S.No', 'Category', 'Course Code', 'Course Name', 'L', 'T', 'P', 'Credits'];
+                                exportToCSV(headers, [], `Subjects_Template_${semesterName}.csv`);
+                                showToast('Sample CSV template downloaded');
+                            }}
+                            title="Download Sample CSV Template"
+                        >
+                            Sample CSV
+                        </button>
                         <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
                             <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
                             📤 Upload CSV

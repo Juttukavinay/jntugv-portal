@@ -32,19 +32,44 @@ router.post('/preview', upload.single('file'), async (req, res) => {
         if (ext === '.csv') {
             const rawData = await parseCsv(req.file.path);
             const subjects = rawData.map((row, i) => {
-                // Flexible Key Matching
-                const getVal = (key) => row[Object.keys(row).find(k => k.toLowerCase() === key.toLowerCase())];
+                const normalizeKey = (value) =>
+                    String(value || '')
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]/g, '');
+
+                const normalizedRow = {};
+                Object.keys(row || {}).forEach((k) => {
+                    normalizedRow[normalizeKey(k)] = row[k];
+                });
+
+                const getVal = (...keys) => {
+                    for (const key of keys) {
+                        const val = normalizedRow[normalizeKey(key)];
+                        if (val === undefined || val === null) continue;
+                        if (String(val).trim() === '') continue;
+                        return val;
+                    }
+                    return undefined;
+                };
+
+                const toNumber = (value, fallback = 0) => {
+                    if (value === undefined || value === null) return fallback;
+                    const str = String(value).trim();
+                    if (!str) return fallback;
+                    const parsed = Number(str);
+                    return Number.isFinite(parsed) ? parsed : fallback;
+                };
 
                 return {
-                    sNo: getVal('sno') || i + 1,
+                    sNo: toNumber(getVal('sno', 's.no', 's no', 'serialno', 'serial no', 'slno', 'sl.no'), i + 1),
                     category: getVal('category') || 'PC',
-                    courseCode: getVal('code') || getVal('coursecode') || '',
-                    courseName: getVal('title') || getVal('name') || getVal('subject') || '',
-                    L: getVal('l') || 0,
-                    T: getVal('t') || 0,
-                    P: getVal('p') || 0,
-                    credits: getVal('c') || getVal('credits') || 0,
-                    semester: 'Uploaded'
+                    courseCode: String(getVal('code', 'coursecode', 'course code', 'subjectcode', 'subject code') || '').trim(),
+                    courseName: String(getVal('title', 'coursename', 'course name', 'name', 'subject', 'subjectname', 'subject name') || '').trim(),
+                    L: toNumber(getVal('l', 'lecture', 'lectures'), 0),
+                    T: toNumber(getVal('t', 'tutorial', 'tutorials'), 0),
+                    P: toNumber(getVal('p', 'practical', 'practicals', 'lab', 'labs'), 0),
+                    credits: toNumber(getVal('c', 'credits', 'credit'), 0),
+                    semester: String(getVal('semester', 'sem') || 'Uploaded').trim() || 'Uploaded'
                 };
             }).filter(s => s.courseName); // Filter empty rows
 
