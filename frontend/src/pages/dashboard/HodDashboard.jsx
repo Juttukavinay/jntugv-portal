@@ -940,6 +940,7 @@ function AcademicCalendarManager({ showToast, user }) {
             if (res.ok && data.success) {
                 showToast('Academic calendar saved successfully');
                 loadCalendar();
+                calculatePeriodLoads({ toastOnSuccess: false });
             } else {
                 showToast(data.message || 'Failed to save calendar', 'error');
             }
@@ -949,7 +950,7 @@ function AcademicCalendarManager({ showToast, user }) {
         }
     };
 
-    const calculatePeriodLoads = async () => {
+    const calculatePeriodLoads = async ({ toastOnSuccess = true } = {}) => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/timetables/analytics/subject-load?semester=${encodeURIComponent(semester)}&department=${encodeURIComponent(dept)}`);
             const data = await res.json();
@@ -958,7 +959,7 @@ function AcademicCalendarManager({ showToast, user }) {
                 return;
             }
             setAnalytics(data);
-            showToast('Semester period count calculated from calendar');
+            if (toastOnSuccess) showToast('Semester period count calculated from calendar');
         } catch (e) {
             console.error(e);
             showToast('Unable to calculate period load', 'error');
@@ -1033,6 +1034,37 @@ function AcademicCalendarManager({ showToast, user }) {
                     <button className="btn-action" onClick={calculatePeriodLoads}>Calculate Subject Loads</button>
                 </div>
             </div>
+
+            {analytics && (
+                <div style={{ padding: '1.25rem', paddingBottom: 0 }}>
+                    <h4 style={{ margin: '0 0 0.75rem 0' }}>Computed Subject Period Counts ({analytics.semester})</h4>
+                    <div style={{ marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>
+                        Instruction Days Counted: <strong>{analytics.instructionDatesCount}</strong>
+                    </div>
+                    <table className="premium-table">
+                        <thead>
+                            <tr>
+                                <th>Subject</th>
+                                <th>Weekly Sessions</th>
+                                <th>Semester Sessions</th>
+                                <th>Weekly Hours</th>
+                                <th>Semester Hours</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {(analytics.subjectStats || []).map((s, i) => (
+                                <tr key={`${s.subject}-${i}`}>
+                                    <td>{s.subject}</td>
+                                    <td>{s.weeklySessions}</td>
+                                    <td>{s.semesterSessions}</td>
+                                    <td>{s.weeklyHours}</td>
+                                    <td>{s.semesterHours}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
 
             <div style={{ padding: '1.25rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
                 <div>
@@ -1193,37 +1225,6 @@ function AcademicCalendarManager({ showToast, user }) {
                     </div>
                 )}
             </div>
-
-            {analytics && (
-                <div style={{ padding: '0 1.25rem 1.25rem 1.25rem' }}>
-                    <h4 style={{ margin: '0 0 0.75rem 0' }}>Computed Subject Period Counts ({analytics.semester})</h4>
-                    <div style={{ marginBottom: '0.75rem', color: 'var(--text-secondary)' }}>
-                        Instruction Days Counted: <strong>{analytics.instructionDatesCount}</strong>
-                    </div>
-                    <table className="premium-table">
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>Weekly Sessions</th>
-                                <th>Semester Sessions</th>
-                                <th>Weekly Hours</th>
-                                <th>Semester Hours</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {(analytics.subjectStats || []).map((s, i) => (
-                                <tr key={`${s.subject}-${i}`}>
-                                    <td>{s.subject}</td>
-                                    <td>{s.weeklySessions}</td>
-                                    <td>{s.semesterSessions}</td>
-                                    <td>{s.weeklyHours}</td>
-                                    <td>{s.semesterHours}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
         </div>
     );
 }
