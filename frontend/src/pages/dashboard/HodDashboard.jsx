@@ -1240,12 +1240,25 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     const [bookingSlot, setBookingSlot] = useState(null);
     const [aiReport, setAiReport] = useState(null);
     const [semesterLoad, setSemesterLoad] = useState(null);
+    const [showClassPicker, setShowClassPicker] = useState(false);
+    const [pendingGenerateMode, setPendingGenerateMode] = useState(null);
+    const [selectedClassroom, setSelectedClassroom] = useState('');
+    const classroomSelectRef = useRef(null);
 
     useEffect(() => {
         if (activeCourse === 'B.Tech') setSelectedSemester('I-B.Tech I Sem');
         else if (activeCourse === 'M.Tech') setSelectedSemester('I-M.Tech I Sem');
         else if (activeCourse === 'MCA') setSelectedSemester('I-MCA I Sem');
     }, [activeCourse]);
+
+    const availableClassrooms = (Array.isArray(allRooms) ? allRooms : [])
+        .filter((r) => r && r.type === 'Classroom' && (!user.department || r.department === user.department))
+        .sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
+
+    useEffect(() => {
+        if (!showClassPicker) return;
+        setTimeout(() => classroomSelectRef.current?.focus(), 0);
+    }, [showClassPicker]);
 
     const fetchTimetable = useCallback(() => {
         setTimetable(null)
@@ -1366,7 +1379,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
         );
     };
 
-    const generateTimetable = async () => {
+    const generateTimetable = async (classroom) => {
         setLoading(true)
         try {
             const res = await fetch(`${API_BASE_URL}/api/timetables/generate`, { 
@@ -1374,12 +1387,13 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ 
                     semester: selectedSemester, 
-                    department: user.department 
+                    department: user.department,
+                    classroom
                 }) 
             })
             const data = await res.json()
             if (res.ok) {
-                if (data.unallocated?.length > 0) showToast(`Generated with warnings: ${data.unallocated.length} slots skipped`, 'error');
+                if (data.unallocated?.length > 0) showToast(`Generated with warnings: ${data.unallocated.length}`, 'error');
                 else showToast("Timetable Generated Successfully!");
                 fetchTimetable();
             }
@@ -1387,7 +1401,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
         } catch (err) { showToast("Failed to connect", 'error'); } finally { setLoading(false) }
     }
 
-    const generateTimetableAI = async () => {
+    const generateTimetableAI = async (classroom) => {
         setLoading(true);
         setAiReport(null);
         try {
@@ -1396,7 +1410,8 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     semester: selectedSemester,
-                    department: user.department
+                    department: user.department,
+                    classroom
                 })
             });
             const data = await res.json();
@@ -1415,6 +1430,33 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
             setLoading(false);
         }
     }
+
+    const startGenerateWithClass = (mode) => {
+        if (loading) return;
+        if (availableClassrooms.length === 0) {
+            showToast('No classrooms found. Add LH rooms in Campus Infra first.', 'error');
+            return;
+        }
+        const hasSelected = selectedClassroom && availableClassrooms.some((r) => r.name === selectedClassroom);
+        if (!hasSelected) setSelectedClassroom(availableClassrooms[0].name);
+        setPendingGenerateMode(mode);
+        setShowClassPicker(true);
+    };
+
+    const confirmGenerateWithClass = async () => {
+        const classroom = String(selectedClassroom || '').trim();
+        if (!classroom) {
+            showToast('Please select a classroom', 'error');
+            return;
+        }
+
+        const mode = pendingGenerateMode;
+        setShowClassPicker(false);
+        setPendingGenerateMode(null);
+
+        if (mode === 'ai') await generateTimetableAI(classroom);
+        else await generateTimetable(classroom);
+    };
     const updateCell = (dayIndex, periodIndex) => {
         const day = timetable.schedule[dayIndex];
         const period = day.periods[periodIndex];
@@ -1463,6 +1505,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                     room: details.room,
                     wing: details.wing,
                     semester: selectedSemester,
+                    department: user.department,
                     updateAll: details.updateAll,
                     originalSubject: bookingSlot.currentSubject
                 })
@@ -1535,10 +1578,10 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                             <option value="I-MCA I Sem">MCA I-I</option><option value="I-MCA II Sem">MCA I-II</option>
                         </select>
                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                            <button className="btn-action primary" onClick={generateTimetable} disabled={loading}>
+                            <button className="btn-action primary" onClick={() => startGenerateWithClass('auto')} disabled={loading}>
                                 {loading ? 'Generating...' : '⚡ Auto-Generate'}
                             </button>
-                            <button className="btn-action" style={{ background: 'linear-gradient(135deg, #8b5cf6, #d946ef)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }} onClick={generateTimetableAI} disabled={loading}>
+                            <button className="btn-action" style={{ background: 'linear-gradient(135deg, #8b5cf6, #d946ef)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }} onClick={() => startGenerateWithClass('ai')} disabled={loading}>
                                 {loading ? 'Optimizing...' : '✨ AI Generate'}
                             </button>
 
@@ -1688,6 +1731,53 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                             <button onClick={() => setShowBookingModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
                         </div>
                         <BookingForm initialData={bookingSlot} facultyList={allFaculty} roomList={allRooms} onSubmit={handleConfirmBooking} onCancel={() => setShowBookingModal(false)} />
+                    </div>
+                </div>, document.body
+            )}
+
+            {showClassPicker && createPortal(
+                <div className="modal-overlay">
+                    <div className="modal-content glass-panel" style={{ maxWidth: '420px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', alignItems: 'center' }}>
+                            <h3 style={{ margin: 0 }}>Select Classroom</h3>
+                            <button
+                                onClick={() => { setShowClassPicker(false); setPendingGenerateMode(null); }}
+                                style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                            Pick the LH classroom saved in Campus Infra. Theory periods will be assigned to this room.
+                        </div>
+                        <select
+                            ref={classroomSelectRef}
+                            className="search-input-premium"
+                            value={selectedClassroom}
+                            onChange={(e) => setSelectedClassroom(e.target.value)}
+                            style={{ width: '100%' }}
+                        >
+                            {availableClassrooms.map((r) => (
+                                <option key={r._id || r.name} value={r.name}>{r.name}</option>
+                            ))}
+                        </select>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1rem' }}>
+                            <button
+                                type="button"
+                                className="btn-action"
+                                onClick={() => { setShowClassPicker(false); setPendingGenerateMode(null); }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-action primary"
+                                onClick={confirmGenerateWithClass}
+                                disabled={loading || !selectedClassroom}
+                            >
+                                Continue
+                            </button>
+                        </div>
                     </div>
                 </div>, document.body
             )}
@@ -2738,15 +2828,15 @@ function InfrastructureManager({ user, showToast }) {
     const [rooms, setRooms] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
     const [addCount, setAddCount] = useState(1);
-    const [filterDept, setFilterDept] = useState(user.department || 'IT');
-    const [batch, setBatch] = useState('2024-2028');
+    const [editingKey, setEditingKey] = useState(null);
+    const dept = user.department || 'IT';
 
     const fetchRooms = useCallback(async () => {
-        const deptParam = user.department ? `?department=${encodeURIComponent(user.department)}` : '';
+        const deptParam = dept ? `?department=${encodeURIComponent(dept)}` : '';
         const res = await fetch(`${API_BASE_URL}/api/rooms${deptParam}`);
         const data = await res.json();
         setRooms(Array.isArray(data) ? data : []);
-    }, [user.department]);
+    }, [dept]);
 
     useEffect(() => { fetchRooms(); }, [fetchRooms]);
 
@@ -2755,7 +2845,7 @@ function InfrastructureManager({ user, showToast }) {
             if (r === roomObj) {
                 const updated = { ...r, [field]: value };
                 if (field === 'type') {
-                    updated.wing = value === 'Lab' ? 'LAB 1' : 'AB1';
+                    updated.wing = value === 'Lab' ? 'Wing 1' : 'Wing 1';
                 }
                 return updated;
             }
@@ -2770,17 +2860,18 @@ function InfrastructureManager({ user, showToast }) {
         const existingLabCount = rooms.filter(r => r.type === 'Lab').length;
 
         for (let i = 0; i < count; i++) {
+            const nextLabIndex = existingLabCount + i + 1;
+            const nextClassIndex = existingClassCount + i + 1;
             newBatch.push({
-                name: type === 'Lab' ? `LAB-${(existingLabCount + i + 1).toString().padStart(2, '0')}` : `LH-${(existingClassCount + i + 1).toString().padStart(2, '0')}`,
+                name: type === 'Lab'
+                    ? `LAB-${nextLabIndex.toString().padStart(2, '0')}`
+                    : `LH-${nextClassIndex.toString().padStart(2, '0')}`,
                 type: type,
-                wing: type === 'Lab' ? 'LAB BLOCK' : 'AB1',
-                year: '1st Year',
-                semester: '1st Sem',
-                batch: batch || '2024-2028',
-                section: 'Section A',
+                // Auto wing split for labs (Wing 1 first, then Wing 2)
+                wing: type === 'Lab' ? ((nextLabIndex % 2 === 0) ? 'Wing 2' : 'Wing 1') : 'Wing 1',
                 morningSession: 'Available',
                 afternoonSession: 'Available',
-                department: user.department || 'IT'
+                department: dept
             });
         }
         setRooms([...rooms, ...newBatch]);
@@ -2797,7 +2888,7 @@ function InfrastructureManager({ user, showToast }) {
             const response = await fetch(`${API_BASE_URL}/api/rooms/save`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ rooms })
+                body: JSON.stringify({ department: dept, rooms })
             });
             if (response.ok) {
                 showToast('Infrastructure saved successfully!');
@@ -2812,7 +2903,7 @@ function InfrastructureManager({ user, showToast }) {
         }
     };
 
-    const filteredRooms = rooms.filter(r => filterDept === 'All' || r.department === filterDept);
+    const filteredRooms = rooms;
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }} className="fade-in-up">
@@ -2824,17 +2915,7 @@ function InfrastructureManager({ user, showToast }) {
                             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>Define and Manage Physical Assets (Classes & Labs)</p>
                         </div>
                         <div style={{ display: 'flex', background: 'var(--bg-subtle)', borderRadius: '12px', padding: '0.5rem', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase' }}>Dept: {user.department || 'IT'}</span>
-                        </div>
-                        <div style={{ marginLeft: '1rem' }}>
-                            <label style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 'bold' }}>Current Batch</label>
-                            <input 
-                                className="modern-input" 
-                                style={{ width: '120px', padding: '6px' }} 
-                                value={batch} 
-                                onChange={e => setBatch(e.target.value)} 
-                                placeholder="e.g. 2024-2028"
-                            />
+                            <span style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase' }}>Dept: {dept}</span>
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
@@ -2869,137 +2950,91 @@ function InfrastructureManager({ user, showToast }) {
                     <table className="premium-table">
                         <thead>
                             <tr>
-                                <th>Identifier (e.g. LH-36)</th>
-                                <th style={{ width: '120px' }}>Type</th>
-                                <th style={{ width: '110px' }}>Mapping</th>
-                                <th style={{ width: '110px' }}>Sem</th>
-                                <th style={{ width: '120px' }}>Batch</th>
-                                <th style={{ width: '120px' }}>Section</th>
-                                <th style={{ width: '120px' }}>Wing</th>
-                                <th>Morning (FN)</th>
-                                <th>Afternoon (AN)</th>
-                                <th>Action</th>
+                                <th>Identifier</th>
+                                <th style={{ width: '160px' }}>Type</th>
+                                <th style={{ width: '120px' }}>Edit</th>
+                                <th style={{ width: '120px' }}>Del</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredRooms.length > 0 ? filteredRooms.map((r, i) => (
                                 <tr key={r._id || i}>
-                                    <td>
-                                        <input
-                                            value={r.name}
-                                            onChange={e => handleRoomChange(r, 'name', e.target.value)}
-                                            className="modern-input"
-                                            style={{ fontWeight: '700', width: '120px' }}
-                                        />
-                                    </td>
-                                    <td>
-                                        <select
-                                            value={r.type}
-                                            onChange={e => handleRoomChange(r, 'type', e.target.value)}
-                                            className="modern-input"
-                                            style={{ padding: '6px' }}
-                                        >
-                                            <option value="Classroom">Classroom</option>
-                                            <option value="Lab">Lab</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select
-                                            value={r.year || '1st Year'}
-                                            onChange={e => handleRoomChange(r, 'year', e.target.value)}
-                                            className="modern-input"
-                                            style={{ padding: '4px', fontSize: '0.75rem' }}
-                                        >
-                                            <option value="1st Year">1st Year</option>
-                                            <option value="2nd Year">2nd Year</option>
-                                            <option value="3rd Year">3rd Year</option>
-                                            <option value="4th Year">4th Year</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select
-                                            value={r.semester || '1st Sem'}
-                                            onChange={e => handleRoomChange(r, 'semester', e.target.value)}
-                                            className="modern-input"
-                                            style={{ padding: '4px', fontSize: '0.75rem' }}
-                                        >
-                                            <option value="1st Sem">1st Sem</option><option value="2nd Sem">2nd Sem</option>
-                                            <option value="3rd Sem">3rd Sem</option><option value="4th Sem">4th Sem</option>
-                                            <option value="5th Sem">5th Sem</option><option value="6th Sem">6th Sem</option>
-                                            <option value="7th Sem">7th Sem</option><option value="8th Sem">8th Sem</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input
-                                            value={r.batch || '2024-2028'}
-                                            onChange={e => handleRoomChange(r, 'batch', e.target.value)}
-                                            className="modern-input"
-                                            style={{ padding: '4px', fontSize: '0.75rem', width: '90px' }}
-                                        />
-                                    </td>
-                                    <td>
-                                        <select
-                                            value={r.section || 'All'}
-                                            onChange={e => handleRoomChange(r, 'section', e.target.value)}
-                                            className="modern-input"
-                                            style={{ padding: '4px', fontSize: '0.75rem' }}
-                                        >
-                                            <option value="Section A">Section A</option>
-                                            <option value="Section B">Section B</option>
-                                            <option value="Wing 1">Wing 1</option>
-                                            <option value="Wing 2">Wing 2</option>
-                                            <option value="All">All</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input
-                                            value={r.wing}
-                                            onChange={e => handleRoomChange(r, 'wing', e.target.value)}
-                                            className="modern-input"
-                                            style={{ width: '100px', fontSize: '0.75rem' }}
-                                        />
-                                    </td>
-                                    <td>
-                                        <select
-                                            value={r.morningSession}
-                                            onChange={e => handleRoomChange(r, 'morningSession', e.target.value)}
-                                            className="modern-input"
-                                            style={{
-                                                color: r.morningSession === 'Available' ? 'var(--univ-green)' : 'var(--univ-red)',
-                                                fontWeight: 'bold',
-                                                padding: '6px'
-                                            }}
-                                        >
-                                            <option value="Available">🟢 Available</option>
-                                            <option value="Occupied">🔴 Occupied</option>
-                                            <option value="Maintenance">🟠 Maintenance</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select
-                                            value={r.afternoonSession}
-                                            onChange={e => handleRoomChange(r, 'afternoonSession', e.target.value)}
-                                            className="modern-input"
-                                            style={{
-                                                color: r.afternoonSession === 'Available' ? 'var(--univ-green)' : 'var(--univ-red)',
-                                                fontWeight: 'bold',
-                                                padding: '6px'
-                                            }}
-                                        >
-                                            <option value="Available">🟢 Available</option>
-                                            <option value="Occupied">🔴 Occupied</option>
-                                            <option value="Maintenance">🟠 Maintenance</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <button onClick={() => deleteRoom(r)} className="btn-action" style={{ color: 'var(--univ-red)' }}>
-                                            <Icons.Trash />
-                                        </button>
-                                    </td>
+                                    {(() => {
+                                        const key = r._id || i;
+                                        const isEditing = editingKey === key;
+                                        return (
+                                            <>
+                                                <td>
+                                                    {isEditing ? (
+                                                        <input
+                                                            value={r.name}
+                                                            onChange={e => handleRoomChange(r, 'name', e.target.value)}
+                                                            className="modern-input"
+                                                            style={{ fontWeight: '800', width: '160px' }}
+                                                        />
+                                                    ) : (
+                                                        <span style={{ fontWeight: '800', color: 'var(--text-primary)' }}>{r.name}</span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {isEditing ? (
+                                                        <select
+                                                            value={r.type}
+                                                            onChange={e => handleRoomChange(r, 'type', e.target.value)}
+                                                            className="modern-input"
+                                                            style={{ padding: '6px' }}
+                                                        >
+                                                            <option value="Classroom">Classroom</option>
+                                                            <option value="Lab">Lab</option>
+                                                        </select>
+                                                    ) : (
+                                                        <span style={{
+                                                            display: 'inline-block',
+                                                            padding: '4px 10px',
+                                                            borderRadius: '999px',
+                                                            fontWeight: '800',
+                                                            fontSize: '0.78rem',
+                                                            background: r.type === 'Lab' ? 'var(--secondary-light)' : 'var(--primary-light)',
+                                                            color: r.type === 'Lab' ? 'var(--secondary)' : 'var(--primary)'
+                                                        }}>
+                                                            {r.type}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    {isEditing ? (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setEditingKey(null)}
+                                                            className="btn-action primary"
+                                                            style={{ padding: '8px 12px' }}
+                                                            title="Done"
+                                                        >
+                                                            <Icons.Check />
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setEditingKey(key)}
+                                                            className="btn-action"
+                                                            title="Edit"
+                                                        >
+                                                            <Icons.Edit />
+                                                        </button>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <button onClick={() => deleteRoom(r)} className="btn-action" style={{ color: 'var(--univ-red)' }} title="Delete">
+                                                        <Icons.Trash />
+                                                    </button>
+                                                </td>
+                                            </>
+                                        );
+                                    })()}
                                 </tr>
                             )) : (
                                 <tr>
-                                    <td colSpan="11" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                                    <td colSpan="4" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
                                         No infrastructure data found. Add assets to get started. 🚀
                                     </td>
                                 </tr>

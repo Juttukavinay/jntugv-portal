@@ -89,7 +89,7 @@ router.delete('/', async (req, res) => {
 
 // GENERATE WITH GEMINI AI
 router.post('/generate-ai', async (req, res) => {
-    const { semester, department: reqDept } = req.body;
+    const { semester, department: reqDept, classroom } = req.body;
     const department = reqDept || 'IT';
     
     if (!semester) return res.status(400).json({ success: false, message: "Semester required" });
@@ -123,6 +123,24 @@ router.post('/generate-ai', async (req, res) => {
             rooms
         });
 
+        const selectedClassroom = String(classroom || '').trim();
+        if (selectedClassroom && Array.isArray(aiResponse?.schedule)) {
+            aiResponse.schedule = aiResponse.schedule.map((d) => ({
+                ...d,
+                periods: (d.periods || []).map((p) => {
+                    const subjectValue = String(p?.subject || '').trim();
+                    const typeValue = String(p?.type || '').trim();
+
+                    const isBreak = typeValue.toLowerCase() === 'break' || subjectValue.toLowerCase().includes('lunch');
+                    const isFree = typeValue.toLowerCase() === 'free' || subjectValue === '-';
+                    const isLab = typeValue.toLowerCase() === 'lab' || subjectValue.toLowerCase().includes('lab');
+
+                    if (isBreak || isFree || isLab) return p;
+                    return { ...p, room: selectedClassroom };
+                })
+            }));
+        }
+
         // 3. Save to DB
         let timetable = await Timetable.findOne({ className: semester, department });
         if (timetable) {
@@ -151,13 +169,14 @@ router.post('/generate-ai', async (req, res) => {
 
 // GENERATE ALGORITHM (CUSTOMIZABLE)
 router.post('/generate', async (req, res) => {
-    const { semester, options, department } = req.body;
+    const { semester, options, department, classroom } = req.body;
 
     // FORCED: 1h fixed slots as per user request ("keep 1hr fixed one no optuons")
     const slotMode = '1h'; 
     const labPlacement = options?.labPlacement || 'afternoon';
 
     const dept = department || 'IT';
+    const selectedClassroom = String(classroom || '').trim();
     console.log(`Generating Custom Timetable for ${semester} in ${dept} [${slotMode}, ${labPlacement}]`);
     if (!semester) return res.status(400).json({ message: "Semester required" });
 
@@ -229,11 +248,11 @@ router.post('/generate', async (req, res) => {
 
         let dayIndices = [0, 1, 2, 3, 4].sort(() => Math.random() - 0.5);
         let unallocated = [];
+        let roomWarnings = [];
 
         // --- 3. FETCH AVAILABLE ROOMS ---
-        const Room = require('../models/roomModel');
         const roomQuery = { type: { $in: ['Classroom', 'Lab'] } };
-        if (department) roomQuery.department = department;
+        if (dept) roomQuery.department = dept;
         
         const availableRooms = await Room.find(roomQuery);
         
@@ -250,7 +269,42 @@ router.post('/generate', async (req, res) => {
             : classRooms;
 
         // --- 4. PLACE LABS ---
-        const existingTimetables = await Timetable.find({});
+        const existingTimetables = await Timetable.find({ department: dept });
+
+        const normalizeWing = (value) => {
+            const v = String(value || '').toLowerCase();
+            if (v.includes('wing 2') || v === '2' || v.endsWith(' 2') || v.includes('w2')) return 'Wing 2';
+            if (v.includes('wing 1') || v === '1' || v.endsWith(' 1') || v.includes('w1')) return 'Wing 1';
+            // Fallback: treat anything with "2" as Wing 2
+            if (v.includes('2')) return 'Wing 2';
+            return 'Wing 1';
+        };
+
+        const wing1Labs = labRooms.filter((r) => normalizeWing(r.wing) === 'Wing 1').sort((a, b) => String(a.name).localeCompare(String(b.name)));
+        const wing2Labs = labRooms.filter((r) => normalizeWing(r.wing) === 'Wing 2').sort((a, b) => String(a.name).localeCompare(String(b.name)));
+
+        const hasRoomConflict = ({ dayName, timeToken, roomName }) => {
+            for (const t of existingTimetables) {
+                if (!t?.schedule) continue;
+                if (t.className === semester && t.department === dept) continue;
+                const sameDay = t.schedule.find((d) => d.day === dayName);
+                if (!sameDay?.periods) continue;
+                if (sameDay.periods.some((p) => String(p?.room || '') === roomName && String(p?.time || '').includes(timeToken))) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        const findAvailableLabRoom = ({ dayName, timeToken }) => {
+            for (const r of wing1Labs) {
+                if (!hasRoomConflict({ dayName, timeToken, roomName: r.name })) return r.name;
+            }
+            for (const r of wing2Labs) {
+                if (!hasRoomConflict({ dayName, timeToken, roomName: r.name })) return r.name;
+            }
+            return null;
+        };
 
         for (let lab of queue.labs) {
             let placed = false;
@@ -268,22 +322,10 @@ router.post('/generate', async (req, res) => {
                         if (!days[i].afternoonConfig && !days[i].morningConfig) {
                             
                             // Find an available physical lab room
-                            let assignedRoom = null;
-                            for (let r of labRooms) {
-                                let roomConflict = false;
-                                for (let t of existingTimetables) {
-                                    if (t.className === semester) continue;
-                                    let sameDay = t.schedule.find(d => d.day === days[i].day);
-                                    if (sameDay && sameDay.periods.some(p => p.time.includes('02:00') && p.room === r.name)) {
-                                        roomConflict = true; break;
-                                    }
-                                }
-                                if (!roomConflict) { assignedRoom = r.name; break; }
-                            }
-
-                            // Guaranteed allocation: if no physical room is free, assign a departmental virtual lab to avoid skipping
+                            let assignedRoom = findAvailableLabRoom({ dayName: days[i].day, timeToken: '02:00' });
                             if (!assignedRoom) {
-                                assignedRoom = `${department || 'Dept'} Lab ${Math.floor(Math.random() * 10) + 1}`;
+                                assignedRoom = '(WANT SOME LAB)';
+                                roomWarnings.push(`${lab.courseName} (lab room needed)`);
                             }
 
                             days[i].afternoonConfig = lab.type;
@@ -297,21 +339,10 @@ router.post('/generate', async (req, res) => {
                         for (let i of dayIndices) {
                             if (!days[i].morningConfig && !days[i].afternoonConfig) {
                                 
-                                let assignedRoom = null;
-                                for (let r of labRooms) {
-                                    let roomConflict = false;
-                                    for (let t of existingTimetables) {
-                                        if (t.className === semester) continue;
-                                        let sameDay = t.schedule.find(d => d.day === days[i].day);
-                                        if (sameDay && sameDay.periods.some(p => p.time.includes('09:30') && p.room === r.name)) {
-                                            roomConflict = true; break;
-                                        }
-                                    }
-                                    if (!roomConflict) { assignedRoom = r.name; break; }
-                                }
-                                // Guaranteed allocation: if no physical room is free, assign a departmental virtual lab to avoid skipping
+                                let assignedRoom = findAvailableLabRoom({ dayName: days[i].day, timeToken: '09:30' });
                                 if (!assignedRoom) {
-                                    assignedRoom = `${department || 'Dept'} Lab ${Math.floor(Math.random() * 10) + 1}`;
+                                    assignedRoom = '(WANT SOME LAB)';
+                                    roomWarnings.push(`${lab.courseName} (lab room needed)`);
                                 }
 
                                 days[i].morningConfig = 'Lab';
@@ -559,8 +590,12 @@ router.post('/generate', async (req, res) => {
             } else {
                 let slots = fillBlock(d.morningConfig, d.morningPeriods || [], 9.5, 12.5);
                 // Assign a theory room if available
-                const theoryRoom = theoryRooms[Math.floor(Math.random() * theoryRooms.length)]?.name || 'TBD';
-                slots.forEach(s => { if (s.type === 'Lecture') s.room = theoryRoom; });
+                const theoryRoom = selectedClassroom || theoryRooms[Math.floor(Math.random() * theoryRooms.length)]?.name || 'TBD';
+                slots.forEach(s => {
+                    if (!s?.subject || s.subject === '-') return;
+                    if (s.type === 'Free' || s.type === 'Activity' || s.type === 'Break' || s.type === 'Lab') return;
+                    s.room = theoryRoom;
+                });
                 p.push(...slots);
             }
 
@@ -594,9 +629,11 @@ router.post('/generate', async (req, res) => {
             }
             else {
                 let slots = fillBlock(d.afternoonConfig, d.afternoonPeriods || [], 14, 17);
-                const theoryRoom = theoryRooms[Math.floor(Math.random() * theoryRooms.length)]?.name || 'TBD';
+                const theoryRoom = selectedClassroom || theoryRooms[Math.floor(Math.random() * theoryRooms.length)]?.name || 'TBD';
                 slots.forEach(s => { 
-                    if (s.type === 'Lecture') s.room = theoryRoom;
+                    if (s?.subject && s.subject !== '-' && s.type !== 'Free' && s.type !== 'Activity' && s.type !== 'Break' && s.type !== 'Lab') {
+                        s.room = theoryRoom;
+                    }
                     s.time = s.time.replace('14:', '02:').replace('15:', '03:').replace('16:', '04:').replace('17:', '05:');
                 });
                 p.push(...slots);
@@ -679,10 +716,11 @@ router.post('/generate', async (req, res) => {
             finalUnallocated = stillUnallocated;
         }
 
-        if (finalUnallocated.length > 0) console.warn("Unallocated:", finalUnallocated);
+        const warnings = [...finalUnallocated, ...roomWarnings];
+        if (warnings.length > 0) console.warn("Warnings:", warnings);
 
-        const newT = await Timetable.create({ className: semester, schedule: days });
-        res.status(201).json({ timetable: newT, unallocated: finalUnallocated });
+        const newT = await Timetable.create({ className: semester, department: dept, schedule: days });
+        res.status(201).json({ timetable: newT, unallocated: warnings });
 
     } catch (e) {
         console.error(e);
@@ -692,11 +730,12 @@ router.post('/generate', async (req, res) => {
 
 // CREATE BLANK MANUAL TIMETABLE
 router.post('/manual', async (req, res) => {
-    const { semester } = req.body;
+    const { semester, department } = req.body;
+    const dept = department || 'IT';
     if (!semester) return res.status(400).json({ message: "Semester required" });
 
     try {
-        await Timetable.deleteOne({ className: semester });
+        await Timetable.deleteOne({ className: semester, department: dept });
         
         const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const blankPeriods = [
@@ -713,7 +752,7 @@ router.post('/manual', async (req, res) => {
             periods: JSON.parse(JSON.stringify(blankPeriods))
         }));
 
-        const newT = await Timetable.create({ className: semester, schedule });
+        const newT = await Timetable.create({ className: semester, department: dept, schedule });
         res.status(201).json({ timetable: newT });
 
     } catch (e) {
@@ -724,9 +763,10 @@ router.post('/manual', async (req, res) => {
 
 // MANUAL UPDATE / BOOK SLOT WITH CONFLICT CHECK
 router.put('/update', async (req, res) => {
-    const { semester, dayIndex, periodIndex, subject, faculty, assistants, room } = req.body;
+    const { semester, department, dayIndex, periodIndex, subject, faculty, assistants, room } = req.body;
     try {
-        const timetable = await Timetable.findOne({ className: semester });
+        const query = { className: semester, ...(department ? { department } : {}) };
+        const timetable = await Timetable.findOne(query);
         if (!timetable) return res.status(404).json({ message: 'Timetable not found' });
 
         if (!timetable.schedule[dayIndex] || !timetable.schedule[dayIndex].periods[periodIndex]) {
@@ -754,7 +794,7 @@ router.put('/update', async (req, res) => {
             const targetTime = parseTime(targetPeriod.time);
 
             // 3. Scan ALL timetables for clashes
-            const allTimetables = await Timetable.find({});
+            const allTimetables = await Timetable.find(department ? { department } : {});
 
             for (const t of allTimetables) {
                 const daySchedule = t.schedule.find(d => d.day === timetable.schedule[dayIndex].day);
