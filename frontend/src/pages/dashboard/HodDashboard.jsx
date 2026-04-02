@@ -1241,6 +1241,7 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [bookingSlot, setBookingSlot] = useState(null);
     const [aiReport, setAiReport] = useState(null);
+    const [semesterLoad, setSemesterLoad] = useState(null);
 
     useEffect(() => {
         if (activeCourse === 'B.Tech') setSelectedSemester('I-B.Tech I Sem');
@@ -1262,6 +1263,30 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     }, [selectedSemester, user.department])
 
     useEffect(() => { fetchTimetable() }, [fetchTimetable]);
+
+    useEffect(() => {
+        const fetchLoad = async () => {
+            if (!timetable?.schedule) {
+                setSemesterLoad(null);
+                return;
+            }
+
+            try {
+                const deptParam = user.department ? `&department=${encodeURIComponent(user.department)}` : '';
+                const res = await fetch(`${API_BASE_URL}/api/timetables/analytics/subject-load?semester=${encodeURIComponent(selectedSemester)}${deptParam}`);
+                if (!res.ok) {
+                    setSemesterLoad(null);
+                    return;
+                }
+                const data = await res.json();
+                setSemesterLoad(data);
+            } catch (e) {
+                console.error(e);
+                setSemesterLoad(null);
+            }
+        };
+        fetchLoad();
+    }, [selectedSemester, user.department, timetable?.updatedAt]);
 
     const slotWindows = [
         { label: '09:30 - 10:30', start: 570, end: 630 },
@@ -1552,6 +1577,48 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                         </table>
                     ) : (
                         <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>No timetable found. Click Auto-Generate to create one.</div>
+                    )}
+                    {timetable && semesterLoad && (
+                        <div className="glass-panel" style={{ margin: '1rem 1rem 0 1rem', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-card)' }}>
+                            <div style={{ fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
+                                Academic Calendar Subject Period Counts
+                            </div>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
+                                Instruction days: {semesterLoad.instructionDatesCount}
+                            </div>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="premium-table" style={{ minWidth: '720px' }}>
+                                    <thead>
+                                        <tr>
+                                            <th style={{ textAlign: 'left' }}>Subject</th>
+                                            <th>Weekly Sessions</th>
+                                            <th>Semester Sessions</th>
+                                            <th>Weekly Hours</th>
+                                            <th>Semester Hours</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(semesterLoad.subjectStats || []).length > 0 ? (
+                                            (semesterLoad.subjectStats || []).map((s, idx) => (
+                                                <tr key={`${s.subject}-${idx}`}>
+                                                    <td style={{ textAlign: 'left', fontWeight: '700' }}>{s.subject}</td>
+                                                    <td>{s.weeklySessions || 0}</td>
+                                                    <td>{s.semesterSessions || 0}</td>
+                                                    <td>{s.weeklyHours || 0}</td>
+                                                    <td>{s.semesterHours || 0}</td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                                                    No subject analytics available.
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
