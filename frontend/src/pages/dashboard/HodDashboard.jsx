@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import API_BASE_URL from '../../config'
@@ -1233,11 +1233,9 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     const [timetable, setTimetable] = useState(null)
     const [loading, setLoading] = useState(false)
     const [selectedSemester, setSelectedSemester] = useState('I-B.Tech I Sem')
-    const [showPreview, setShowPreview] = useState(false)
-    const [previewData, setPreviewData] = useState({ theory: [], labs: [] })
-    const [showSettings, setShowSettings] = useState(false)
-    const [genOptions, setGenOptions] = useState({ slotMode: '1h', labPlacement: 'afternoon', lunchTime: '12:30' })
     const [activeCourse, setActiveCourse] = useState('B.Tech');
+    const [showActions, setShowActions] = useState(false);
+    const actionsMenuRef = useRef(null);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [bookingSlot, setBookingSlot] = useState(null);
     const [aiReport, setAiReport] = useState(null);
@@ -1287,6 +1285,28 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
         };
         fetchLoad();
     }, [selectedSemester, user.department, timetable?.updatedAt]);
+
+    useEffect(() => {
+        if (!showActions) return;
+
+        const handleClickOutside = (e) => {
+            if (actionsMenuRef.current && !actionsMenuRef.current.contains(e.target)) {
+                setShowActions(false);
+            }
+        };
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') setShowActions(false);
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        document.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [showActions]);
 
     const slotWindows = [
         { label: '09:30 - 10:30', start: 570, end: 630 },
@@ -1354,7 +1374,6 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                 headers: { 'Content-Type': 'application/json' }, 
                 body: JSON.stringify({ 
                     semester: selectedSemester, 
-                    options: genOptions,
                     department: user.department 
                 }) 
             })
@@ -1457,6 +1476,41 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
         } catch (e) { showToast('Failed to update slot', 'error'); }
     }
 
+    const exportTimetableSheet = () => {
+        if (!timetable || !timetable.schedule) {
+            showToast('No timetable to export', 'error');
+            return;
+        }
+        const headers = ['Day', '09:30-10:30', '10:30-11:30', '11:30-12:30', '02:00-03:00', '03:00-04:00', '04:00-05:00'];
+        const data = timetable.schedule.map(d => {
+            const row = [d.day];
+            const periodMap = {};
+            d.periods.forEach(p => {
+                periodMap[p.time] = `${p.subject || '-'} (${p.faculty || 'NA'})`;
+            });
+            row.push(periodMap['09:30-10:30'] || '-');
+            row.push(periodMap['10:30-11:30'] || '-');
+            row.push(periodMap['11:30-12:30'] || '-');
+            row.push(periodMap['02:00-03:00'] || '-');
+            row.push(periodMap['03:00-04:00'] || '-');
+            row.push(periodMap['04:00-05:00'] || '-');
+            return row;
+        });
+        exportToCSV(headers, data, `Timetable_${selectedSemester}.csv`);
+    };
+
+    const deleteCurrentTimetable = async () => {
+        if (!confirm('Delete ENTIRE timetable for this semester?')) return;
+        try {
+            await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`, { method: 'DELETE' });
+            showToast('Timetable deleted');
+            fetchTimetable();
+        } catch (e) {
+            console.error(e);
+            showToast('Failed to delete timetable', 'error');
+        }
+    };
+
     return (
         <>
             <div className="glass-table-container">
@@ -1480,61 +1534,64 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                             <option value="I-M.Tech I Sem">M.Tech I-I</option><option value="I-M.Tech II Sem">M.Tech I-II</option>
                             <option value="I-MCA I Sem">MCA I-I</option><option value="I-MCA II Sem">MCA I-II</option>
                         </select>
-                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <label className="btn-action upload" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Upload CSV">
-                            <input type="file" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files[0]) { try { showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success'); setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500); } catch(err){ alert('CSV Uploaded: ' + e.target.files[0].name); } e.target.value = null; } }} />
-                            📤 Upload CSV
-                        </label>
-                        <button className="btn-action csv-dl" onClick={() => {
-                                if (!timetable || !timetable.schedule) return;
-                                const headers = ['Day', '09:30-10:30', '10:30-11:30', '11:30-12:30', '02:00-03:00', '03:00-04:00', '04:00-05:00'];
-                                const data = timetable.schedule.map(d => {
-                                    const row = [d.day];
-                                    // Assuming periods are ordered and correspond to the headers, skipping lunch
-                                    const periodMap = {};
-                                    d.periods.forEach(p => {
-                                        periodMap[p.time] = `${p.subject || '-'} (${p.faculty || 'NA'})`;
-                                    });
-                                    row.push(periodMap['09:30-10:30'] || '-');
-                                    row.push(periodMap['10:30-11:30'] || '-');
-                                    row.push(periodMap['11:30-12:30'] || '-');
-                                    row.push(periodMap['02:00-03:00'] || '-');
-                                    row.push(periodMap['03:00-04:00'] || '-');
-                                    row.push(periodMap['04:00-05:00'] || '-');
-                                    return row;
-                                });
-                                exportToCSV(headers, data, `Timetable_${selectedSemester}.csv`);
-                            }} title="Export CSV">📄 CSV</button>
-                        <button className="btn-action excel" onClick={() => {
-                                if (!timetable || !timetable.schedule) return;
-                                const headers = ['Day', '09:30-10:30', '10:30-11:30', '11:30-12:30', '02:00-03:00', '03:00-04:00', '04:00-05:00'];
-                                const data = timetable.schedule.map(d => {
-                                    const row = [d.day];
-                                    // Assuming periods are ordered and correspond to the headers, skipping lunch
-                                    const periodMap = {};
-                                    d.periods.forEach(p => {
-                                        periodMap[p.time] = `${p.subject || '-'} (${p.faculty || 'NA'})`;
-                                    });
-                                    row.push(periodMap['09:30-10:30'] || '-');
-                                    row.push(periodMap['10:30-11:30'] || '-');
-                                    row.push(periodMap['11:30-12:30'] || '-');
-                                    row.push(periodMap['02:00-03:00'] || '-');
-                                    row.push(periodMap['03:00-04:00'] || '-');
-                                    row.push(periodMap['04:00-05:00'] || '-');
-                                    return row;
-                                });
-                                exportToCSV(headers, data, `Timetable_${selectedSemester}.csv`);
-                            }} title="Export Excel">📊 Excel</button>
-                            <button className="btn-action pdf" onClick={() => window.print()} title="Generate PDF Report">📕 PDF</button>
-                            <button className="btn-action" onClick={() => setShowSettings(true)}>⚙️ Settings</button>
-                            <button className="btn-action primary" onClick={generateTimetable} disabled={loading}>{loading ? 'Generating...' : '⚡ Auto-Generate'}</button>
-                            <button className="btn-action" style={{ background: 'linear-gradient(135deg, #8b5cf6, #d946ef)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }} onClick={generateTimetableAI} disabled={loading}>{loading ? 'Optimizing...' : '✨ AI Generate'}</button>
-                            <button className="btn-action" style={{ background: 'var(--bg-card)', color: 'var(--primary)', border: '1px solid var(--primary)' }} onClick={createBlankTimetable} disabled={loading}>📝 Create Blank</button>
-                            {timetable && (
-                                <button className="btn-action" style={{ color: 'var(--univ-red)', borderColor: 'rgba(239, 68, 68, 0.2)', background: 'var(--bg-card)', display: 'flex', alignItems: 'center', gap: '0.5rem' }} onClick={async () => { if (confirm('Delete ENTIRE timetable for this semester?')) { await fetch(`${API_BASE_URL}/api/timetables?semester=${encodeURIComponent(selectedSemester)}`, { method: 'DELETE' }); fetchTimetable(); } }}>
-                                    <Icons.Trash /> Delete Timetable
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                            <button className="btn-action primary" onClick={generateTimetable} disabled={loading}>
+                                {loading ? 'Generating...' : '⚡ Auto-Generate'}
+                            </button>
+                            <button className="btn-action" style={{ background: 'linear-gradient(135deg, #8b5cf6, #d946ef)', color: 'white', border: 'none', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)' }} onClick={generateTimetableAI} disabled={loading}>
+                                {loading ? 'Optimizing...' : '✨ AI Generate'}
+                            </button>
+
+                            <div ref={actionsMenuRef} style={{ position: 'relative' }}>
+                                <button className="btn-action" type="button" onClick={() => setShowActions((v) => !v)} aria-expanded={showActions}>
+                                    More ▾
                                 </button>
-                            )}
+                                {showActions && (
+                                    <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', minWidth: '240px', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-card)', boxShadow: 'var(--shadow-lg)', zIndex: 1000 }}>
+                                        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', width: '100%', padding: '0.55rem 0.75rem', borderRadius: '10px', cursor: 'pointer', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                            📤 Upload CSV
+                                            <input
+                                                type="file"
+                                                accept=".csv"
+                                                style={{ display: 'none' }}
+                                                onChange={(e) => {
+                                                    if (e.target.files[0]) {
+                                                        try {
+                                                            showToast('CSV File ' + e.target.files[0].name + ' uploaded successfully! Processing...', 'success');
+                                                            setTimeout(() => { showToast('Data synced successfully!', 'success'); }, 1500);
+                                                        } catch (err) {
+                                                            alert('CSV Uploaded: ' + e.target.files[0].name);
+                                                        }
+                                                        e.target.value = null;
+                                                    }
+                                                    setShowActions(false);
+                                                }}
+                                            />
+                                        </label>
+
+                                        <button type="button" onClick={() => { exportTimetableSheet(); setShowActions(false); }} style={{ width: '100%', textAlign: 'left', padding: '0.55rem 0.75rem', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                            📄 Export CSV
+                                        </button>
+                                        <button type="button" onClick={() => { exportTimetableSheet(); setShowActions(false); }} style={{ width: '100%', textAlign: 'left', padding: '0.55rem 0.75rem', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                            📊 Export Excel
+                                        </button>
+                                        <button type="button" onClick={() => { window.print(); setShowActions(false); }} style={{ width: '100%', textAlign: 'left', padding: '0.55rem 0.75rem', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: '700', color: 'var(--text-primary)' }}>
+                                            📕 PDF / Print
+                                        </button>
+
+                                        <div style={{ height: '1px', background: 'var(--border-light)', margin: '0.35rem 0' }} />
+
+                                        <button type="button" onClick={async () => { setShowActions(false); await createBlankTimetable(); }} disabled={loading} style={{ width: '100%', textAlign: 'left', padding: '0.55rem 0.75rem', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: '700', color: 'var(--text-primary)', opacity: loading ? 0.6 : 1 }}>
+                                            📝 Create Blank
+                                        </button>
+                                        {timetable && (
+                                            <button type="button" onClick={async () => { setShowActions(false); await deleteCurrentTimetable(); }} style={{ width: '100%', textAlign: 'left', padding: '0.55rem 0.75rem', borderRadius: '10px', border: 'none', background: 'transparent', cursor: 'pointer', fontWeight: '800', color: 'var(--univ-red)' }}>
+                                                🗑️ Delete Timetable
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1631,21 +1688,6 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
                             <button onClick={() => setShowBookingModal(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }}>×</button>
                         </div>
                         <BookingForm initialData={bookingSlot} facultyList={allFaculty} roomList={allRooms} onSubmit={handleConfirmBooking} onCancel={() => setShowBookingModal(false)} />
-                    </div>
-                </div>, document.body
-            )}
-
-            {showSettings && createPortal(
-                <div className="modal-overlay">
-                    <div className="modal-content glass-panel" style={{ maxWidth: '400px' }}>
-                        <h3>Generation Settings</h3>
-                        <div style={{ margin: '1rem 0' }}>
-                            <label style="font-weight: 800">Slot Mode: 1-Hour Fixed</label>
-                            <select className="search-input-premium" value={genOptions.slotMode} onChange={e => setGenOptions({ ...genOptions, slotMode: e.target.value })}>
-                                <option value="1h">1 Hour Fixed (Institutional Standard)</option>
-                            </select>
-                        </div>
-                        <button className="btn-action primary" onClick={() => setShowSettings(false)}>Done</button>
                     </div>
                 </div>, document.body
             )}
