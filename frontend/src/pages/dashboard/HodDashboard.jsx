@@ -93,7 +93,7 @@ function HodDashboard() {
             case 'timetable': return <TimetableManager showToast={showToast} allFaculty={allFaculty} allRooms={allRooms} user={user} />;
             case 'academicCalendar': return <AcademicCalendarManager showToast={showToast} user={user} />;
             case 'subjects': return <SubjectsManager facultyList={allFaculty} showToast={showToast} user={user} />;
-            case 'infrastructure': return <InfrastructureManager user={user} showToast={showToast} />;
+            case 'infrastructure': return <InfrastructureManager user={user} showToast={showToast} onRoomsUpdated={fetchAllRooms} />;
             case 'leaves': return <LeaveApprovals user={user} showToast={showToast} allFaculty={allFaculty} />;
             case 'attendance': return (
                 <AttendanceManager 
@@ -2824,7 +2824,7 @@ function AttendanceCalendarView({ history, loading, fetchHistory, setViewingReco
     );
 }
 
-function InfrastructureManager({ user, showToast }) {
+function InfrastructureManager({ user, showToast, onRoomsUpdated }) {
     const [rooms, setRooms] = useState([]);
     const [isSaving, setIsSaving] = useState(false);
     const [addCount, setAddCount] = useState(1);
@@ -2893,6 +2893,7 @@ function InfrastructureManager({ user, showToast }) {
             if (response.ok) {
                 showToast('Infrastructure saved successfully!');
                 fetchRooms();
+                onRoomsUpdated?.();
             } else {
                 showToast('Failed to save infrastructure data.', 'error');
             }
