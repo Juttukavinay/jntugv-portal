@@ -2,10 +2,36 @@ const express = require('express');
 const router = express.Router();
 const Timetable = require('../models/timetableModel');
 const Subject = require('../models/subjectModel');
+const Course = require('../models/courseModel');
 const Faculty = require('../models/facultyModel');
 const Room = require('../models/roomModel');
 const AcademicCalendar = require('../models/academicCalendarModel');
 const { generateTimetableWithAI } = require('../services/geminiService');
+
+const deriveCourseNameFromSemester = (semester) => {
+    const value = String(semester || '');
+    if (value.includes('B.Tech')) return 'B.Tech';
+    if (value.includes('M.Tech')) return 'M.Tech';
+    if (value.includes('MCA')) return 'MCA';
+    return null;
+};
+
+const getSubjectsForGeneration = async ({ semester, department, courseName }) => {
+    if (!semester) return [];
+
+    const dept = department || 'IT';
+    const derivedCourseName = courseName || deriveCourseNameFromSemester(semester);
+
+    const courseQuery = { department: dept, ...(derivedCourseName ? { courseName: derivedCourseName } : {}) };
+    const courses = await Course.find(courseQuery).sort({ createdAt: -1 }).lean();
+
+    for (const course of courses) {
+        const subjects = await Subject.find({ courseId: course._id, semester }).sort({ sNo: 1 }).lean();
+        if (subjects.length > 0) return subjects;
+    }
+
+    return [];
+};
 
 // GET
 router.get('/', async (req, res) => {
@@ -70,13 +96,13 @@ router.post('/generate-ai', async (req, res) => {
 
     try {
         // 1. Fetch data
-        let subjects = await Subject.find({ semester, department });
+        let subjects = await getSubjectsForGeneration({ semester, department });
         const faculty = await Faculty.find({ department });
         const rooms = await Room.find({ department });
 
         if (subjects.length === 0) {
-            console.log("No subjects found. Auto-seeding default subjects for smooth generation...");
-            const defaultSubjects = [
+            console.log("No subjects found for this semester. Using default subjects for AI generation...");
+            subjects = [
                 { courseName: 'Core Subject 1', L: 3, T: 1, P: 0 },
                 { courseName: 'Core Subject 2', L: 3, T: 1, P: 0 },
                 { courseName: 'Core Subject 3', L: 3, T: 0, P: 0 },
@@ -84,9 +110,7 @@ router.post('/generate-ai', async (req, res) => {
                 { courseName: 'Core Subject 5', L: 3, T: 0, P: 0 },
                 { courseName: 'Core Lab 1', L: 0, T: 0, P: 3 },
                 { courseName: 'Core Lab 2', L: 0, T: 0, P: 3 },
-            ].map(s => ({ ...s, semester, department, category: 'PC', courseCode: 'AUTOGEN' }));
-            await Subject.insertMany(defaultSubjects);
-            subjects = await Subject.find({ semester, department });
+            ].map((s, i) => ({ ...s, semester, sNo: i + 1, category: 'PC', courseCode: 'AUTOGEN' }));
         }
 
         // 2. Call Gemini AI
@@ -139,10 +163,10 @@ router.post('/generate', async (req, res) => {
 
     try {
         await Timetable.deleteOne({ className: semester, department: dept });
-        let subjects = await Subject.find({ semester, department: dept });
+        let subjects = await getSubjectsForGeneration({ semester, department: dept });
         if (subjects.length === 0) {
-            console.log("No subjects found. Auto-seeding default subjects for smooth generation...");
-            const defaultSubjects = [
+            console.log("No subjects found for this semester. Using default subjects for generation...");
+            subjects = [
                 { courseName: 'Core Subject 1', L: 3, T: 1, P: 0 },
                 { courseName: 'Core Subject 2', L: 3, T: 1, P: 0 },
                 { courseName: 'Core Subject 3', L: 3, T: 0, P: 0 },
@@ -150,9 +174,7 @@ router.post('/generate', async (req, res) => {
                 { courseName: 'Core Subject 5', L: 3, T: 0, P: 0 },
                 { courseName: 'Core Lab 1', L: 0, T: 0, P: 3 },
                 { courseName: 'Core Lab 2', L: 0, T: 0, P: 3 },
-            ].map(s => ({ ...s, semester, department: dept, category: 'PC', courseCode: 'AUTOGEN' }));
-            await Subject.insertMany(defaultSubjects);
-            subjects = await Subject.find({ semester, department: dept });
+            ].map((s, i) => ({ ...s, semester, sNo: i + 1, category: 'PC', courseCode: 'AUTOGEN' }));
         }
 
         // --- 1. PRE-PROCESS DEMAND ---
@@ -166,14 +188,15 @@ router.post('/generate', async (req, res) => {
 
         const activityKeywords = ['Health', 'Yoga', 'Sports', 'Constitution', 'NSS', 'Library', 'Wellness', 'Democracy', 'Human Values'];
 
-        subjects.forEach(s => {
+        subjects.forEach((s) => {
             // Safe Cast
             const L = Number(s.L) || 0;
             const T = Number(s.T) || 0;
             const P = Number(s.P) || 0;
-            let item = { ...s.toObject(), L, T, P, ltp: `L:${L}-T:${T}-P:${P}` };
+            const courseName = String(s.courseName || '');
+            let item = { ...s, courseName, L, T, P, ltp: `L:${L}-T:${T}-P:${P}` };
 
-            if (activityKeywords.some(k => s.courseName.includes(k))) {
+            if (activityKeywords.some(k => courseName.includes(k))) {
                 queue.saturday.push(item); return;
             }
 

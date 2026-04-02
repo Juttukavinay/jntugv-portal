@@ -1240,7 +1240,6 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [bookingSlot, setBookingSlot] = useState(null);
     const [aiReport, setAiReport] = useState(null);
-    const [semesterLoad, setSemesterLoad] = useState(null);
 
     useEffect(() => {
         if (activeCourse === 'B.Tech') setSelectedSemester('I-B.Tech I Sem');
@@ -1262,25 +1261,6 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
     }, [selectedSemester, user.department])
 
     useEffect(() => { fetchTimetable() }, [fetchTimetable]);
-
-    useEffect(() => {
-        const fetchLoad = async () => {
-            try {
-                const deptParam = user.department ? `&department=${encodeURIComponent(user.department)}` : '';
-                const res = await fetch(`${API_BASE_URL}/api/timetables/analytics/subject-load?semester=${encodeURIComponent(selectedSemester)}${deptParam}`);
-                if (!res.ok) {
-                    setSemesterLoad(null);
-                    return;
-                }
-                const data = await res.json();
-                setSemesterLoad(data);
-            } catch (e) {
-                console.error(e);
-                setSemesterLoad(null);
-            }
-        };
-        fetchLoad();
-    }, [selectedSemester, user.department, timetable?.updatedAt]);
 
     const slotWindows = [
         { label: '09:30 - 10:30', start: 570, end: 630 },
@@ -1535,50 +1515,6 @@ function TimetableManager({ showToast, allFaculty, allRooms, user }) {
 
                 <div style={{ overflowX: 'auto', marginTop: '1rem' }}>
                     <AIReportCard report={aiReport} onClear={() => setAiReport(null)} />
-                    {semesterLoad && (
-                        <div className="glass-panel" style={{ margin: '0 1rem 1rem 1rem', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-light)', background: 'var(--bg-card)' }}>
-                            <div style={{ fontWeight: '800', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>
-                                Calendar-Aligned Subject Period Counts
-                            </div>
-                            <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '0.75rem' }}>
-                                Instruction days: {semesterLoad.instructionDatesCount}
-                            </div>
-                            <div style={{ overflowX: 'auto' }}>
-                                <table className="premium-table" style={{ minWidth: '720px' }}>
-                                    <thead>
-                                        <tr>
-                                            <th style={{ textAlign: 'left' }}>Subject</th>
-                                            <th>Weekly</th>
-                                            <th>Semester</th>
-                                            <th>Required</th>
-                                            <th>Gap</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(semesterLoad.subjectStats || []).length > 0 ? (
-                                            (semesterLoad.subjectStats || []).map((s, idx) => (
-                                                <tr key={`${s.subject}-${idx}`}>
-                                                    <td style={{ textAlign: 'left', fontWeight: '700' }}>{s.subject}</td>
-                                                    <td>{s.weeklySessions || 0}</td>
-                                                    <td>{s.semesterSessions || 0}</td>
-                                                    <td>{s.requiredTotalPeriods || 0}</td>
-                                                    <td style={{ fontWeight: '700', color: (s.gapToRequired || 0) === 0 ? 'var(--univ-green)' : 'var(--univ-red)' }}>
-                                                        {s.gapToRequired || 0}
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                                                    No subject analytics available.
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
                     {timetable ? (
                         <table className="premium-table" style={{ textAlign: 'center', minWidth: '1200px' }}>
                             <thead><tr><th>Day</th><th>09:30-10:30</th><th>10:30-11:30</th><th>11:30-12:30</th><th style={{ background: '#f8fafc' }}>Lunch</th><th>02:00-03:00</th><th>03:00-04:00</th><th>04:00-05:00</th></tr></thead>
