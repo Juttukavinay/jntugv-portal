@@ -251,17 +251,12 @@ router.post('/generate', async (req, res) => {
         let roomWarnings = [];
 
         // --- 3. FETCH AVAILABLE ROOMS ---
-        const roomQuery = { type: { $in: ['Classroom', 'Lab'] } };
+        const roomQuery = { type: 'Classroom' };
         if (dept) roomQuery.department = dept;
-        
-        const availableRooms = await Room.find(roomQuery);
-        
-        // Try to find specific room for this semester if mapped
-        // We match by semester string or extract year/sem
-        const mappedRooms = availableRooms.filter(r => r.semester === semester || (r.year && semester.startsWith(r.year)));
-        
-        const labRooms = availableRooms.filter(r => r.type === 'Lab');
-        const classRooms = availableRooms.filter(r => r.type === 'Classroom');
+        const availableClassrooms = await Room.find(roomQuery);
+        const labRooms = await Room.find({ type: 'Lab' }); // Global campus infra labs
+        const mappedRooms = availableClassrooms.filter(r => r.semester === semester || (r.year && semester.startsWith(r.year)));
+        const classRooms = availableClassrooms;
         
         // Preference for Theory: prioritized mappedrooms
         const theoryRooms = mappedRooms.filter(r => r.type === 'Classroom').length > 0 
@@ -269,7 +264,7 @@ router.post('/generate', async (req, res) => {
             : classRooms;
 
         // --- 4. PLACE LABS ---
-        const existingTimetables = await Timetable.find({ department: dept });
+        const existingTimetables = await Timetable.find({}); // Check globally for lab conflicts
 
         const normalizeWing = (value) => {
             const v = String(value || '').toLowerCase();
@@ -794,7 +789,7 @@ router.put('/update', async (req, res) => {
             const targetTime = parseTime(targetPeriod.time);
 
             // 3. Scan ALL timetables for clashes
-            const allTimetables = await Timetable.find(department ? { department } : {});
+            const allTimetables = await Timetable.find({});
 
             for (const t of allTimetables) {
                 const daySchedule = t.schedule.find(d => d.day === timetable.schedule[dayIndex].day);
@@ -809,8 +804,12 @@ router.put('/update', async (req, res) => {
 
                     const pTime = parseTime(p.time);
                     const isOverlap = (targetTime.start < pTime.end) && (pTime.start < targetTime.end);
-
                     if (isOverlap) {
+                        if (room && p.room && p.room === room && room !== 'TBD' && room !== 'Main Lab' && room !== '(WANT SOME LAB)') {
+                            return res.status(409).json({
+                                message: `Room Conflict! Room '${room}' is already booked in ${t.className} at ${p.time}.`
+                            });
+                        }
                         const bookedFaculty = [];
                         if (p.faculty && p.faculty !== 'N/A') bookedFaculty.push(p.faculty);
                         if (p.assistants && Array.isArray(p.assistants)) bookedFaculty.push(...p.assistants);
