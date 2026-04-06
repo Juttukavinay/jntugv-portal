@@ -24,6 +24,9 @@ async function generateTimetableWithAI(data) {
         FACULTY: ${JSON.stringify(data.faculty)}
         ROOMS: ${JSON.stringify(data.rooms)}
         
+        EXISTING SCHEDULED CLASSES (DO NOT book rooms that are already taken here):
+        ${JSON.stringify((data.existingTimetables || []).map(t => ({ class: t.className, dept: t.department, schedule: t.schedule.map(d => ({ day: d.day, periods: d.periods.filter(p => p.room).map(p => ({ time: p.time, room: p.room }))})) })))}
+        
         CONSTRAINTS:
         1. Each subject has L (Lecture), T (Tutorial), P (Practical/Lab) credits. 
            L=3 means 3 one-hour lectures per week. 
@@ -32,7 +35,7 @@ async function generateTimetableWithAI(data) {
         2. Theory periods are 1 hour (09:30-10:30, 10:30-11:30, 11:30-12:30, 02:00-03:00, 03:00-04:00, 04:00-05:00).
         3. Labs (P) MUST be 3 hours continuous (either 09:30-12:30 or 02:00-05:00).
         4. Faculty cannot be assigned to more than one class in the same time slot across ALL semesters (Assume these are the only constraints for now).
-        5. Rooms (Classrooms/Labs) cannot be double-booked.
+        5. Rooms (Classrooms/Labs) cannot be double-booked. Cross-check with "EXISTING SCHEDULED CLASSES" and do not book a room if it is occupied during that time.
         6. Lunch break is fixed: 12:30 PM to 02:00 PM.
         7. Days: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday.
         

@@ -98,7 +98,10 @@ router.post('/generate-ai', async (req, res) => {
         // 1. Fetch data
         let subjects = await getSubjectsForGeneration({ semester, department });
         const faculty = await Faculty.find({ department });
-        const rooms = await Room.find({ department });
+        const labRooms = await Room.find({ type: 'Lab' });
+        const classRooms = await Room.find({ department, type: 'Classroom' });
+        const rooms = [...labRooms, ...classRooms];
+        const existingTimetables = await Timetable.find({});
 
         if (subjects.length === 0) {
             console.log("No subjects found for this semester. Using default subjects for AI generation...");
@@ -120,7 +123,8 @@ router.post('/generate-ai', async (req, res) => {
             department,
             subjects,
             faculty,
-            rooms
+            rooms,
+            existingTimetables
         });
 
         const selectedClassroom = String(classroom || '').trim();
